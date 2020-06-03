@@ -511,6 +511,8 @@ class Compressor(om.Group):
         self.add_subsystem('FAR_passthru', PassThrough(
             'Fl_I:FAR', 'Fl_O:FAR', 0.0), promotes=['*'])
 
+
+
         if statics:
             if design:
                 #   Calculate static properties
@@ -559,6 +561,11 @@ class Compressor(om.Group):
                             'real_flow','eff_poly_calc' , 'blds_pwr',
                             'FAR_passthru'] + bleed_names + ['W_passthru'])
 
+
+        # define the group level defaults
+        self.add_input('Fl_I:FAR', val=0., units=None)
+        self.add_input('PR', val=2., units=None)
+        self.add_input('eff', val=0.99, units=None)
 
 if __name__ == "__main__":
 

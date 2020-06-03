@@ -105,34 +105,36 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    des_vars = prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
-    des_vars.add_output('des:alt', 10000., units="m")
-    des_vars.add_output('des:MN', .72)
-    des_vars.add_output('des:inlet_MN', .6)
-    des_vars.add_output('des:FPR', 1.2)
-    des_vars.add_output('des:eff', 0.96)
+    # des_vars = prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
+    # des_vars.add_output('des:alt', 10000., units="m")
+    # des_vars.add_output('des:MN', .72)
+    # des_vars.add_output('des:inlet_MN', .6)
+    # des_vars.add_output('des:FPR', 1.2)
+    # des_vars.add_output('des:eff', 0.96)
 
-    des_vars.add_output('pwr_target', -2600., units='kW')
+    # des_vars.add_output('pwr_target', -2600., units='kW')
 
 
-    design = prob.model.add_subsystem('design', Propulsor(design=True))
+    design = prob.model.add_subsystem('design', Propulsor(design=True), promotes_inputs=['pwr_target'])
 
-    prob.model.connect('des:alt', 'design.fc.alt')
-    prob.model.connect('des:MN', 'design.fc.MN')
-    prob.model.connect('des:inlet_MN', 'design.inlet.MN')
-    prob.model.connect('des:FPR', 'design.fan.PR')
-    prob.model.connect('pwr_target', ['design.pwr_target', 'off_design.pwr_target'])
+    # prob.model.connect('des:alt', 'design.fc.alt')
+    # prob.model.connect('des:MN', 'design.fc.MN')
+    # prob.model.connect('des:inlet_MN', 'design.inlet.MN')
+    # prob.model.connect('des:FPR', 'design.fan.PR')
+    # prob.model.connect('pwr_target', ['design.pwr_target', 'off_design.pwr_target'])
     # prob.model.connect('pwr_target', 'design.pwr_target')
-    prob.model.connect('des:eff', 'design.fan.eff')
+    # prob.model.connect('des:eff', 'design.fan.eff')
 
 
-    des_vars.add_output('OD:alt', 10000, units='m')
-    des_vars.add_output('OD:MN', 0.72)
+    # des_vars.add_output('OD:alt', 10000, units='m')
+    # des_vars.add_output('OD:MN', 0.72)
 
-    od = prob.model.add_subsystem('off_design', Propulsor(design=False))
+    od = prob.model.add_subsystem('off_design', Propulsor(design=False), promotes_inputs=['pwr_target'])
 
-    prob.model.connect('OD:alt', 'off_design.fc.alt')
-    prob.model.connect('OD:MN', 'off_design.fc.MN')
+    prob.model.add_input('pwr_target', units='kW')
+
+    # prob.model.connect('OD:alt', 'off_design.fc.alt')
+    # prob.model.connect('OD:MN', 'off_design.fc.MN')
 
     # need to pass some design values to the OD point
     # prob.model.connect('design.inlet:ram_recovery', 'off_design.inlet.ram_recovery')
@@ -151,6 +153,18 @@ if __name__ == "__main__":
     prob.set_solver_print(level=2, depth=2)
 
     prob.setup(check=False)
+    prob.final_setup()
+
+    prob.set_val('design.fc.alt', 10000, units='m')
+    prob['design.fc.MN'] = 0.8
+    prob['design.inlet.MN'] = 0.6
+    prob['design.fan.PR'] = 1.2
+    prob['pwr_target'] = -2600
+    prob['design.fan.eff'] = 0.96
+
+    prob.set_val('off_design.fc.alt', 10000, units='m')
+    prob['off_design.fc.MN'] = 0.8
+
 
     design.nonlinear_solver.options['atol'] = 1e-6
     design.nonlinear_solver.options['rtol'] = 1e-6
@@ -159,9 +173,6 @@ if __name__ == "__main__":
     od.nonlinear_solver.options['rtol'] = 1e-6
     od.nonlinear_solver.options['maxiter'] = 10
 
-    # parameters
-    prob['des:MN'] = .8
-    prob['OD:MN'] = .8
 
     # initial guess
     prob['design.balance.W'] = 200.
