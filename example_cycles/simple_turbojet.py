@@ -157,9 +157,12 @@ if __name__ == "__main__":
     prob.model.add_subsystem('DESIGN', Turbojet())
    
     # Connect off-design and required design inputs to model
-    pts = ['OD1']
+    od_pts = ['OD1']
+    od_MNs = [0.000001,]
+    od_alts = [0.0]
+    od_Fns =[11000.0]
 
-    for pt in pts:
+    for pt in od_pts:
         prob.model.add_subsystem(pt, Turbojet(design=False))
 
         prob.model.connect('DESIGN.comp.s_PR', pt+'.comp.s_PR')
@@ -206,11 +209,7 @@ if __name__ == "__main__":
     prob['DESIGN.fc.balance.Pt'] = 14.6955113159
     prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
-    od_MNs = [0.000001,]
-    od_alts = [0.0]
-    od_Fns =[110000.0]
-
-    for i,pt in enumerate(pts):
+    for i,pt in enumerate(od_pts):
         prob[pt+'.burner.dPqP'] = 0.03
         prob[pt+'.nozz.Cv'] = 0.99
 
@@ -232,7 +231,7 @@ if __name__ == "__main__":
     prob.set_solver_print(level=2, depth=1)
     prob.run_model()
 
-    for pt in ['DESIGN']+pts:
+    for pt in ['DESIGN']+od_pts:
         viewer(prob, pt)
 
     print()
