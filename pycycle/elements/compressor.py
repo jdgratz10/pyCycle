@@ -563,9 +563,9 @@ class Compressor(om.Group):
 
 
         # define the group level defaults
-        self.add_input('Fl_I:FAR', val=0., units=None)
-        self.add_input('PR', val=2., units=None)
-        self.add_input('eff', val=0.99, units=None)
+        self.set_input_defaults('Fl_I:FAR', val=0., units=None)
+        self.set_input_defaults('PR', val=2., units=None)
+        self.set_input_defaults('eff', val=0.99, units=None)
 
 if __name__ == "__main__":
 

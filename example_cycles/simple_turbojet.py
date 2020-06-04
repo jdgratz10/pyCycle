@@ -61,11 +61,11 @@ class Turbojet(om.Group):
         balance = self.add_subsystem('balance', om.BalanceComp())
         if design:
 
-            balance.add_balance('W', units='lbm/s', eq_units='lbf')
+            balance.add_balance('W', units='lbm/s', eq_units='lbf', rhs_name='Fn_target')
             self.connect('balance.W', 'inlet.Fl_I:stat:W')
             self.connect('perf.Fn', 'balance.lhs:W')
 
-            balance.add_balance('FAR', eq_units='degR', lower=1e-4, val=.017)
+            balance.add_balance('FAR', eq_units='degR', lower=1e-4, val=.017, rhs_name='T4_target')
             self.connect('balance.FAR', 'burner.Fl_I:FAR')
             self.connect('burner.Fl_O:tot:T', 'balance.lhs:FAR')
 
@@ -75,7 +75,7 @@ class Turbojet(om.Group):
 
         else:
 
-            balance.add_balance('FAR', eq_units='lbf', lower=1e-4, val=.3)
+            balance.add_balance('FAR', eq_units='lbf', lower=1e-4, val=.3, rhs_name='Fn_target')
             self.connect('balance.FAR', 'burner.Fl_I:FAR')
             self.connect('perf.Fn', 'balance.lhs:FAR')
 
@@ -153,63 +153,14 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    des_vars = prob.model.add_subsystem('des_vars', IndepVarComp(), promotes=["*"])
-
-    # Design point inputs
-    des_vars.add_output('alt', 0.0, units='ft'),
-    des_vars.add_output('MN', 0.000001),
-    des_vars.add_output('T4max', 2370.0, units='degR'),
-    des_vars.add_output('Fn_des', 11800.0, units='lbf'),
-    des_vars.add_output('comp:PRdes', 13.5),
-    des_vars.add_output('comp:effDes', 0.83),
-    des_vars.add_output('burn:dPqP', 0.03),
-    des_vars.add_output('turb:effDes', 0.86),
-    des_vars.add_output('nozz:Cv', 0.99),
-    des_vars.add_output('shaft:Nmech', 8070.0, units='rpm'),
-    des_vars.add_output('inlet:MN_out', 0.60),
-    des_vars.add_output('comp:MN_out', 0.20),
-    des_vars.add_output('burner:MN_out', 0.20),
-    des_vars.add_output('turb:MN_out', 0.4),
-
-    # Off-design (point 1) inputs
-    des_vars.add_output('OD1_MN', 0.000001),
-    des_vars.add_output('OD1_alt', 0.0, units='ft'),
-    des_vars.add_output('OD1_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD1_Fn', 11000.0, units='lbf')
-    des_vars.add_output('OD1_Rline', 2.0),
-
     # Create design instance of model
     prob.model.add_subsystem('DESIGN', Turbojet())
-
-    # Connect design point inputs to model
-    prob.model.connect('alt', 'DESIGN.fc.alt')
-    prob.model.connect('MN', 'DESIGN.fc.MN')
-    prob.model.connect('Fn_des', 'DESIGN.balance.rhs:W')
-    prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR')
-
-    prob.model.connect('comp:PRdes', 'DESIGN.comp.PR')
-    prob.model.connect('comp:effDes', 'DESIGN.comp.eff')
-    prob.model.connect('burn:dPqP', 'DESIGN.burner.dPqP')
-    prob.model.connect('turb:effDes', 'DESIGN.turb.eff')
-    prob.model.connect('nozz:Cv', 'DESIGN.nozz.Cv')
-    prob.model.connect('shaft:Nmech', 'DESIGN.Nmech')
-
-    prob.model.connect('inlet:MN_out', 'DESIGN.inlet.MN')
-    prob.model.connect('comp:MN_out', 'DESIGN.comp.MN')
-    prob.model.connect('burner:MN_out', 'DESIGN.burner.MN')
-    prob.model.connect('turb:MN_out', 'DESIGN.turb.MN')
-
+   
     # Connect off-design and required design inputs to model
     pts = ['OD1']
 
     for pt in pts:
         prob.model.add_subsystem(pt, Turbojet(design=False))
-
-        prob.model.connect('burn:dPqP', pt+'.burner.dPqP')
-        prob.model.connect('nozz:Cv', pt+'.nozz.Cv')
-
-        prob.model.connect(pt+'_alt', pt+'.fc.alt')
-        prob.model.connect(pt+'_MN', pt+'.fc.MN')
 
         prob.model.connect('DESIGN.comp.s_PR', pt+'.comp.s_PR')
         prob.model.connect('DESIGN.comp.s_Wc', pt+'.comp.s_Wc')
@@ -226,12 +177,27 @@ if __name__ == "__main__":
         prob.model.connect('DESIGN.burner.Fl_O:stat:area', pt+'.burner.area')
         prob.model.connect('DESIGN.turb.Fl_O:stat:area', pt+'.turb.area')
 
-        # prob.model.connect(pt+'_T4', pt+'.balance.rhs:FAR')
-        prob.model.connect(pt+'_Fn', pt+'.balance.rhs:FAR')
         prob.model.connect('DESIGN.nozz.Throat:stat:area', pt+'.balance.rhs:W')
 
-
     prob.setup(check=False)
+
+    # Set the model
+    prob.set_val('DESIGN.fc.alt', 0, units='ft')
+    prob.set_val('DESIGN.fc.MN', 0.000001)
+    prob.set_val('DESIGN.balance.Fn_target', 11800.0, units='lbf')
+    prob.set_val('DESIGN.balance.T4_target', 2370.0, units='degR') 
+
+    prob.set_val('DESIGN.comp.PR', 13.5) 
+    prob.set_val('DESIGN.comp.eff', 0.83)
+    prob.set_val('DESIGN.burner.dPqP', 0.03)
+    prob.set_val('DESIGN.turb.eff', 0.86)
+    prob.set_val('DESIGN.nozz.Cv', 0.99)
+    prob.set_val('DESIGN.Nmech', 8070.0, units='rpm')
+
+    prob.set_val('DESIGN.inlet.MN', 0.60)
+    prob.set_val('DESIGN.comp.MN', 0.020)
+    prob.set_val('DESIGN.burner.MN', 0.020)
+    prob.set_val('DESIGN.turb.MN', 0.4)
 
     # Set initial guesses for balances
     prob['DESIGN.balance.FAR'] = 0.0175506829934
@@ -240,7 +206,19 @@ if __name__ == "__main__":
     prob['DESIGN.fc.balance.Pt'] = 14.6955113159
     prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
-    for pt in pts:
+    od_MNs = [0.000001,]
+    od_alts = [0.0]
+    od_Fns =[110000.0]
+
+    for i,pt in enumerate(pts):
+        prob[pt+'.burner.dPqP'] = 0.03
+        prob[pt+'.nozz.Cv'] = 0.99
+
+        prob[pt+'.fc.MN'] = od_MNs[i]
+        prob.set_val(pt+'.fc.alt', od_alts[i], units='ft')
+        prob.set_val(pt+'.balance.Fn_target', od_Fns[i], units='lbf')  
+
+        # initial guesses
         prob[pt+'.balance.W'] = 166.073
         prob[pt+'.balance.FAR'] = 0.01680
         prob[pt+'.balance.Nmech'] = 8197.38

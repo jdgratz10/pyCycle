@@ -28,7 +28,8 @@ class FlightConditions(om.Group):
         balance.add_balance('Pt', val=14.696, lower=1e-4, units='psi', desc='Total pressure', eq_units='psi')
 
 
-        self.add_input('MN', val=0.5, units=None)
+        self.set_input_defaults('MN', val=0.5, units=None)
+        self.set_input_defaults('W', val=100, units='lbm/s')
         # sub.set_order(['fs','balance'])
 
         newton = conv.nonlinear_solver = om.NewtonSolver()

@@ -675,6 +675,10 @@ class Turbine(om.Group):
                            ['pwr_turb','real_flow_b4bld', 'eff_poly_calc', 'real_flow', 'FAR_passthru', 'W_passthru'])
 
 
+        self.set_input_defaults('Fl_I:FAR', val=0., units=None)
+        self.set_input_defaults('eff', val=0.99, units=None)
+
+
 if __name__ == "__main__":
     from pycycle.api import FlowStart
     from pycycle.cea import species_data
