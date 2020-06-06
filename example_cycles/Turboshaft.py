@@ -69,11 +69,11 @@ class Turboshaft(om.Group):
         balance = self.add_subsystem('balance', om.BalanceComp())
         if design:
 
-            balance.add_balance('W', units='lbm/s', eq_units=None)
+            balance.add_balance('W', units='lbm/s', eq_units=None, rhs_name='nozz_PR_target')
             self.connect('balance.W', 'inlet.Fl_I:stat:W')
             self.connect('nozzle.PR', 'balance.lhs:W')
 
-            balance.add_balance('FAR', eq_units='degR', lower=1e-4, val=.017)
+            balance.add_balance('FAR', eq_units='degR', lower=1e-4, val=.017, rhs_name='T4_target')
             self.connect('balance.FAR', 'burner.Fl_I:FAR')
             self.connect('burner.Fl_O:tot:T', 'balance.lhs:FAR')
 
@@ -208,62 +208,6 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    des_vars = prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
-
-    # FOR DESIGN
-    des_vars.add_output('alt', 28000., units='ft'),
-    des_vars.add_output('MN', 0.5),
-    des_vars.add_output('T4max', 2740.0, units='degR'),
-    des_vars.add_output('nozz_PR_des', 1.1)
-    des_vars.add_output('inlet:ram_recovery', 1.0),
-    des_vars.add_output('inlet:MN_out', 0.4),
-    des_vars.add_output('duct1:dPqP', 0.0),
-    des_vars.add_output('duct1:MN_out', 0.4),
-    des_vars.add_output('lpc:PRdes', 5.000),
-    des_vars.add_output('lpc:effDes', 0.8900),
-    des_vars.add_output('lpc:MN_out', 0.3),
-    des_vars.add_output('icduct:dPqP', 0.002),
-    des_vars.add_output('icduct:MN_out', 0.3),
-    des_vars.add_output('hpc_axi:PRdes', 3.0),
-    des_vars.add_output('hpc_axi:effDes', 0.8900),
-    des_vars.add_output('hpc_axi:MN_out', 0.25),
-    des_vars.add_output('bld25:cool1:frac_W', 0.024),
-    des_vars.add_output('bld25:cool2:frac_W', 0.0146),
-    des_vars.add_output('bld25:MN_out', 0.3000),
-    des_vars.add_output('hpc_centri:PRdes', 2.7),
-    des_vars.add_output('hpc_centri:effDes', 0.8800),
-    des_vars.add_output('hpc_centri:MN_out', 0.20),
-    des_vars.add_output('bld3:cool3:frac_W', 0.1705),
-    des_vars.add_output('bld3:cool4:frac_W', 0.1209),
-    des_vars.add_output('bld3:MN_out', 0.2000),
-    des_vars.add_output('duct6:dPqP', 0.00),
-    des_vars.add_output('duct6:MN_out', 0.2000),
-    des_vars.add_output('burner:dPqP', 0.050),
-    des_vars.add_output('burner:MN_out', 0.15),
-    des_vars.add_output('hpt:effDes', 0.89),
-    des_vars.add_output('hpt:cool3:frac_P', 1.0),
-    des_vars.add_output('hpt:cool4:frac_P', 0.0),
-    des_vars.add_output('hpt:MN_out', 0.30),
-    des_vars.add_output('duct43:dPqP', 0.0051),
-    des_vars.add_output('duct43:MN_out', 0.30),
-    des_vars.add_output('lpt:effDes', 0.9),
-    des_vars.add_output('lpt:cool1:frac_P', 1.0),
-    des_vars.add_output('lpt:cool2:frac_P', 0.0),
-    des_vars.add_output('lpt:MN_out', 0.4),
-    des_vars.add_output('itduct:dPqP', 0.00),
-    des_vars.add_output('itduct:MN_out', 0.4),
-    des_vars.add_output('pt:effDes', 0.85),
-    des_vars.add_output('pt:MN_out', 0.4),
-    des_vars.add_output('duct12:dPqP', 0.00),
-    des_vars.add_output('duct12:MN_out', 0.4),
-    des_vars.add_output('nozzle:Cv', 0.99),
-    des_vars.add_output('lp_shaft:Nmech', 12750., units='rpm'),
-    des_vars.add_output('lp_shaft:HPX', 1800.0, units='hp'),
-    des_vars.add_output('ip_shaft:Nmech', 12000., units='rpm'),
-    des_vars.add_output('hp_shaft:Nmech', 14800., units='rpm'),
-
-    # des_vars.add_output('FAR', 0.02261)
-    # des_vars.add_output('W', 10.76, units='lbm/s')
 
     # OFF DESIGN 1
     des_vars.add_output('OD1_MN', 0.5),
@@ -274,57 +218,7 @@ if __name__ == "__main__":
     # DESIGN CASE
     prob.model.add_subsystem('DESIGN', Turboshaft())
 
-    prob.model.connect('alt', 'DESIGN.fc.alt')
-    prob.model.connect('MN', 'DESIGN.fc.MN')
-    prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR')
-    prob.model.connect('nozz_PR_des', 'DESIGN.balance.rhs:W')
-
-    prob.model.connect('inlet:ram_recovery', 'DESIGN.inlet.ram_recovery')
-    prob.model.connect('inlet:MN_out', 'DESIGN.inlet.MN')
-    prob.model.connect('duct1:dPqP', 'DESIGN.duct1.dPqP')
-    prob.model.connect('duct1:MN_out', 'DESIGN.duct1.MN')
-    prob.model.connect('lpc:PRdes', 'DESIGN.lpc.PR')
-    prob.model.connect('lpc:effDes', 'DESIGN.lpc.eff')
-    prob.model.connect('lpc:MN_out', 'DESIGN.lpc.MN')
-    prob.model.connect('icduct:dPqP', 'DESIGN.icduct.dPqP')
-    prob.model.connect('icduct:MN_out', 'DESIGN.icduct.MN')
-    prob.model.connect('hpc_axi:PRdes', 'DESIGN.hpc_axi.PR')
-    prob.model.connect('hpc_axi:effDes', 'DESIGN.hpc_axi.eff')
-    prob.model.connect('hpc_axi:MN_out', 'DESIGN.hpc_axi.MN')
-    prob.model.connect('bld25:cool1:frac_W', 'DESIGN.bld25.cool1:frac_W')
-    prob.model.connect('bld25:cool2:frac_W', 'DESIGN.bld25.cool2:frac_W')
-    prob.model.connect('bld25:MN_out', 'DESIGN.bld25.MN')
-    prob.model.connect('hpc_centri:PRdes', 'DESIGN.hpc_centri.PR')
-    prob.model.connect('hpc_centri:effDes', 'DESIGN.hpc_centri.eff')
-    prob.model.connect('hpc_centri:MN_out', 'DESIGN.hpc_centri.MN')
-    prob.model.connect('bld3:cool3:frac_W', 'DESIGN.bld3.cool3:frac_W')
-    prob.model.connect('bld3:cool4:frac_W', 'DESIGN.bld3.cool4:frac_W')
-    prob.model.connect('bld3:MN_out', 'DESIGN.bld3.MN')
-    prob.model.connect('duct6:dPqP', 'DESIGN.duct6.dPqP')
-    prob.model.connect('duct6:MN_out', 'DESIGN.duct6.MN')
-    prob.model.connect('burner:dPqP', 'DESIGN.burner.dPqP')
-    prob.model.connect('burner:MN_out', 'DESIGN.burner.MN')
-    prob.model.connect('hpt:effDes', 'DESIGN.hpt.eff')
-    prob.model.connect('hpt:cool3:frac_P', 'DESIGN.hpt.cool3:frac_P')
-    prob.model.connect('hpt:cool4:frac_P', 'DESIGN.hpt.cool4:frac_P')
-    prob.model.connect('hpt:MN_out', 'DESIGN.hpt.MN')
-    prob.model.connect('duct43:dPqP', 'DESIGN.duct43.dPqP')
-    prob.model.connect('duct43:MN_out', 'DESIGN.duct43.MN')
-    prob.model.connect('lpt:effDes', 'DESIGN.lpt.eff')
-    prob.model.connect('lpt:cool1:frac_P', 'DESIGN.lpt.cool1:frac_P')
-    prob.model.connect('lpt:cool2:frac_P', 'DESIGN.lpt.cool2:frac_P')
-    prob.model.connect('lpt:MN_out', 'DESIGN.lpt.MN')
-    prob.model.connect('itduct:dPqP', 'DESIGN.itduct.dPqP')
-    prob.model.connect('itduct:MN_out', 'DESIGN.itduct.MN')
-    prob.model.connect('pt:effDes', 'DESIGN.pt.eff')
-    prob.model.connect('pt:MN_out', 'DESIGN.pt.MN')
-    prob.model.connect('duct12:dPqP', 'DESIGN.duct12.dPqP')
-    prob.model.connect('duct12:MN_out', 'DESIGN.duct12.MN')
-    prob.model.connect('nozzle:Cv', 'DESIGN.nozzle.Cv')
-    prob.model.connect('lp_shaft:Nmech', 'DESIGN.LP_Nmech')
-    prob.model.connect('lp_shaft:HPX', 'DESIGN.lp_shaft.HPX')
-    prob.model.connect('ip_shaft:Nmech', 'DESIGN.IP_Nmech')
-    prob.model.connect('hp_shaft:Nmech', 'DESIGN.HP_Nmech')
+   
 
     # prob.model.connect('FAR', 'DESIGN.burner.Fl_I:FAR')
     # prob.model.connect('W', 'DESIGN.inlet.Fl_I:stat:W')
@@ -407,6 +301,61 @@ if __name__ == "__main__":
     #     prob.model.connect('DESIGN.duct15.Fl_O:stat:area', pt+'.duct15.area')
 
     prob.setup(check=False)
+
+
+    # Parameters for the DESIGN case
+    prob.set_val('DESIGN.fc.alt', 28000, units='ft')
+    prob.set_val('DESIGN.fc.MN', 0.5)
+    prob.set_val('DESIGN.balance.T4_target', 2740.0)
+    prob.set_val('DESIGN.balance.nozz_PR_target', 1.1)
+
+    prob.model.connect('inlet:ram_recovery', 'DESIGN.inlet.ram_recovery')
+    prob.model.connect('inlet:MN_out', 'DESIGN.inlet.MN')
+    prob.model.connect('duct1:dPqP', 'DESIGN.duct1.dPqP')
+    prob.model.connect('duct1:MN_out', 'DESIGN.duct1.MN')
+    prob.model.connect('lpc:PRdes', 'DESIGN.lpc.PR')
+    prob.model.connect('lpc:effDes', 'DESIGN.lpc.eff')
+    prob.model.connect('lpc:MN_out', 'DESIGN.lpc.MN')
+    prob.model.connect('icduct:dPqP', 'DESIGN.icduct.dPqP')
+    prob.model.connect('icduct:MN_out', 'DESIGN.icduct.MN')
+    prob.model.connect('hpc_axi:PRdes', 'DESIGN.hpc_axi.PR')
+    prob.model.connect('hpc_axi:effDes', 'DESIGN.hpc_axi.eff')
+    prob.model.connect('hpc_axi:MN_out', 'DESIGN.hpc_axi.MN')
+    prob.model.connect('bld25:cool1:frac_W', 'DESIGN.bld25.cool1:frac_W')
+    prob.model.connect('bld25:cool2:frac_W', 'DESIGN.bld25.cool2:frac_W')
+    prob.model.connect('bld25:MN_out', 'DESIGN.bld25.MN')
+    prob.model.connect('hpc_centri:PRdes', 'DESIGN.hpc_centri.PR')
+    prob.model.connect('hpc_centri:effDes', 'DESIGN.hpc_centri.eff')
+    prob.model.connect('hpc_centri:MN_out', 'DESIGN.hpc_centri.MN')
+    prob.model.connect('bld3:cool3:frac_W', 'DESIGN.bld3.cool3:frac_W')
+    prob.model.connect('bld3:cool4:frac_W', 'DESIGN.bld3.cool4:frac_W')
+    prob.model.connect('bld3:MN_out', 'DESIGN.bld3.MN')
+    prob.model.connect('duct6:dPqP', 'DESIGN.duct6.dPqP')
+    prob.model.connect('duct6:MN_out', 'DESIGN.duct6.MN')
+    prob.model.connect('burner:dPqP', 'DESIGN.burner.dPqP')
+    prob.model.connect('burner:MN_out', 'DESIGN.burner.MN')
+    prob.model.connect('hpt:effDes', 'DESIGN.hpt.eff')
+    prob.model.connect('hpt:cool3:frac_P', 'DESIGN.hpt.cool3:frac_P')
+    prob.model.connect('hpt:cool4:frac_P', 'DESIGN.hpt.cool4:frac_P')
+    prob.model.connect('hpt:MN_out', 'DESIGN.hpt.MN')
+    prob.model.connect('duct43:dPqP', 'DESIGN.duct43.dPqP')
+    prob.model.connect('duct43:MN_out', 'DESIGN.duct43.MN')
+    prob.model.connect('lpt:effDes', 'DESIGN.lpt.eff')
+    prob.model.connect('lpt:cool1:frac_P', 'DESIGN.lpt.cool1:frac_P')
+    prob.model.connect('lpt:cool2:frac_P', 'DESIGN.lpt.cool2:frac_P')
+    prob.model.connect('lpt:MN_out', 'DESIGN.lpt.MN')
+    prob.model.connect('itduct:dPqP', 'DESIGN.itduct.dPqP')
+    prob.model.connect('itduct:MN_out', 'DESIGN.itduct.MN')
+    prob.model.connect('pt:effDes', 'DESIGN.pt.eff')
+    prob.model.connect('pt:MN_out', 'DESIGN.pt.MN')
+    prob.model.connect('duct12:dPqP', 'DESIGN.duct12.dPqP')
+    prob.model.connect('duct12:MN_out', 'DESIGN.duct12.MN')
+    prob.model.connect('nozzle:Cv', 'DESIGN.nozzle.Cv')
+    prob.model.connect('lp_shaft:Nmech', 'DESIGN.LP_Nmech')
+    prob.model.connect('lp_shaft:HPX', 'DESIGN.lp_shaft.HPX')
+    prob.model.connect('ip_shaft:Nmech', 'DESIGN.IP_Nmech')
+    prob.model.connect('hp_shaft:Nmech', 'DESIGN.HP_Nmech')
+
 
     # initial guesses
     prob['DESIGN.balance.FAR'] = 0.02261
