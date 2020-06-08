@@ -86,6 +86,11 @@ class Inlet(om.Group):
         self.options.declare('design', default=True,
                               desc='Switch between on-design and off-design calculation.')
 
+        self.default_des_od_conns = [
+            # (design src, off-design target)
+            ('Fl_O:stat:area', 'area'),
+        ]
+
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']

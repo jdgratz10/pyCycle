@@ -160,6 +160,11 @@ class Duct(om.Group):
                               desc='Mach number exponent for dPqP_MN calculations.'
                                    '0 means it has no effect. Only has impact in off-design')
 
+
+        self.default_des_od_conns = [
+            # (design src, off-design target)
+            ('Fl_O:stat:area', 'area')
+        ]
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']

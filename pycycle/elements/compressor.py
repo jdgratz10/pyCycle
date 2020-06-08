@@ -403,6 +403,14 @@ class Compressor(om.Group):
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
 
 
+        self.default_des_od_conns = [
+            # (design src, off-design target)
+            ('s_WcDes', 's_WcDes'),
+            ('s_PRdes', 's_PRdes'),
+            ('s_effDes', 's_effDes'), 
+            ('s_NcDes', 's_NcDes'), 
+            ('Fl_O:stat:area', 'area')
+        ]
 
     def setup(self):
         #(self, mapclass=NCP01map(), design=True, thermo_data=species_data.janaf, elements=AIR_MIX, bleeds=[],statics=True):

@@ -172,12 +172,11 @@ if __name__ == "__main__":
     prob.model.add_subsystem('DESIGN', Turboshaft())
 
     # Connect off-design and required design inputs to model
-    od_pts = ['OD1']
-    # Off-design (point 1) inputs
-    od_MNs = [0.000001]
-    od_alts =[0.0]
-    od_pwrs =[3500.0]
-    od_nmechs =[5000.]
+    od_pts = ['OD1', 'OD2']
+    od_MNs = [0.000001, 0.1]
+    od_alts =[0.0, 0.0]
+    od_pwrs =[3500.0, 3500.0]
+    od_nmechs =[5000., 5000.]
 
     for pt in od_pts:
         prob.model.add_subsystem(pt, Turboshaft(design=False))

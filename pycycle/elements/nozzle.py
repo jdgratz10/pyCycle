@@ -313,6 +313,7 @@ class Nozzle(om.Group):
                               desc='set of elements present in the flow')
         self.options.declare('internal_solver', default=False)
 
+
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']

@@ -508,6 +508,16 @@ class Turbine(om.Group):
                               Options are `slinear`, `cubic`, `quintic`.')
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
 
+
+        self.default_des_od_conns = [
+            # (design src, off-design target)
+            ('s_WpDes', 's_WpDes'),
+            ('s_PRdes', 's_PRdes'),
+            ('s_effDes', 's_effDes'), 
+            ('s_NpDes', 's_NpDes'), 
+            ('Fl_O:stat:area', 'area')
+        ]
+
     def setup(self):
 
         thermo_data = self.options['thermo_data']
