@@ -404,8 +404,8 @@ if __name__ == "__main__":
     prob.run_model()
     # prob.final_setup()
 
-    # prob.model.DESIGN.burner.list_inputs(prom_name=True)
-    print(prob.model.DESIGN.burner._get_val('dPqP'))
+    prob.model.DESIGN.inlet.list_inputs(prom_name=True)
+    # print(prob.model.DESIGN.burner._get_val('dPqP'))
 
     exit()
 
