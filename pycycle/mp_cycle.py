@@ -25,13 +25,13 @@ class Cycle(om.Group):
     #                           desc='Switch between on-design and off-design calculation.')
 
 
-    def pyc_add_element(name, element, promotes=None, promote_inputs=None, promote_outputs=None):
+    def pyc_add_element(self, name, element,**kwargs):
         """
         A thin wrapper around `add_subsystem` to keep track of 
         the elements in a given cycle, separate from the general 
         components (e.g. BalanceComp, ExecComp, etc.)
         """
-        self._elements.add(name)
+        self._elements.add(element)
         self.add_subsystem(name, element, **kwargs)
 
     def pyc_connect_flow(self, fl_src, fl_target, connect_stat=True, connect_tot=True, connect_w=True):
@@ -60,13 +60,13 @@ class MPCycle(om.Group):
 
     def initialize(self): 
         self._cycle_params = {}
-        self._des_pnt_name = None
-        self._od_pnt_names = []
+        self._des_pnt = None
+        self._od_pnts= []
         self._des_od_connections = []
         self._use_default_des_od_conns = False
 
 
-    def pyc_set_cycle_param(self, name, val, units=None): 
+    def pyc_add_cycle_param(self, name, val, units=None): 
 
         # TODO: Throw error if this is called after setup
 
@@ -76,22 +76,24 @@ class MPCycle(om.Group):
         self._cycle_params[name] = (val, units)
 
     def pyc_connect_des_od(self, src, target): 
-        self._des_od_connections.append(src, target)
+        self._des_od_connections.append((src, target))
 
     def pyc_use_default_des_od_conns(self): 
         self._use_default_des_od_conns = True
 
 
     def pyc_add_des_pnt(self, name, pnt, **kwargs): 
-        if self._des_pnt_name is not None: 
+        if self._des_pnt is not None: 
             raise ValueError(f'Only one design point is allowed. A design point named `{self._des_pnt_name}` already exists.')
         
         self.add_subsystem(name, pnt, **kwargs)
-        self._des_pnt_name = name
+        self._des_pnt = pnt
+        return pnt
 
-    def pyc_add_od_pnt(self, name, pt, **kwargs):
+    def pyc_add_od_pnt(self, name, pnt, **kwargs):
         self.add_subsystem(name, pnt, **kwargs)
-        self._od_pnts.append(name)
+        self._od_pnts.append(pnt)
+        return pnt
 
 
     def configure(self): 
@@ -102,15 +104,24 @@ class MPCycle(om.Group):
         for param, (val, units) in self._cycle_params.items(): 
             self.set_input_defaults(name=param, val=val, units=units)
         
-            self.promotes(self._des_pnt_name, inputs=[param])
-            for pnt in self._od_pnt_names: 
-                self.promotes(pnt, inputs=[param])
+            self.promotes(self._des_pnt.name, inputs=[param])
+            for pnt in self._od_pnts: 
+                self.promotes(pnt.name, inputs=[param])
+
 
         for src, target in self._des_od_connections: 
-            for od_pnt in self._od_pnt_names: 
-                self.connect(f'DESIGN.{src}', f'{od_pnt}.{target}')
+            for od_pnt in self._od_pnts: 
+                self.connect(f'{self._des_pnt.name}.{src}', f'{od_pnt.name}.{target}')
+        
+        if self._use_default_des_od_conns: 
+            for elem in self._des_pnt._elements: 
+                try: 
+                    for src, target in elem.default_des_od_conns: 
+                        for od_pnt in self._od_pnts: 
+                            self.connect( f'{self._des_pnt.name}.{elem.name}.{src}', f'{od_pnt.name}.{elem.name}.{target}')
+                except AttributeError: 
+                    pass # no des-to-od conns defined
 
-        # if self._use_default_des_od_conns: 
 
 
 

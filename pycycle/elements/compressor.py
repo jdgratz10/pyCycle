@@ -405,10 +405,10 @@ class Compressor(om.Group):
 
         self.default_des_od_conns = [
             # (design src, off-design target)
-            ('s_WcDes', 's_WcDes'),
-            ('s_PRdes', 's_PRdes'),
-            ('s_effDes', 's_effDes'), 
-            ('s_NcDes', 's_NcDes'), 
+            ('s_Wc', 's_Wc'),
+            ('s_PR', 's_PR'),
+            ('s_eff', 's_eff'), 
+            ('s_Nc', 's_Nc'), 
             ('Fl_O:stat:area', 'area')
         ]
 

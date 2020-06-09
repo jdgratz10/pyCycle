@@ -153,6 +153,9 @@ class Inlet(om.Group):
             self.add_subsystem('W_passthru', PassThrough('Fl_I:stat:W', 'Fl_O:stat:W', 0.0, units= "lbm/s"),
                                promotes=['*'])
 
+        # if not design:
+            
+
 
 if __name__ == "__main__":
 

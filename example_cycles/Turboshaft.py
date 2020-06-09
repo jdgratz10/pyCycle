@@ -223,41 +223,17 @@ if __name__ == "__main__":
     # des_vars.add_output('OD1_P_target', 7500.0, units='hp')
 
     # OFF DESIGN CASES
-    pts = [] # 'OD1','OD2','OD3','OD4','OD5','OD6','OD7','OD8']
+    od_pts = ['OD1'] # 'OD2','OD3','OD4','OD5','OD6','OD7','OD8']
+    od_pts = [0.5]
+    od_alts = [28000,]
+    od_
 
-    for pt in pts:
-        ODpt = prob.model.pyc_add_od_pnt(pt, Turboshaft(design=False))
+    for pnt in od_pts:
+        ODpt = prob.model.pyc_add_od_pnt(pnt, Turboshaft(design=False))
 
     #     prob.model.connect(pt+'_alt', pt+'.fc.alt')
     #     prob.model.connect(pt+'_MN', pt+'.fc.MN')
     #     # prob.model.connect(pt+'_Fn_target', pt+'.thrust_balance.rhs')
-
-    #     prob.model.connect('inlet:ram_recovery', pt+'.inlet.ram_recovery')
-    #     prob.model.connect('duct4:dPqP', pt+'.duct4.dPqP')
-    #     prob.model.connect('duct6:dPqP', pt+'.duct6.dPqP')
-    #     prob.model.connect('burner:dPqP', pt+'.burner.dPqP')
-    #     prob.model.connect('duct11:dPqP', pt+'.duct11.dPqP')
-    #     prob.model.connect('duct13:dPqP', pt+'.duct13.dPqP')
-    #     prob.model.connect('nozzle:Cv', pt+'.nozzle.Cv')
-    #     prob.model.connect('duct15:dPqP', pt+'.duct15.dPqP')
-    #     prob.model.connect('hp_shaft:HPX', pt+'.hp_shaft.HPX')
-
-    #     prob.model.connect('hpc:cool1:frac_W', pt+'.hpc.cool1:frac_W')
-    #     prob.model.connect('hpc:cool1:frac_P', pt+'.hpc.cool1:frac_P')
-    #     prob.model.connect('hpc:cool1:frac_work', pt+'.hpc.cool1:frac_work')
-    #     prob.model.connect('hpc:cool2:frac_W', pt+'.hpc.cool2:frac_W')
-    #     prob.model.connect('hpc:cool2:frac_P', pt+'.hpc.cool2:frac_P')
-    #     prob.model.connect('hpc:cool2:frac_work', pt+'.hpc.cool2:frac_work')
-    #     prob.model.connect('bld3:cool3:frac_W', pt+'.bld3.cool3:frac_W')
-    #     prob.model.connect('bld3:cool4:frac_W', pt+'.bld3.cool4:frac_W')
-    #     prob.model.connect('hpc:cust:frac_W', pt+'.hpc.cust:frac_W')
-    #     prob.model.connect('hpc:cust:frac_P', pt+'.hpc.cust:frac_P')
-    #     prob.model.connect('hpc:cust:frac_work', pt+'.hpc.cust:frac_work')
-    #     prob.model.connect('hpt:cool3:frac_P', pt+'.hpt.cool3:frac_P')
-    #     prob.model.connect('hpt:cool4:frac_P', pt+'.hpt.cool4:frac_P')
-    #     prob.model.connect('lpt:cool1:frac_P', pt+'.lpt.cool1:frac_P')
-    #     prob.model.connect('lpt:cool2:frac_P', pt+'.lpt.cool2:frac_P')
-    #     prob.model.connect('bypBld:frac_W', pt+'.byp_bld.bypBld:frac_W')
 
     #     prob.model.connect('DESIGN.fan.s_PRdes', pt+'.fan.s_PRdes')
     #     prob.model.connect('DESIGN.fan.s_WcDes', pt+'.fan.s_WcDes')
@@ -271,7 +247,7 @@ if __name__ == "__main__":
     #     prob.model.connect('DESIGN.hpc.s_WcDes', pt+'.hpc.s_WcDes')
     #     prob.model.connect('DESIGN.hpc.s_effDes', pt+'.hpc.s_effDes')
     #     prob.model.connect('DESIGN.hpc.s_NcDes', pt+'.hpc.s_NcDes')
-    #     prob.model.connect('DESIGN.hpt.s_PRdes', pt+'.hpt.s_PRdes')
+    #     prob.model.connect('DESIGN.hpt.s_PRdes', pt+'.hpt.s_PRdes')   
     #     prob.model.connect('DESIGN.hpt.s_WpDes', pt+'.hpt.s_WpDes')
     #     prob.model.connect('DESIGN.hpt.s_effDes', pt+'.hpt.s_effDes')
     #     prob.model.connect('DESIGN.hpt.s_NpDes', pt+'.hpt.s_NpDes')
@@ -301,90 +277,66 @@ if __name__ == "__main__":
 
 
     # cycle parameters are shared values across all points
-    prob.model.pyc_set_cycle_param('inlet.ram_recovery', 1.0)
+    # these get promoted to the MP group level 
 
-    prob.model.pyc_set_cycle_param('bld25.cool1:frac_W', 0.024)
-    prob.model.pyc_set_cycle_param('bld25.cool2:frac_W', 0.0146)
+    prob.model.pyc_add_cycle_param('inlet.ram_recovery', 1.0)
+    prob.model.pyc_add_cycle_param('duct1.dPqP', 0.0)
+    prob.model.pyc_add_cycle_param('duct12.dPqP', 0.00)
+    prob.model.pyc_add_cycle_param('icduct.dPqP', 0.002)
+    prob.model.pyc_add_cycle_param('burner.dPqP', 0.050)
+    prob.model.pyc_add_cycle_param('duct43.dPqP', 0.0051)
+    prob.model.pyc_add_cycle_param('duct6.dPqP', 0.00)
+    prob.model.pyc_add_cycle_param('itduct.dPqP', 0.00)
+    prob.model.pyc_add_cycle_param('lp_shaft.HPX', 1800.0, units='hp')\
 
-    prob.model.pyc_set_cycle_param('bld3.cool3:frac_W', 0.1705)
-    prob.model.pyc_set_cycle_param('bld3.cool4:frac_W', 0.1209)
-
-    prob.model.pyc_set_cycle_param('hpt.cool3:frac_P', 1.0)
-    prob.model.pyc_set_cycle_param('hpt.cool4:frac_P', 0.0)
-
-    prob.model.pyc_set_cycle_param('lpt.cool1:frac_P', 1.0)
-    prob.model.pyc_set_cycle_param('lpt.cool2:frac_P', 0.0)
-
-    prob.model.pyc_set_cycle_param('duct1.dPqP', 0.0)
-    prob.model.pyc_set_cycle_param('duct12.dPqP', 0.00)
-    prob.model.pyc_set_cycle_param('icduct.dPqP', 0.002)
-    prob.model.pyc_set_cycle_param('burner.dPqP', 0.50)
-    prob.model.pyc_set_cycle_param('duct43.dPqP', 0.0051)
-    prob.model.pyc_set_cycle_param('duct6.dPqP', 0.00)
-    prob.model.pyc_set_cycle_param('itduct.dPqP', 0.00)
-
-    prob.model.pyc_set_cycle_param('lp_shaft.HPX', 1800.0, units='hp')
-
+    prob.model.pyc_add_cycle_param('bld25.cool1:frac_W', 0.024)
+    prob.model.pyc_add_cycle_param('bld25.cool2:frac_W', 0.0146)
+    prob.model.pyc_add_cycle_param('bld3.cool3:frac_W', 0.1705)
+    prob.model.pyc_add_cycle_param('bld3.cool4:frac_W', 0.1209)
+    prob.model.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('hpt.cool4:frac_P', 0.0)
+    prob.model.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
 
     prob.setup(check=False)
 
-
-    # Parameters for the DESIGN case
+    # DESIGN specific inputs  
+    # these are not promoted
+    # NOTE JSG: Its annoying that pyc_add_cycle_params is before setup, and this is after...   
     prob.set_val('DESIGN.fc.alt', 28000, units='ft')
     prob.set_val('DESIGN.fc.MN', 0.5)
     prob.set_val('DESIGN.balance.T4_target', 2740.0)
     prob.set_val('DESIGN.balance.nozz_PR_target', 1.1)
 
-
     prob.set_val('DESIGN.inlet.MN', 0.4)
-
     prob.set_val('DESIGN.duct1.MN', 0.4)
-
     prob.set_val('DESIGN.lpc.PR', 5.0)
     prob.set_val('DESIGN.lpc.eff', 0.89)
     prob.set_val('DESIGN.lpc.MN', 0.3)
-
     prob.set_val('DESIGN.icduct.MN', 0.3)
-
     prob.set_val('DESIGN.hpc_axi.PR', 3.0)
-    prob.set_val('DESIGN.hpc_axi.eff', 2.7)
+    prob.set_val('DESIGN.hpc_axi.eff', 0.89)
     prob.set_val('DESIGN.hpc_axi.MN', 0.25)
-
     prob.set_val('DESIGN.bld25.MN', 0.3)
-
     prob.set_val('DESIGN.hpc_centri.PR', 2.7)
     prob.set_val('DESIGN.hpc_centri.eff', 0.88)
     prob.set_val('DESIGN.hpc_centri.MN', 0.20)
-
     prob.set_val('DESIGN.bld3.MN', 0.2)
-
     prob.set_val('DESIGN.duct6.MN', 0.20)
-
     prob.set_val('DESIGN.burner.MN', 0.15)
-
     prob.set_val('DESIGN.hpt.eff', 0.89)
     prob.set_val('DESIGN.hpt.MN', 0.30)
-
     prob.set_val('DESIGN.duct43.MN', 0.30)
-    
     prob.set_val('DESIGN.lpt.eff', 0.9)
     prob.set_val('DESIGN.lpt.MN', 0.4)
-    
     prob.set_val('DESIGN.itduct.MN', 0.4)
-    
     prob.set_val('DESIGN.pt.eff', 0.85)
     prob.set_val('DESIGN.pt.MN', 0.4)
-    
     prob.set_val('DESIGN.duct12.MN', 0.4)
-    
     prob.set_val('DESIGN.nozzle.Cv', 0.99)
-    
     prob.set_val('DESIGN.LP_Nmech', 12750, units='rpm')
-    
     prob.set_val('DESIGN.IP_Nmech', 12000., units='rpm')
-    
     prob.set_val('DESIGN.HP_Nmech', 14800, units='rpm')
-
 
     # initial guesses
     prob['DESIGN.balance.FAR'] = 0.02261
@@ -395,22 +347,20 @@ if __name__ == "__main__":
     prob['DESIGN.fc.balance.Pt'] = 5.666
     prob['DESIGN.fc.balance.Tt'] = 440.0
 
-   
     st = time.time()
-
 
     prob.set_solver_print(level=-1)
     prob.set_solver_print(level=2, depth=1)
     prob.run_model()
     # prob.final_setup()
 
-    prob.model.DESIGN.inlet.list_inputs(prom_name=True)
+    prob.model.list_outputs(prom_name=True, residuals=True, residuals_tol=1e-2)
+    # prob.model.DESIGN.inlet.list_inputs(prom_name=True)
     # print(prob.model.DESIGN.burner._get_val('dPqP'))
+    print(prob['DESIGN.balance.T4_target'])
 
-    exit()
-
-    for pt in ['DESIGN']+pts:
-        viewer(prob, pt)
+    for pnt in ['DESIGN']+od_pts:
+        viewer(prob, pnt)
 
     print()
     print("time", time.time() - st)

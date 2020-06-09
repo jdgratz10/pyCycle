@@ -3,7 +3,7 @@ import openmdao.api as om
 import pycycle.api as pyc
 
 
-class Propulsor(om.Group):
+class Propulsor(pyc.Cycle):
 
     def initialize(self):
         self.options.declare('design', types=bool, default=True)
@@ -13,14 +13,14 @@ class Propulsor(om.Group):
         thermo_spec = pyc.species_data.janaf
         design = self.options['design']
 
-        self.add_subsystem('fc', pyc.FlightConditions(thermo_data=thermo_spec,
+        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec,
                                                   elements=pyc.AIR_MIX))
 
-        self.add_subsystem('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('fan', pyc.Compressor(thermo_data=thermo_spec, elements=pyc.AIR_MIX,
+        self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('fan', pyc.Compressor(thermo_data=thermo_spec, elements=pyc.AIR_MIX,
                                                  design=design, map_data=pyc.FanMap, map_extrap=True))
-        self.add_subsystem('nozz', pyc.Nozzle(thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('perf', pyc.Performance(num_nozzles=1, num_burners=0))
+        self.pyc_add_element('nozz', pyc.Nozzle(thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('perf', pyc.Performance(num_nozzles=1, num_burners=0))
 
 
         balance = om.BalanceComp()
@@ -50,9 +50,9 @@ class Propulsor(om.Group):
             self.add_subsystem('balance', balance,
                                promotes_inputs=[('rhs:Nmech', 'pwr_target')])
 
-        pyc.connect_flow(self, 'fc.Fl_O', 'inlet.Fl_I')
-        pyc.connect_flow(self, 'inlet.Fl_O', 'fan.Fl_I')
-        pyc.connect_flow(self, 'fan.Fl_O', 'nozz.Fl_I')
+        self.pyc_connect_flow('fc.Fl_O', 'inlet.Fl_I')
+        self.pyc_connect_flow('inlet.Fl_O', 'fan.Fl_I')
+        self.pyc_connect_flow('fan.Fl_O', 'nozz.Fl_I')
 
 
         self.connect('fc.Fl_O:stat:P', 'nozz.Ps_exhaust')
@@ -105,26 +105,15 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    design = prob.model.add_subsystem('design', Propulsor(design=True), promotes_inputs=['pwr_target'])
-    od = prob.model.add_subsystem('off_design', Propulsor(design=False), promotes_inputs=['pwr_target'])
+    prob.model = pyc.MPCycle()
 
+    design = prob.model.pyc_add_des_pnt('design', Propulsor(design=True))
+    od = prob.model.pyc_add_od_pnt('off_design', Propulsor(design=False))
 
-    # prob.model.set_input_defaults('pwr_target', units='kW')
+    prob.model.pyc_add_cycle_param('pwr_target', 100.)
+    prob.model.pyc_use_default_des_od_conns()
 
-    # prob.model.connect('OD:alt', 'off_design.fc.alt')
-    # prob.model.connect('OD:MN', 'off_design.fc.MN')
-
-    # need to pass some design values to the OD point
-    # prob.model.connect('design.inlet:ram_recovery', 'off_design.inlet.ram_recovery')
-    prob.model.connect('design.inlet.Fl_O:stat:area', 'off_design.inlet.area')
-
-    prob.model.connect('design.fan.s_PR', 'off_design.fan.s_PR')
-    prob.model.connect('design.fan.s_Wc', 'off_design.fan.s_Wc')
-    prob.model.connect('design.fan.s_eff', 'off_design.fan.s_eff')
-    prob.model.connect('design.fan.s_Nc', 'off_design.fan.s_Nc')
-    prob.model.connect('design.fan.Fl_O:stat:area', 'off_design.fan.area')
-
-    prob.model.connect('design.nozz.Throat:stat:area', 'off_design.balance.rhs:W')
+    prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
 
     prob.set_solver_print(level=-1)
@@ -140,7 +129,7 @@ if __name__ == "__main__":
     prob['pwr_target'] = -2600
     prob['design.fan.eff'] = 0.96
 
-    prob.set_val('off_design.fc.alt', 10000, units='m')
+    prob.set_val('off_design.fc.alt', 12000, units='m')
     prob['off_design.fc.MN'] = 0.8
 
 
@@ -153,7 +142,7 @@ if __name__ == "__main__":
 
 
     ########################
-    # initial guess
+    # initial guesses
     ########################
     
     prob['design.balance.W'] = 200.
