@@ -83,8 +83,8 @@ def print_burner(prob, element_names, file=sys.stdout):
         W_tot = prob[e_name+'.Fl_O:stat:W'][0]
         W_air = W_tot - W_fuel
         FAR = W_fuel/W_air
-        print(line_tmpl.format(e_name, sys._get_val['dPqP'][0],
-                               sys._get_val['Fl_O:tot:T'][0],
+        print(line_tmpl.format(e_name, sys._get_val('dPqP')[0],
+                               sys._get_val('Fl_O:tot:T')[0],
                                W_fuel, FAR),
               file=file, flush=True)
 
@@ -152,7 +152,6 @@ def print_bleed(prob, element_names, file=sys.stdout):
     # get max name length:
     max_name_len = 0
     for e_name in element_names:
-        print('foo', e_name)
         bleed = prob.model._get_subsystem(e_name)
         for bn in bleed.options['bleed_names']:
             max_name_len = max(max_name_len, len(e_name+bn))

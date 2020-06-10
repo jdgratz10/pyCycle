@@ -223,13 +223,12 @@ if __name__ == "__main__":
     # des_vars.add_output('OD1_P_target', 7500.0, units='hp')
 
     # OFF DESIGN CASES
-    od_pts = ['OD1'] # 'OD2','OD3','OD4','OD5','OD6','OD7','OD8']
-    od_pts = [0.5]
+    od_pts = [] # ['OD1'] # 'OD2','OD3','OD4','OD5','OD6','OD7','OD8']
+    od_MNs = [0.5]
     od_alts = [28000,]
-    od_
 
     for pnt in od_pts:
-        ODpt = prob.model.pyc_add_od_pnt(pnt, Turboshaft(design=False))
+        od_point = prob.model.pyc_add_od_pnt(pnt, Turboshaft(design=False))
 
     #     prob.model.connect(pt+'_alt', pt+'.fc.alt')
     #     prob.model.connect(pt+'_MN', pt+'.fc.MN')
