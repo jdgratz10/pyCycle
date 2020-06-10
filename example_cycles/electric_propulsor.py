@@ -98,10 +98,6 @@ if __name__ == "__main__":
     import time
 
     import numpy as np
-    np.set_printoptions(precision=5)
-
-    from openmdao.api import Problem
-    from openmdao.utils.units import convert_units as cu
 
     prob = om.Problem()
 
@@ -125,7 +121,7 @@ if __name__ == "__main__":
     prob['design.fc.MN'] = 0.8
     prob['design.inlet.MN'] = 0.6
     prob['design.fan.PR'] = 1.2
-    prob['pwr_target'] = -2600
+    prob['pwr_target'] = -3486.657 # -2600
     prob['design.fan.eff'] = 0.96
 
     prob.set_val('off_design.fc.alt', 12000, units='m')
