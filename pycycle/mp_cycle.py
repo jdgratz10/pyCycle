@@ -91,7 +91,6 @@ class MPCycle(om.Group):
         return pnt
 
     def pyc_add_od_pnt(self, name, pnt, **kwargs):
-        print('foo', name, pnt)
         self.add_subsystem(name, pnt, **kwargs)
         self._od_pnts.append(pnt)
         return pnt
