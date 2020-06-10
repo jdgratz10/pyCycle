@@ -368,10 +368,11 @@ class Compressor(om.Group):
     -------------
         inputs
         --------
-        s_PRdes
-        s_WcDes
-        s_effDes
-        s_NcDes
+        s_PR
+        s_Wc
+        s_eff
+        s_Nc
+        area
 
         outputs
         --------
@@ -574,6 +575,9 @@ class Compressor(om.Group):
         self.set_input_defaults('Fl_I:FAR', val=0., units=None)
         self.set_input_defaults('PR', val=2., units=None)
         self.set_input_defaults('eff', val=0.99, units=None)
+
+        if not design: 
+            self.set_input_defaults('area', val=1, units='in**2')    
 
 if __name__ == "__main__":
 

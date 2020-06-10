@@ -115,7 +115,6 @@ if __name__ == "__main__":
 
     prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
-
     prob.set_solver_print(level=-1)
     prob.set_solver_print(level=2, depth=2)
 
@@ -139,7 +138,6 @@ if __name__ == "__main__":
     od.nonlinear_solver.options['atol'] = 1e-6
     od.nonlinear_solver.options['rtol'] = 1e-6
     od.nonlinear_solver.options['maxiter'] = 10
-
 
     ########################
     # initial guesses

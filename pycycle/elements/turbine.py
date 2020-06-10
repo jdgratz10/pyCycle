@@ -487,7 +487,53 @@ class EnthalpyAndPower(om.ExplicitComponent):
 
 
 class Turbine(om.Group):
-    """An Assembly that models a turbine"""
+    """
+    An Assembly that models a turbine
+
+    --------------
+    Flow Stations
+    --------------
+    Fl_I
+    Fl_O
+
+    -------------
+    Design
+    -------------
+        inputs
+        --------
+        map.PRdes
+        map.effDes
+        alphaMap
+        MN
+
+        outputs
+        --------
+        s_PR
+        s_Wc
+        s_eff
+        s_Nc
+
+    -------------
+    Off-Design
+    -------------
+        inputs
+        --------
+        s_PR
+        s_Wc
+        s_eff
+        s_Nc
+        area
+
+        outputs
+        --------
+        Wp
+        PR
+        eff
+        eff_poly
+        Np
+        power
+        trq
+    """
 
     def initialize(self):
         self.options.declare('map_data', default=LPT2269)
@@ -560,8 +606,8 @@ class Turbine(om.Group):
                                promotes_outputs=['PR', 'eff'])
 
         # Calculate pressure drop across turbine
-        self.add_subsystem('press_drop', PressureDrop(), promotes_inputs=[
-                           'PR', ('Pt_in', 'Fl_I:tot:P')])
+        self.add_subsystem('press_drop', PressureDrop(), 
+                           promotes_inputs=['PR', ('Pt_in', 'Fl_I:tot:P')])
 
         # Calculate ideal flow station properties
         self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements),
@@ -628,8 +674,8 @@ class Turbine(om.Group):
         self.connect('press_drop.Pt_out', 'real_flow_b4bld.P')
 
         # Calculate Polytropic efficiency
-        self.add_subsystem('eff_poly_calc',eff_poly_calc(),promotes_inputs=['PR',('S_in','Fl_I:tot:S'),
-                            ('Rt','Fl_I:tot:R')],
+        self.add_subsystem('eff_poly_calc', eff_poly_calc(), 
+                            promotes_inputs=['PR',('S_in','Fl_I:tot:S'), ('Rt','Fl_I:tot:R')],
                             promotes_outputs=['eff_poly'])
         self.connect('real_flow_b4bld.Fl_O_b4bld:tot:S','eff_poly_calc.S_out')
 
@@ -687,6 +733,9 @@ class Turbine(om.Group):
 
         self.set_input_defaults('Fl_I:FAR', val=0., units=None)
         self.set_input_defaults('eff', val=0.99, units=None)
+        if not design: 
+            self.set_input_defaults('area', val=1, units='in**2')   
+
 
 
 if __name__ == "__main__":
