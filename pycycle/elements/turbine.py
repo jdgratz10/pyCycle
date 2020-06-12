@@ -734,7 +734,7 @@ class Turbine(om.Group):
         self.set_input_defaults('Fl_I:FAR', val=0., units=None)
         self.set_input_defaults('eff', val=0.99, units=None)
         if not designFlag: 
-            self.set_input_defaults('area', val=1, units='in**2')   
+            self.set_input_defaults('area', val=1, units='inch**2')   
 
 
 

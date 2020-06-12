@@ -154,7 +154,7 @@ class Inlet(om.Group):
                                promotes=['*'])
 
         if not design: 
-            self.set_input_defaults('area', val=1, units='in**2')            
+            self.set_input_defaults('area', val=1, units='inch**2')            
 
 
 if __name__ == "__main__":
