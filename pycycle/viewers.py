@@ -64,8 +64,6 @@ def print_compressor(prob, element_names, file=sys.stdout):
 
 
 def print_burner(prob, element_names, file=sys.stdout):
-
-
     len_header = 23+4*13
     print("-"*len_header, file=file, flush=True)
     print("                            BURNER PROPERTIES", file=file, flush=True)
@@ -77,8 +75,6 @@ def print_burner(prob, element_names, file=sys.stdout):
     # line_tmpl = '{:<20}|  '+'{:13.3f}'*4
     line_tmpl = '{:<20}|  {:13.4f}{:13.2f}{:13.4f}{:13.5f}'
     for e_name in element_names:
-        sys = prob.model._get_subsystem(e_name)
-
         W_fuel = prob[e_name+'.Wfuel'][0]
         W_tot = prob[e_name+'.Fl_O:stat:W'][0]
         W_air = W_tot - W_fuel
@@ -152,6 +148,7 @@ def print_bleed(prob, element_names, file=sys.stdout):
     # get max name length:
     max_name_len = 0
     for e_name in element_names:
+        # print('foo', e_name)
         bleed = prob.model._get_subsystem(e_name)
         for bn in bleed.options['bleed_names']:
             max_name_len = max(max_name_len, len(e_name+bn))
