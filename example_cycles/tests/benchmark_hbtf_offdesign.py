@@ -14,69 +14,17 @@ class CFM56OffdesignTestCase(unittest.TestCase):
 
         self.prob = om.Problem()
 
+        self.prob.model.add_subsystem('OD', HBTF(design=False))
+
         des_vars = self.prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=['*'])
-        des_vars.add_output('OD_MN', 0.8),
-        des_vars.add_output('OD_alt', 35000.0, units='ft'),
-        des_vars.add_output('OD_Fn_target', 5500.0, units='lbf'),  # 8950.0
-        des_vars.add_output('OD_dTs', 0.0, units='degR')
-        des_vars.add_output('OD_cust_fracW', 0.0445)
-        # des_vars.add_output('alt', 35000., units='ft'),
-        # des_vars.add_output('MN', 0.8),
-        # des_vars.add_output('T4max', 2857.0, units='degR'),
-        # des_vars.add_output('Fn_des', 5500.0, units='lbf'),
-        des_vars.add_output('inlet:ram_recovery', 0.9990),
-        des_vars.add_output('duct4:dPqP', 0.0048),
-        des_vars.add_output('duct6:dPqP', 0.0101),
-        des_vars.add_output('burner:dPqP', 0.0540),
-        des_vars.add_output('duct11:dPqP', 0.0051),
-        des_vars.add_output('duct13:dPqP', 0.0107),
-        des_vars.add_output('core_nozz:Cv', 0.9933),
-        des_vars.add_output('bypBld:frac_W', 0.005),
-        des_vars.add_output('duct15:dPqP', 0.0149),
-        des_vars.add_output('byp_nozz:Cv', 0.9939),
-        des_vars.add_output('hp_shaft:HPX', 250.0, units='hp'),
-        des_vars.add_output('hpc:cool1:frac_W', 0.050708),
-        des_vars.add_output('hpc:cool1:frac_P', 0.5),
-        des_vars.add_output('hpc:cool1:frac_work', 0.5),
-        des_vars.add_output('hpc:cool2:frac_W', 0.020274),
-        des_vars.add_output('hpc:cool2:frac_P', 0.55),
-        des_vars.add_output('hpc:cool2:frac_work', 0.5),
-        des_vars.add_output('bld3:cool3:frac_W', 0.067214),
-        des_vars.add_output('bld3:cool4:frac_W', 0.101256),
-        # des_vars.add_output('hpc:cust:frac_W', 0.0445),
-        des_vars.add_output('hpc:cust:frac_P', 0.5),
-        des_vars.add_output('hpc:cust:frac_work', 0.5),
-        des_vars.add_output('hpt:cool3:frac_P', 1.0),
-        des_vars.add_output('hpt:cool4:frac_P', 0.0),
-        des_vars.add_output('lpt:cool1:frac_P', 1.0),
-        des_vars.add_output('lpt:cool2:frac_P', 0.0),
-
-        des_vars.add_output('fan:s_PRdes', 0.999912416431),
-        des_vars.add_output('fan:s_WcDes', 1.03246959658),
-        des_vars.add_output('fan:s_effDes', 1.00013412617),
-        des_vars.add_output('fan:s_NcDes', 5091.84571411),
-        des_vars.add_output('lpc:s_PRdes', 1.0),
-        des_vars.add_output('lpc:s_WcDes', 1.00411122011),
-        des_vars.add_output('lpc:s_effDes', 0.999972953236),
-        des_vars.add_output('lpc:s_NcDes', 4640.80978341),
-        des_vars.add_output('hpc:s_PRdes', 0.999352552331),
-        des_vars.add_output('hpc:s_WcDes', 1.02817130922),
-        des_vars.add_output('hpc:s_effDes', 1.00007580683),
-        des_vars.add_output('hpc:s_NcDes', 13544.2035253),
-        des_vars.add_output('hpt:s_PRdes', 0.524557693866),
-        des_vars.add_output('hpt:s_WpDes', 1.39329803688),
-        des_vars.add_output('hpt:s_effDes', 0.987775061125),
-        des_vars.add_output('hpt:s_NpDes', 2.75125333383),
-        des_vars.add_output('lpt:s_PRdes', 0.673736258118),
-        des_vars.add_output('lpt:s_WpDes', 1.48034371393),
-        des_vars.add_output('lpt:s_effDes', 0.974542303109),
-        des_vars.add_output('lpt:s_NpDes', 1.03027097635),
-
-        des_vars.add_output('core_nozz:Throat:stat:area', 397.755002537, units='inch**2')
-        des_vars.add_output('byp_nozz:Throat:stat:area', 1316.25610748, units='inch**2')
+        # des_vars.add_output('alt', 35000., units='ft'), #
+        # des_vars.add_output('MN', 0.8), #
+        # des_vars.add_output('T4max', 2857.0, units='degR'), #
+        # des_vars.add_output('Fn_des', 5500.0, units='lbf'), #
+        # des_vars.add_output('hpc:cust:frac_W', 0.0445), #
 
         des_vars.add_output('inlet:Fl_O:stat:area', 2566.76100868, units='inch**2')
-        des_vars.add_output('fan:Fl_O:stat:area', 2228.37737592, units='inch**2')
+        # des_vars.add_output('fan:Fl_O:stat:area', 2228.37737592, units='inch**2')
         des_vars.add_output('splitter:Fl_O1:stat:area', 504.011122272, units='inch**2')
         des_vars.add_output('splitter:Fl_O2:stat:area', 1882.18932965, units='inch**2')
         des_vars.add_output('duct4:Fl_O:stat:area', 503.997116848, units='inch**2')
@@ -92,69 +40,12 @@ class CFM56OffdesignTestCase(unittest.TestCase):
         des_vars.add_output('byp_bld:Fl_O:stat:area', 1882.04141644, units='inch**2')
         des_vars.add_output('duct15:Fl_O:stat:area', 1878.67377328, units='inch**2')
 
-        self.prob.model.add_subsystem('OD', HBTF(design=False))
+        # self.prob.model.connect('splitter:BPR', 'OD.splitter.BPR') #
 
-        self.prob.model.connect('OD_alt', 'OD.fc.alt')
-        self.prob.model.connect('OD_MN', 'OD.fc.MN')
-        self.prob.model.connect('OD_Fn_target', 'OD.balance.rhs:FAR')
-        self.prob.model.connect('OD_dTs', 'OD.fc.dTs')
-        self.prob.model.connect('OD_cust_fracW', 'OD.hpc.cust:frac_W')
-
-        self.prob.model.connect('inlet:ram_recovery', 'OD.inlet.ram_recovery')
-        # self.prob.model.connect('splitter:BPR', 'OD.splitter.BPR')
-        self.prob.model.connect('duct4:dPqP', 'OD.duct4.dPqP')
-        self.prob.model.connect('duct6:dPqP', 'OD.duct6.dPqP')
-        self.prob.model.connect('burner:dPqP', 'OD.burner.dPqP')
-        self.prob.model.connect('duct11:dPqP', 'OD.duct11.dPqP')
-        self.prob.model.connect('duct13:dPqP', 'OD.duct13.dPqP')
-        self.prob.model.connect('core_nozz:Cv', 'OD.core_nozz.Cv')
-        self.prob.model.connect('duct15:dPqP', 'OD.duct15.dPqP')
-        self.prob.model.connect('byp_nozz:Cv', 'OD.byp_nozz.Cv')
-        self.prob.model.connect('hp_shaft:HPX', 'OD.hp_shaft.HPX')
-
-        self.prob.model.connect('hpc:cool1:frac_W', 'OD.hpc.cool1:frac_W')
-        self.prob.model.connect('hpc:cool1:frac_P', 'OD.hpc.cool1:frac_P')
-        self.prob.model.connect('hpc:cool1:frac_work', 'OD.hpc.cool1:frac_work')
-        self.prob.model.connect('hpc:cool2:frac_W', 'OD.hpc.cool2:frac_W')
-        self.prob.model.connect('hpc:cool2:frac_P', 'OD.hpc.cool2:frac_P')
-        self.prob.model.connect('hpc:cool2:frac_work', 'OD.hpc.cool2:frac_work')
-        self.prob.model.connect('bld3:cool3:frac_W', 'OD.bld3.cool3:frac_W')
-        self.prob.model.connect('bld3:cool4:frac_W', 'OD.bld3.cool4:frac_W')
-        # self.prob.model.connect('hpc:cust:frac_W', 'OD.hpc.cust:frac_W')
-        self.prob.model.connect('hpc:cust:frac_P', 'OD.hpc.cust:frac_P')
-        self.prob.model.connect('hpc:cust:frac_work', 'OD.hpc.cust:frac_work')
-        self.prob.model.connect('hpt:cool3:frac_P', 'OD.hpt.cool3:frac_P')
-        self.prob.model.connect('hpt:cool4:frac_P', 'OD.hpt.cool4:frac_P')
-        self.prob.model.connect('lpt:cool1:frac_P', 'OD.lpt.cool1:frac_P')
-        self.prob.model.connect('lpt:cool2:frac_P', 'OD.lpt.cool2:frac_P')
-        self.prob.model.connect('bypBld:frac_W', 'OD.byp_bld.bypBld:frac_W')
-
-        self.prob.model.connect('fan:s_PRdes', 'OD.fan.s_PR')
-        self.prob.model.connect('fan:s_WcDes', 'OD.fan.s_Wc')
-        self.prob.model.connect('fan:s_effDes', 'OD.fan.s_eff')
-        self.prob.model.connect('fan:s_NcDes', 'OD.fan.s_Nc')
-        self.prob.model.connect('lpc:s_PRdes', 'OD.lpc.s_PR')
-        self.prob.model.connect('lpc:s_WcDes', 'OD.lpc.s_Wc')
-        self.prob.model.connect('lpc:s_effDes', 'OD.lpc.s_eff')
-        self.prob.model.connect('lpc:s_NcDes', 'OD.lpc.s_Nc')
-        self.prob.model.connect('hpc:s_PRdes', 'OD.hpc.s_PR')
-        self.prob.model.connect('hpc:s_WcDes', 'OD.hpc.s_Wc')
-        self.prob.model.connect('hpc:s_effDes', 'OD.hpc.s_eff')
-        self.prob.model.connect('hpc:s_NcDes', 'OD.hpc.s_Nc')
-        self.prob.model.connect('hpt:s_PRdes', 'OD.hpt.s_PR')
-        self.prob.model.connect('hpt:s_WpDes', 'OD.hpt.s_Wp')
-        self.prob.model.connect('hpt:s_effDes', 'OD.hpt.s_eff')
-        self.prob.model.connect('hpt:s_NpDes', 'OD.hpt.s_Np')
-        self.prob.model.connect('lpt:s_PRdes', 'OD.lpt.s_PR')
-        self.prob.model.connect('lpt:s_WpDes', 'OD.lpt.s_Wp')
-        self.prob.model.connect('lpt:s_effDes', 'OD.lpt.s_eff')
-        self.prob.model.connect('lpt:s_NpDes', 'OD.lpt.s_Np')
-
-        self.prob.model.connect('core_nozz:Throat:stat:area', 'OD.balance.rhs:W')
-        self.prob.model.connect('byp_nozz:Throat:stat:area', 'OD.balance.rhs:BPR')
+        # self.prob.model.connect('hpc:cust:frac_W', 'OD.hpc.cust:frac_W') #
 
         self.prob.model.connect('inlet:Fl_O:stat:area', 'OD.inlet.area')
-        self.prob.model.connect('fan:Fl_O:stat:area', 'OD.fan.area')
+        # self.prob.model.connect('fan:Fl_O:stat:area', 'OD.fan.area')
         self.prob.model.connect('splitter:Fl_O1:stat:area', 'OD.splitter.area1')
         self.prob.model.connect('splitter:Fl_O2:stat:area', 'OD.splitter.area2')
         self.prob.model.connect('duct4:Fl_O:stat:area', 'OD.duct4.area')
@@ -173,6 +64,64 @@ class CFM56OffdesignTestCase(unittest.TestCase):
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
         self.prob.setup(check=False)
+
+        self.prob.set_val('OD.fc.MN', 0.8)
+        self.prob.set_val('OD.fc.alt', 35000.0, units='ft')
+        self.prob.set_val('OD.balance.rhs:FAR', 5500.0, units='lbf')  # 8950.0
+        self.prob.set_val('OD.fc.dTs', 0.0, units='degR')
+        self.prob.set_val('OD.hpc.cust:frac_W', 0.0445)
+
+        self.prob.set_val('OD.inlet.ram_recovery', 0.9990)
+        self.prob.set_val('OD.duct4.dPqP', 0.0048)
+        self.prob.set_val('OD.duct6.dPqP', 0.0101)
+        self.prob.set_val('OD.burner.dPqP', 0.0540)
+        self.prob.set_val('OD.duct11.dPqP', 0.0051)
+        self.prob.set_val('OD.duct13.dPqP', 0.0107)
+        self.prob.set_val('OD.core_nozz.Cv', 0.9933)
+        self.prob.set_val('OD.byp_bld.bypBld:frac_W', 0.005)
+        self.prob.set_val('OD.duct15.dPqP', 0.0149)
+        self.prob.set_val('OD.byp_nozz.Cv', 0.9939)
+        self.prob.set_val('OD.hp_shaft.HPX', 250.0, units='hp')
+
+        self.prob.set_val('OD.hpc.cool1:frac_W', 0.050708)
+        self.prob.set_val('OD.hpc.cool1:frac_P', 0.5)
+        self.prob.set_val('OD.hpc.cool1:frac_work', 0.5)
+        self.prob.set_val('OD.hpc.cool2:frac_W', 0.020274)
+        self.prob.set_val('OD.hpc.cool2:frac_P', 0.55)
+        self.prob.set_val('OD.hpc.cool2:frac_work', 0.5)
+        self.prob.set_val('OD.bld3.cool3:frac_W', 0.067214)
+        self.prob.set_val('OD.bld3.cool4:frac_W', 0.101256)
+        self.prob.set_val('OD.hpc.cust:frac_P', 0.5)
+        self.prob.set_val('OD.hpc.cust:frac_work', 0.5)
+        self.prob.set_val('OD.hpt.cool3:frac_P', 1.0)
+        self.prob.set_val('OD.hpt.cool4:frac_P', 0.0)
+        self.prob.set_val('OD.lpt.cool1:frac_P', 1.0)
+        self.prob.set_val('OD.lpt.cool2:frac_P', 0.0)
+        self.prob.set_val('OD.fan.s_PR', 0.999912416431)
+        self.prob.set_val('OD.fan.s_Wc', 1.03246959658)
+        self.prob.set_val('OD.fan.s_eff', 1.00013412617)
+        self.prob.set_val('OD.fan.s_Nc', 5091.84571411)
+        self.prob.set_val('OD.lpc.s_PR', 1.0)
+        self.prob.set_val('OD.lpc.s_Wc', 1.00411122011)
+        self.prob.set_val('OD.lpc.s_eff', 0.999972953236)
+        self.prob.set_val('OD.lpc.s_Nc', 4640.80978341)
+        self.prob.set_val('OD.hpc.s_PR', 0.999352552331)
+        self.prob.set_val('OD.hpc.s_Wc', 1.02817130922)
+        self.prob.set_val('OD.hpc.s_eff', 1.00007580683)
+        self.prob.set_val('OD.hpc.s_Nc', 13544.2035253)
+        self.prob.set_val('OD.hpt.s_PR', 0.524557693866)
+        self.prob.set_val('OD.hpt.s_Wp', 1.39329803688)
+        self.prob.set_val('OD.hpt.s_eff', 0.987775061125)
+        self.prob.set_val('OD.hpt.s_Np', 2.75125333383)
+        self.prob.set_val('OD.lpt.s_PR', 0.673736258118)
+        self.prob.set_val('OD.lpt.s_Wp', 1.48034371393)
+        self.prob.set_val('OD.lpt.s_eff', 0.974542303109)
+        self.prob.set_val('OD.lpt.s_Np', 1.03027097635)
+
+        self.prob.set_val('OD.balance.rhs:W', 397.755002537, units='inch**2')
+        self.prob.set_val('OD.balance.rhs:BPR', 1316.25610748, units='inch**2')
+
+        self.prob.set_val('OD.fan.area', 2228.37737592, units='inch**2')
 
         # from openmdao.api import view_model
         # view_model(self.prob)
@@ -263,11 +212,11 @@ class CFM56OffdesignTestCase(unittest.TestCase):
         self.prob['OD.lpc.map.RlineMap'] = 2.0
         self.prob['OD.hpc.map.RlineMap'] = 2.0
 
-        self.prob['OD_MN'] = 0.8
-        self.prob['OD_alt'] = 35000.0
-        self.prob['OD_Fn_target'] = 5970.0
-        self.prob['OD_dTs'] = 0.0
-        self.prob['OD_cust_fracW'] = 0.0422
+        self.prob['OD.fc.MN'] = 0.8
+        self.prob['OD.fc.alt'] = 35000.0
+        self.prob['OD.balance.rhs:FAR'] = 5970.0
+        self.prob['OD.fc.dTs'] = 0.0
+        self.prob['OD.hpc.cust:frac_W'] = 0.0422
         self.prob.run_model()
         tol = 1e-3
 
@@ -337,11 +286,11 @@ class CFM56OffdesignTestCase(unittest.TestCase):
         self.prob['OD.lpc.map.RlineMap'] = 2.0
         self.prob['OD.hpc.map.RlineMap'] = 2.0
 
-        self.prob['OD_MN'] = 0.25
-        self.prob['OD_alt'] = 0.0
-        self.prob['OD_Fn_target'] = 22590.0
-        self.prob['OD_dTs'] = 27.0
-        self.prob['OD_cust_fracW'] = 0.0177
+        self.prob['OD.fc.MN'] = 0.25
+        self.prob['OD.fc.alt'] = 0.0
+        self.prob['OD.balance.rhs:FAR'] = 22590.0
+        self.prob['OD.fc.dTs'] = 27.0
+        self.prob['OD.hpc.cust:frac_W'] = 0.0177
         self.prob.run_model()
         tol = 1e-3
 
@@ -411,11 +360,11 @@ class CFM56OffdesignTestCase(unittest.TestCase):
         self.prob['OD.lpc.map.RlineMap'] = 2.0
         self.prob['OD.hpc.map.RlineMap'] = 2.0
 
-        self.prob['OD_MN'] = 0.00001
-        self.prob['OD_alt'] = 0.0
-        self.prob['OD_Fn_target'] = 27113.0
-        self.prob['OD_dTs'] = 27.0
-        self.prob['OD_cust_fracW'] = 0.0185
+        self.prob['OD.fc.MN'] = 0.00001
+        self.prob['OD.fc.alt'] = 0.0
+        self.prob['OD.balance.rhs:FAR'] = 27113.0
+        self.prob['OD.fc.dTs'] = 27.0
+        self.prob['OD.hpc.cust:frac_W'] = 0.0185
         self.prob.run_model()
         tol = 1e-3
 
