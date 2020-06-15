@@ -174,6 +174,9 @@ class BleedOut(om.Group):
 
         self.add_subsystem('FAR_passthru', PassThrough('Fl_I:FAR', 'Fl_O:FAR', 0.0), promotes=['*'])
 
+        if not design:
+            self.set_input_defaults('area', val=1, units='inch**2')
+
 
 if __name__ == "__main__":
 

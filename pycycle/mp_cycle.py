@@ -95,6 +95,22 @@ class MPCycle(om.Group):
         self._od_pnts.append(pnt)
         return pnt
 
+    # def pyc_add_pnt(self, name, pnt, **kwargs):
+    #     if pnt.options['design'] is True:
+    #         if self._des_pnt is not None:
+    #             raise ValueError(f'Only one design point is allowed. A design point named `{self._des_pnt_name}` already exists.')
+
+    #         self.add_subsystem(name, pnt, **kwargs)
+    #         self._des_pnt = pnt
+    #         return pnt
+
+    #     elif pnt.options['design'] is False:
+    #         self.add_subsystem(name, pnt, **kwargs):
+    #         self._od_pnts.append(pnt)
+    #         return pnt
+    #     else:
+    #         raise ValueError(f'An invalid type mode was provided. The only acceptable values for the design option are True for a design point and False for an off design point.')
+
 
     def configure(self): 
         # after all child pts have been set up, 
