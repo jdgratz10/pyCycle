@@ -268,16 +268,11 @@ if __name__ == "__main__":
     import time
 
     prob = om.Problem()
-    
-    #Create all the independent variables that are input to the system
-    des_vars = prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
-
-    des_vars.add_output('hp_shaft:HPX', 250.0, units='hp'),
 
     # DESIGN CASE  
-    prob.model.add_subsystem('DESIGN', HBTF()) # Create an instace of the High Bypass ratio Turbofan
-       
-    prob.model.connect('hp_shaft:HPX', 'DESIGN.hp_shaft.HPX')###shouldn't be here, but needs fixing
+    prob.model.add_subsystem('DESIGN', HBTF(), promotes=['hp_shaft.HPX']) # Create an instace of the High Bypass ratio Turbofan
+    #Note that we promote hp_shaft.HPX because otherwise it's absolute name would be DESIGN.hp_shaft.HPX, which would cause a promotion mask error
+    #and we would not be allowed to promote hp_shaft.HPX from the off-design cases to the name DESIGN.hp_shaft.HPX
 
     # OFF DESIGN CASES
     pts = ['OD1'] #,'OD2','OD3','OD4']
@@ -291,9 +286,7 @@ if __name__ == "__main__":
             ('hpc.cool1:frac_work', 'DESIGN.hpc.cool1:frac_work'), ('hpc.cool2:frac_W', 'DESIGN.hpc.cool2:frac_W'), ('hpc.cool2:frac_P', 'DESIGN.hpc.cool2:frac_P'),
             ('hpc.cool2:frac_work', 'DESIGN.hpc.cool2:frac_work'), ('bld3.cool3:frac_W', 'DESIGN.bld3.cool3:frac_W'), ('bld3.cool4:frac_W', 'DESIGN.bld3.cool4:frac_W'),
             ('hpc.cust:frac_P', 'DESIGN.hpc.cust:frac_P'), ('hpc.cust:frac_work', 'DESIGN.hpc.cust:frac_work'), ('hpt.cool3:frac_P', 'DESIGN.hpt.cool3:frac_P'),
-            ('hpt.cool4:frac_P', 'DESIGN.hpt.cool4:frac_P'), ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P'), ('lpt.cool2:frac_P', 'DESIGN.lpt.cool2:frac_P')])
-
-        prob.model.connect('hp_shaft:HPX', pt+'.hp_shaft.HPX')###shouldn't be here, but needs fixing
+            ('hpt.cool4:frac_P', 'DESIGN.hpt.cool4:frac_P'), ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P'), ('lpt.cool2:frac_P', 'DESIGN.lpt.cool2:frac_P'), 'hp_shaft.HPX'])
 
         #Connect all DESIGN map scalars to the off design cases
         prob.model.connect('DESIGN.fan.s_PR', pt+'.fan.s_PR')
@@ -446,7 +439,7 @@ if __name__ == "__main__":
     # ---------------
     # --- HP SHAFT -----
     prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm'),
-    # prob.set_val('DESIGN.hp_shaft.HPX', 250.0, units='hp'),
+    prob.set_val('DESIGN.hp_shaft.HPX', 250.0, units='hp'),
 
     # --- Set up bleed values -----
     prob.set_val('DESIGN.hpc.cool1:frac_W', 0.050708),
@@ -513,11 +506,9 @@ if __name__ == "__main__":
     prob.run_model()
     prob.model.DESIGN.list_outputs(residuals=True, residuals_tol=1e-2)
 
+    for pt in ['DESIGN']+pts:
+        viewer(prob, pt)
 
-    # for pt in ['DESIGN']+pts:
-    #     viewer(prob, pt)
-
-
-    # print()
+    print()
     print("Run time", time.time() - st)
 
