@@ -518,7 +518,7 @@ class Compressor(om.Group):
             self.connect(BN + ':Pt', BN + "_flow.P")
 
         self.add_subsystem('FAR_passthru', PassThrough(
-            'Fl_I:FAR', 'Fl_O:FAR', 0.0), promotes=['*'])
+            'Fl_I:FAR', 'Fl_O:FAR', 1), promotes=['*'])
 
 
 
