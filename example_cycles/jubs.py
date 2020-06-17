@@ -98,7 +98,7 @@ if __name__ == "__main__":
     import time
 
     import numpy as np
-    # np.set_printoptions(precision=5)
+    np.set_printoptions(precision=5)
 
     prob = om.Problem()
 
@@ -124,10 +124,52 @@ if __name__ == "__main__":
     prob.set_solver_print(level=2, depth=2)
     # prob.set_solver_print(level=2)
 
+    ####
+    ##
+    #
+    ################ Note: the following three sections are only meant to be uncommented one at a time.
+    ################ Section 1 runs correctly, sections 2 and 3 do not.
+    #
+    ##
+    ###
+
+    ################BEGIN SECTION 1#####################
+
     prob.setup(check=False)
     prob.final_setup()
-
+    prob.set_val('off_design.inlet.area', 3309.11689846, 'inch**2')
     prob.set_val('design.fc.alt', 10000., units="m")
+    prob.set_val('off_design.fc.alt', 10000, units='m') 
+
+    ################END SECTION 1#######################
+
+
+
+
+
+    ################BEGIN SECTION 2#####################
+
+    # prob.setup(check=False)
+    # prob.set_val('off_design.inlet.area', 3309.11689846, 'inch**2')
+    # prob.set_val('design.fc.alt', 10000., units="m")
+    # prob.set_val('off_design.fc.alt', 10000, units='m') 
+    # prob.final_setup()
+
+    ################END SECTION 3#######################
+
+
+
+
+
+    ################BEGIN SECTION 3#####################
+
+    # prob.setup(check=False)
+    # prob.set_val('off_design.inlet.area', 3309.11689846, 'inch**2')
+    # prob.set_val('design.fc.alt', 10000., units="m")
+    # prob.set_val('off_design.fc.alt', 10000, units='m') 
+
+    ################END SECTION 3#######################
+
     prob['design.fc.MN'] = .8
     prob['design.inlet.MN'] = 0.6
     prob['design.fan.PR'] = 1.2
@@ -135,9 +177,6 @@ if __name__ == "__main__":
     prob['design.fan.eff'] = 0.96
 
     prob['off_design.fc.MN'] = .8
-
-    prob.set_val('off_design.fc.alt', 10000, units='m') # problem is that electric propulsor sets the altitude to 12000 m and it takes longer to converge.
-
 
     design.nonlinear_solver.options['atol'] = 1e-6
     design.nonlinear_solver.options['rtol'] = 1e-6
@@ -152,22 +191,21 @@ if __name__ == "__main__":
     prob['off_design.balance.Nmech'] = 1. # normalized value
     prob['off_design.fan.PR'] = 1.2
     prob['off_design.fan.map.RlineMap'] = 2.2
-    prob.set_val('off_design.inlet.area', 3309.11689846, 'inch**2')#####
     # prob['off_design.inlet.area'] = 3309.11689846######
 
     st = time.time()
     prob.run_model()
     run_time = time.time() - st
 
-    print("design")
+    # print("design")
 
-    viewer(prob, 'design')
+    # viewer(prob, 'design')
 
-    print("######"*10)
-    print("######"*10)
-    print("######"*10)
+    # print("######"*10)
+    # print("######"*10)
+    # print("######"*10)
 
-    viewer(prob, 'off_design')
+    # viewer(prob, 'off_design')
 
     print("Run time (s)", run_time)
     print(prob['design.inlet.Fl_O:stat:area']) #correct answer is 3309.11689846, units are inch**2
