@@ -15,114 +15,72 @@ class TurboshaftDesignTestCase(unittest.TestCase):
 
         self.prob = Problem()
 
-        des_vars = self.prob.model.add_subsystem('des_vars', IndepVarComp(), promotes=['*'])
-        des_vars.add_output('alt', 28000., units='ft'),
-        des_vars.add_output('MN', 0.5),
-        des_vars.add_output('T4max', 2740.0, units='degR'),
-        des_vars.add_output('nozz_PR_des', 1.1)
-        des_vars.add_output('inlet:ram_recovery', 1.0),
-        des_vars.add_output('inlet:MN_out', 0.4),
-        des_vars.add_output('duct1:dPqP', 0.0),
-        des_vars.add_output('duct1:MN_out', 0.4),
-        des_vars.add_output('lpc:PRdes', 5.000),
-        des_vars.add_output('lpc:effDes', 0.8900),
-        des_vars.add_output('lpc:MN_out', 0.3),
-        des_vars.add_output('icduct:dPqP', 0.002),
-        des_vars.add_output('icduct:MN_out', 0.3),
-        des_vars.add_output('hpc_axi:PRdes', 3.0),
-        des_vars.add_output('hpc_axi:effDes', 0.8900),
-        des_vars.add_output('hpc_axi:MN_out', 0.25),
-        des_vars.add_output('bld25:cool1:frac_W', 0.024),
-        des_vars.add_output('bld25:cool2:frac_W', 0.0146),
-        des_vars.add_output('bld25:MN_out', 0.3000),
-        des_vars.add_output('hpc_centri:PRdes', 2.7),
-        des_vars.add_output('hpc_centri:effDes', 0.8800),
-        des_vars.add_output('hpc_centri:MN_out', 0.20),
-        des_vars.add_output('bld3:cool3:frac_W', 0.1705),
-        des_vars.add_output('bld3:cool4:frac_W', 0.1209),
-        des_vars.add_output('bld3:MN_out', 0.2000),
-        des_vars.add_output('duct6:dPqP', 0.00),
-        des_vars.add_output('duct6:MN_out', 0.2000),
-        des_vars.add_output('burner:dPqP', 0.050),
-        des_vars.add_output('burner:MN_out', 0.15),
-        des_vars.add_output('hpt:effDes', 0.89),
-        des_vars.add_output('hpt:cool3:frac_P', 1.0),
-        des_vars.add_output('hpt:cool4:frac_P', 0.0),
-        des_vars.add_output('hpt:MN_out', 0.30),
-        des_vars.add_output('duct43:dPqP', 0.0051),
-        des_vars.add_output('duct43:MN_out', 0.30),
-        des_vars.add_output('lpt:effDes', 0.9),
-        des_vars.add_output('lpt:cool1:frac_P', 1.0),
-        des_vars.add_output('lpt:cool2:frac_P', 0.0),
-        des_vars.add_output('lpt:MN_out', 0.4),
-        des_vars.add_output('itduct:dPqP', 0.00),
-        des_vars.add_output('itduct:MN_out', 0.4),
-        des_vars.add_output('pt:effDes', 0.85),
-        des_vars.add_output('pt:MN_out', 0.4),
-        des_vars.add_output('duct12:dPqP', 0.00),
-        des_vars.add_output('duct12:MN_out', 0.4),
-        des_vars.add_output('nozzle:Cv', 0.99),
-        des_vars.add_output('lp_shaft:Nmech', 12750., units='rpm'),
-        des_vars.add_output('lp_shaft:HPX', 1800.0, units='hp'),
-        des_vars.add_output('ip_shaft:Nmech', 12000., units='rpm'),
-        des_vars.add_output('hp_shaft:Nmech', 14800., units='rpm'),
-
         self.prob.model.add_subsystem('DESIGN', Turboshaft())
-
-        self.prob.model.connect('alt', 'DESIGN.fc.alt')
-        self.prob.model.connect('MN', 'DESIGN.fc.MN')
-        self.prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR')
-        self.prob.model.connect('nozz_PR_des', 'DESIGN.balance.rhs:W')
-        self.prob.model.connect('inlet:ram_recovery', 'DESIGN.inlet.ram_recovery')
-        self.prob.model.connect('inlet:MN_out', 'DESIGN.inlet.MN')
-        self.prob.model.connect('duct1:dPqP', 'DESIGN.duct1.dPqP')
-        self.prob.model.connect('duct1:MN_out', 'DESIGN.duct1.MN')
-        self.prob.model.connect('lpc:PRdes', 'DESIGN.lpc.PR')
-        self.prob.model.connect('lpc:effDes', 'DESIGN.lpc.eff')
-        self.prob.model.connect('lpc:MN_out', 'DESIGN.lpc.MN')
-        self.prob.model.connect('icduct:dPqP', 'DESIGN.icduct.dPqP')
-        self.prob.model.connect('icduct:MN_out', 'DESIGN.icduct.MN')
-        self.prob.model.connect('hpc_axi:PRdes', 'DESIGN.hpc_axi.PR')
-        self.prob.model.connect('hpc_axi:effDes', 'DESIGN.hpc_axi.eff')
-        self.prob.model.connect('hpc_axi:MN_out', 'DESIGN.hpc_axi.MN')
-        self.prob.model.connect('bld25:cool1:frac_W', 'DESIGN.bld25.cool1:frac_W')
-        self.prob.model.connect('bld25:cool2:frac_W', 'DESIGN.bld25.cool2:frac_W')
-        self.prob.model.connect('bld25:MN_out', 'DESIGN.bld25.MN')
-        self.prob.model.connect('hpc_centri:PRdes', 'DESIGN.hpc_centri.PR')
-        self.prob.model.connect('hpc_centri:effDes', 'DESIGN.hpc_centri.eff')
-        self.prob.model.connect('hpc_centri:MN_out', 'DESIGN.hpc_centri.MN')
-        self.prob.model.connect('bld3:cool3:frac_W', 'DESIGN.bld3.cool3:frac_W')
-        self.prob.model.connect('bld3:cool4:frac_W', 'DESIGN.bld3.cool4:frac_W')
-        self.prob.model.connect('bld3:MN_out', 'DESIGN.bld3.MN')
-        self.prob.model.connect('duct6:dPqP', 'DESIGN.duct6.dPqP')
-        self.prob.model.connect('duct6:MN_out', 'DESIGN.duct6.MN')
-        self.prob.model.connect('burner:dPqP', 'DESIGN.burner.dPqP')
-        self.prob.model.connect('burner:MN_out', 'DESIGN.burner.MN')
-        self.prob.model.connect('hpt:effDes', 'DESIGN.hpt.eff')
-        self.prob.model.connect('hpt:cool3:frac_P', 'DESIGN.hpt.cool3:frac_P')
-        self.prob.model.connect('hpt:cool4:frac_P', 'DESIGN.hpt.cool4:frac_P')
-        self.prob.model.connect('hpt:MN_out', 'DESIGN.hpt.MN')
-        self.prob.model.connect('duct43:dPqP', 'DESIGN.duct43.dPqP')
-        self.prob.model.connect('duct43:MN_out', 'DESIGN.duct43.MN')
-        self.prob.model.connect('lpt:effDes', 'DESIGN.lpt.eff')
-        self.prob.model.connect('lpt:cool1:frac_P', 'DESIGN.lpt.cool1:frac_P')
-        self.prob.model.connect('lpt:cool2:frac_P', 'DESIGN.lpt.cool2:frac_P')
-        self.prob.model.connect('lpt:MN_out', 'DESIGN.lpt.MN')
-        self.prob.model.connect('itduct:dPqP', 'DESIGN.itduct.dPqP')
-        self.prob.model.connect('itduct:MN_out', 'DESIGN.itduct.MN')
-        self.prob.model.connect('pt:effDes', 'DESIGN.pt.eff')
-        self.prob.model.connect('pt:MN_out', 'DESIGN.pt.MN')
-        self.prob.model.connect('duct12:dPqP', 'DESIGN.duct12.dPqP')
-        self.prob.model.connect('duct12:MN_out', 'DESIGN.duct12.MN')
-        self.prob.model.connect('nozzle:Cv', 'DESIGN.nozzle.Cv')
-        self.prob.model.connect('lp_shaft:Nmech', 'DESIGN.LP_Nmech')
-        self.prob.model.connect('lp_shaft:HPX', 'DESIGN.lp_shaft.HPX')
-        self.prob.model.connect('ip_shaft:Nmech', 'DESIGN.IP_Nmech')
-        self.prob.model.connect('hp_shaft:Nmech', 'DESIGN.HP_Nmech')
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
         self.prob.setup(check=False)
+        self.prob.final_setup()
+
+        self.prob.set_val('DESIGN.fc.alt', 28000., units='ft'),
+        self.prob.set_val('DESIGN.fc.MN', 0.5),
+        self.prob.set_val('DESIGN.balance.rhs:FAR', 2740.0, units='degR'),
+        self.prob.set_val('DESIGN.balance.rhs:W', 1.1)
+        self.prob.set_val('DESIGN.inlet.ram_recovery', 1.0),
+
+        self.prob.set_val('DESIGN.inlet.MN', 0.4),
+        self.prob.set_val('DESIGN.duct1.dPqP', 0.0),
+        self.prob.set_val('DESIGN.duct1.MN', 0.4),
+        self.prob.set_val('DESIGN.lpc.PR', 5.000),
+        self.prob.set_val('DESIGN.lpc.eff', 0.8900),
+
+        self.prob.set_val('DESIGN.lpc.MN', 0.3),
+        self.prob.set_val('DESIGN.icduct.dPqP', 0.002),
+        self.prob.set_val('DESIGN.icduct.MN', 0.3),
+        self.prob.set_val('DESIGN.hpc_axi.PR', 3.0),
+        self.prob.set_val('DESIGN.hpc_axi.eff', 0.8900),
+
+        self.prob.set_val('DESIGN.hpc_axi.MN', 0.25),
+        self.prob.set_val('DESIGN.bld25.cool1:frac_W', 0.024),
+        self.prob.set_val('DESIGN.bld25.cool2:frac_W', 0.0146),
+        self.prob.set_val('DESIGN.bld25.MN', 0.3000),
+        self.prob.set_val('DESIGN.hpc_centri.PR', 2.7),
+
+        self.prob.set_val('DESIGN.hpc_centri.eff', 0.8800),
+        self.prob.set_val('DESIGN.hpc_centri.MN', 0.20),
+        self.prob.set_val('DESIGN.bld3.cool3:frac_W', 0.1705),
+        self.prob.set_val('DESIGN.bld3.cool4:frac_W', 0.1209),
+        self.prob.set_val('DESIGN.bld3.MN', 0.2000),
+
+        self.prob.set_val('DESIGN.duct6.dPqP', 0.00),
+        self.prob.set_val('DESIGN.duct6.MN', 0.2000),
+        self.prob.set_val('DESIGN.burner.dPqP', 0.050),
+        self.prob.set_val('DESIGN.burner.MN', 0.15),
+        self.prob.set_val('DESIGN.hpt.eff', 0.89),
+
+        self.prob.set_val('DESIGN.hpt.cool3:frac_P', 1.0),
+        self.prob.set_val('DESIGN.hpt.cool4:frac_P', 0.0),
+        self.prob.set_val('DESIGN.hpt.MN', 0.30),
+        self.prob.set_val('DESIGN.duct43.dPqP', 0.0051),
+        self.prob.set_val('DESIGN.duct43.MN', 0.30),
+
+        self.prob.set_val('DESIGN.lpt.eff', 0.9),
+        self.prob.set_val('DESIGN.lpt.cool1:frac_P', 1.0),
+        self.prob.set_val('DESIGN.lpt.cool2:frac_P', 0.0),
+        self.prob.set_val('DESIGN.lpt.MN', 0.4),
+        self.prob.set_val('DESIGN.itduct.dPqP', 0.00),
+
+        self.prob.set_val('DESIGN.itduct.MN', 0.4),
+        self.prob.set_val('DESIGN.pt.eff', 0.85),
+        self.prob.set_val('DESIGN.pt.MN', 0.4),
+        self.prob.set_val('DESIGN.duct12.dPqP', 0.00),
+        self.prob.set_val('DESIGN.duct12.MN', 0.4),
+
+        self.prob.set_val('DESIGN.nozzle.Cv', 0.99),
+        self.prob.set_val('DESIGN.LP_Nmech', 12750., units='rpm'),
+        self.prob.set_val('DESIGN.lp_shaft.HPX', 1800.0, units='hp'),
+        self.prob.set_val('DESIGN.IP_Nmech', 12000., units='rpm'),
+        self.prob.set_val('DESIGN.HP_Nmech', 14800., units='rpm'),
 
         self.prob['DESIGN.balance.FAR'] = 0.02261
         self.prob['DESIGN.balance.W'] = 10.76
@@ -131,10 +89,6 @@ class TurboshaftDesignTestCase(unittest.TestCase):
         self.prob['DESIGN.balance.hpt_PR'] = 4.236
         self.prob['DESIGN.fc.balance.Pt'] = 5.666
         self.prob['DESIGN.fc.balance.Tt'] = 440.0
-
-        # from openmdao.api import view_model
-        # view_model(self.prob)
-        # exit()
 
     def benchmark_case1(self):
         np.seterr(divide='raise')
