@@ -165,20 +165,20 @@ if __name__ == "__main__":
     for pt in od_pts:
         prob.model.pyc_add_pnt(pt, Turbojet(design=False))
 
-        prob.model.connect('DESIGN.comp.s_PR', pt+'.comp.s_PR')
-        prob.model.connect('DESIGN.comp.s_Wc', pt+'.comp.s_Wc')
-        prob.model.connect('DESIGN.comp.s_eff', pt+'.comp.s_eff')
-        prob.model.connect('DESIGN.comp.s_Nc', pt+'.comp.s_Nc')
+    prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
+    prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
+    prob.model.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
+    prob.model.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
 
-        prob.model.connect('DESIGN.turb.s_PR', pt+'.turb.s_PR')
-        prob.model.connect('DESIGN.turb.s_Wp', pt+'.turb.s_Wp')
-        prob.model.connect('DESIGN.turb.s_eff', pt+'.turb.s_eff')
-        prob.model.connect('DESIGN.turb.s_Np', pt+'.turb.s_Np')
+    prob.model.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
+    prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
+    prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
+    prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
 
-        prob.model.connect('DESIGN.inlet.Fl_O:stat:area', pt+'.inlet.area')
-        prob.model.connect('DESIGN.comp.Fl_O:stat:area', pt+'.comp.area')
-        prob.model.connect('DESIGN.burner.Fl_O:stat:area', pt+'.burner.area')
-        prob.model.connect('DESIGN.turb.Fl_O:stat:area', pt+'.turb.area')
+    prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
+    prob.model.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
+    prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
+    prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
 
     prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
