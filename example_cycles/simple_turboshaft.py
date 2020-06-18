@@ -4,7 +4,7 @@ import openmdao.api as om
 
 import pycycle.api as pyc
 
-class Turboshaft(om.Group):
+class Turboshaft(pyc.Cycle):
 
     def initialize(self):
         self.options.declare('design', default=True,
@@ -16,36 +16,36 @@ class Turboshaft(om.Group):
         design = self.options['design']
 
         # Add engine elements
-        self.add_subsystem('fc', pyc.FlightConditions(thermo_data=thermo_spec,
+        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec,
                                     elements=pyc.AIR_MIX))
-        self.add_subsystem('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec,
+        self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec,
                                     elements=pyc.AIR_MIX))
-        self.add_subsystem('comp', pyc.Compressor(map_data=pyc.AXI5, design=design,
+        self.pyc_add_element('comp', pyc.Compressor(map_data=pyc.AXI5, design=design,
                                     thermo_data=thermo_spec, elements=pyc.AIR_MIX, map_extrap=True),
                                     promotes_inputs=[('Nmech', 'HP_Nmech')])
-        self.add_subsystem('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
+        self.pyc_add_element('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
                                     inflow_elements=pyc.AIR_MIX,
                                     air_fuel_elements=pyc.AIR_FUEL_MIX,
                                     fuel_type='JP-7'))
-        self.add_subsystem('turb', pyc.Turbine(map_data=pyc.LPT2269, design=design,
+        self.pyc_add_element('turb', pyc.Turbine(map_data=pyc.LPT2269, design=design,
                                     thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, map_extrap=True),
                                     promotes_inputs=[('Nmech', 'HP_Nmech')])
-        self.add_subsystem('pt', pyc.Turbine(map_data=pyc.LPT2269, design=design,
+        self.pyc_add_element('pt', pyc.Turbine(map_data=pyc.LPT2269, design=design,
                                     thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, map_extrap=True),
                                     promotes_inputs=[('Nmech', 'LP_Nmech')])
-        self.add_subsystem('nozz', pyc.Nozzle(nozzType='CV', lossCoef='Cv',
+        self.pyc_add_element('nozz', pyc.Nozzle(nozzType='CV', lossCoef='Cv',
                                     thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
-        self.add_subsystem('HP_shaft', pyc.Shaft(num_ports=2),promotes_inputs=[('Nmech', 'HP_Nmech')])
-        self.add_subsystem('LP_shaft', pyc.Shaft(num_ports=1),promotes_inputs=[('Nmech', 'LP_Nmech')])
-        self.add_subsystem('perf', pyc.Performance(num_nozzles=1, num_burners=1))
+        self.pyc_add_element('HP_shaft', pyc.Shaft(num_ports=2),promotes_inputs=[('Nmech', 'HP_Nmech')])
+        self.pyc_add_element('LP_shaft', pyc.Shaft(num_ports=1),promotes_inputs=[('Nmech', 'LP_Nmech')])
+        self.pyc_add_element('perf', pyc.Performance(num_nozzles=1, num_burners=1))
 
         # Connect flow stations
-        pyc.connect_flow(self, 'fc.Fl_O', 'inlet.Fl_I', connect_w=False)
-        pyc.connect_flow(self, 'inlet.Fl_O', 'comp.Fl_I')
-        pyc.connect_flow(self, 'comp.Fl_O', 'burner.Fl_I')
-        pyc.connect_flow(self, 'burner.Fl_O', 'turb.Fl_I')
-        pyc.connect_flow(self, 'turb.Fl_O', 'pt.Fl_I')
-        pyc.connect_flow(self, 'pt.Fl_O', 'nozz.Fl_I')
+        self.pyc_connect_flow('fc.Fl_O', 'inlet.Fl_I', connect_w=False)
+        self.pyc_connect_flow('inlet.Fl_O', 'comp.Fl_I')
+        self.pyc_connect_flow('comp.Fl_O', 'burner.Fl_I')
+        self.pyc_connect_flow('burner.Fl_O', 'turb.Fl_I')
+        self.pyc_connect_flow('turb.Fl_O', 'pt.Fl_I')
+        self.pyc_connect_flow('pt.Fl_O', 'nozz.Fl_I')
 
         # Connect turbomachinery elements to shaft
         self.connect('comp.trq', 'HP_shaft.trq_0')
@@ -163,13 +163,13 @@ def viewer(prob, pt, file=sys.stdout):
 if __name__ == "__main__":
 
     import time
-    from openmdao.api import Problem, IndepVarComp
-    from openmdao.utils.units import convert_units as cu
 
     prob = om.Problem()
 
+    prob.model = pyc.MPCycle()
+
     # Create design instance of model
-    prob.model.add_subsystem('DESIGN', Turboshaft())
+    prob.model.pyc_add_pnt('DESIGN', Turboshaft())
 
     # Connect off-design and required design inputs to model
     od_pts = ['OD1', 'OD2']
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     od_nmechs =[5000., 5000.]
 
     for pt in od_pts:
-        prob.model.add_subsystem(pt, Turboshaft(design=False))
+        prob.model.pyc_add_pnt(pt, Turboshaft(design=False))
 
         prob.model.connect('DESIGN.comp.s_PR', pt+'.comp.s_PR')
         prob.model.connect('DESIGN.comp.s_Wc', pt+'.comp.s_Wc')
@@ -253,7 +253,7 @@ if __name__ == "__main__":
 
         prob[pt+'.balance.W'] = 27.265
         prob[pt+'.balance.FAR'] = 0.0175506829934
-        # prob[pt+'.balance.Nmech'] = 8070.0
+        prob[pt+'.balance.HP_Nmech'] = 8070.0
         prob[pt+'.fc.balance.Pt'] = 15.703
         prob[pt+'.fc.balance.Tt'] = 558.31
         prob[pt+'.turb.PR'] = 3.8768

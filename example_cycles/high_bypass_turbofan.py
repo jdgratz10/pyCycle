@@ -7,7 +7,7 @@ import openmdao.api as om
 import pycycle.api as pyc
 
 
-class HBTF(om.Group):
+class HBTF(pyc.Cycle):
 
     def initialize(self):
         # Initialize the model here by setting option variables such as a switch for design vs off-des cases
@@ -22,45 +22,45 @@ class HBTF(om.Group):
         design = self.options['design']
         
         #Add subsystems to build the engine deck:
-        self.add_subsystem('fc', pyc.FlightConditions(thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec, elements=pyc.AIR_MIX))
         
-        self.add_subsystem('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
         
         # Note variable promotion for the fan -- 
         # the LP spool speed and the fan speed are INPUTS that are promoted:
         # Note here that promotion aliases are used. Here Nmech is being aliased to LP_Nmech
         # in fact for a multi-spool engine you HAVE(?) to alias if you want to promote_inputs
         # check out: http://openmdao.org/twodocs/versions/latest/features/core_features/grouping_components/add_subsystem.html?highlight=alias
-        self.add_subsystem('fan', pyc.Compressor(map_data=pyc.FanMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
+        self.pyc_add_element('fan', pyc.Compressor(map_data=pyc.FanMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
                                         bleed_names=[], map_extrap=True), promotes_inputs=[('Nmech','LP_Nmech')])
-        self.add_subsystem('splitter', pyc.Splitter(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('duct4', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('lpc', pyc.Compressor(map_data=pyc.LPCMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
+        self.pyc_add_element('splitter', pyc.Splitter(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('duct4', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('lpc', pyc.Compressor(map_data=pyc.LPCMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
                                         map_extrap=True),promotes_inputs=[('Nmech','LP_Nmech')])
-        self.add_subsystem('duct6', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('hpc', pyc.Compressor(map_data=pyc.HPCMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
+        self.pyc_add_element('duct6', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('hpc', pyc.Compressor(map_data=pyc.HPCMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
                                         bleed_names=['cool1','cool2','cust'], map_extrap=True),promotes_inputs=[('Nmech','HP_Nmech')])
-        self.add_subsystem('bld3', pyc.BleedOut(design=design, bleed_names=['cool3','cool4']))
-        self.add_subsystem('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
+        self.pyc_add_element('bld3', pyc.BleedOut(design=design, bleed_names=['cool3','cool4']))
+        self.pyc_add_element('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
                                         inflow_elements=pyc.AIR_MIX,
                                         air_fuel_elements=pyc.AIR_FUEL_MIX,
                                         fuel_type='Jet-A(g)'))
-        self.add_subsystem('hpt', pyc.Turbine(map_data=pyc.HPTMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
+        self.pyc_add_element('hpt', pyc.Turbine(map_data=pyc.HPTMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
                                         bleed_names=['cool3','cool4'], map_extrap=True),promotes_inputs=[('Nmech','HP_Nmech')])
-        self.add_subsystem('duct11', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
-        self.add_subsystem('lpt', pyc.Turbine(map_data=pyc.LPTMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
+        self.pyc_add_element('duct11', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
+        self.pyc_add_element('lpt', pyc.Turbine(map_data=pyc.LPTMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
                                         bleed_names=['cool1','cool2'], map_extrap=True),promotes_inputs=[('Nmech','LP_Nmech')])
-        self.add_subsystem('duct13', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
-        self.add_subsystem('core_nozz', pyc.Nozzle(nozzType='CV', lossCoef='Cv', thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
+        self.pyc_add_element('duct13', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
+        self.pyc_add_element('core_nozz', pyc.Nozzle(nozzType='CV', lossCoef='Cv', thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
 
-        self.add_subsystem('byp_bld', pyc.BleedOut(design=design, bleed_names=['bypBld']))
-        self.add_subsystem('duct15', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('byp_nozz', pyc.Nozzle(nozzType='CV', lossCoef='Cv', thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('byp_bld', pyc.BleedOut(design=design, bleed_names=['bypBld']))
+        self.pyc_add_element('duct15', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('byp_nozz', pyc.Nozzle(nozzType='CV', lossCoef='Cv', thermo_data=thermo_spec, elements=pyc.AIR_MIX))
         
         #Create shaft instances. Note that LP shaft has 3 ports! => no gearbox
-        self.add_subsystem('lp_shaft', pyc.Shaft(num_ports=3),promotes_inputs=[('Nmech','LP_Nmech')])
-        self.add_subsystem('hp_shaft', pyc.Shaft(num_ports=2),promotes_inputs=[('Nmech','HP_Nmech')])
-        self.add_subsystem('perf', pyc.Performance(num_nozzles=2, num_burners=1))
+        self.pyc_add_element('lp_shaft', pyc.Shaft(num_ports=3),promotes_inputs=[('Nmech','LP_Nmech')])
+        self.pyc_add_element('hp_shaft', pyc.Shaft(num_ports=2),promotes_inputs=[('Nmech','HP_Nmech')])
+        self.pyc_add_element('perf', pyc.Performance(num_nozzles=2, num_burners=1))
     
         # Now use the explicit connect method to make connections -- connect(<from>, <to>)
         
@@ -165,29 +165,29 @@ class HBTF(om.Group):
                             'lpt', 'duct13', 'core_nozz', 'byp_bld', 'duct15', 'byp_nozz', 'lp_shaft', 'hp_shaft', 'perf'])
         
         # Set up all the flow connections:
-        pyc.connect_flow(self, 'fc.Fl_O', 'inlet.Fl_I', connect_w=False)
-        pyc.connect_flow(self, 'inlet.Fl_O', 'fan.Fl_I')
-        pyc.connect_flow(self, 'fan.Fl_O', 'splitter.Fl_I')
-        pyc.connect_flow(self, 'splitter.Fl_O1', 'duct4.Fl_I')
-        pyc.connect_flow(self, 'duct4.Fl_O', 'lpc.Fl_I')
-        pyc.connect_flow(self, 'lpc.Fl_O', 'duct6.Fl_I')
-        pyc.connect_flow(self, 'duct6.Fl_O', 'hpc.Fl_I')
-        pyc.connect_flow(self, 'hpc.Fl_O', 'bld3.Fl_I')
-        pyc.connect_flow(self, 'bld3.Fl_O', 'burner.Fl_I')
-        pyc.connect_flow(self, 'burner.Fl_O', 'hpt.Fl_I')
-        pyc.connect_flow(self, 'hpt.Fl_O', 'duct11.Fl_I')
-        pyc.connect_flow(self, 'duct11.Fl_O', 'lpt.Fl_I')
-        pyc.connect_flow(self, 'lpt.Fl_O', 'duct13.Fl_I')
-        pyc.connect_flow(self, 'duct13.Fl_O','core_nozz.Fl_I')
-        pyc.connect_flow(self, 'splitter.Fl_O2', 'byp_bld.Fl_I')
-        pyc.connect_flow(self, 'byp_bld.Fl_O', 'duct15.Fl_I')
-        pyc.connect_flow(self, 'duct15.Fl_O', 'byp_nozz.Fl_I')
+        self.pyc_connect_flow('fc.Fl_O', 'inlet.Fl_I', connect_w=False)
+        self.pyc_connect_flow('inlet.Fl_O', 'fan.Fl_I')
+        self.pyc_connect_flow('fan.Fl_O', 'splitter.Fl_I')
+        self.pyc_connect_flow('splitter.Fl_O1', 'duct4.Fl_I')
+        self.pyc_connect_flow('duct4.Fl_O', 'lpc.Fl_I')
+        self.pyc_connect_flow('lpc.Fl_O', 'duct6.Fl_I')
+        self.pyc_connect_flow('duct6.Fl_O', 'hpc.Fl_I')
+        self.pyc_connect_flow('hpc.Fl_O', 'bld3.Fl_I')
+        self.pyc_connect_flow('bld3.Fl_O', 'burner.Fl_I')
+        self.pyc_connect_flow('burner.Fl_O', 'hpt.Fl_I')
+        self.pyc_connect_flow('hpt.Fl_O', 'duct11.Fl_I')
+        self.pyc_connect_flow('duct11.Fl_O', 'lpt.Fl_I')
+        self.pyc_connect_flow('lpt.Fl_O', 'duct13.Fl_I')
+        self.pyc_connect_flow('duct13.Fl_O','core_nozz.Fl_I')
+        self.pyc_connect_flow('splitter.Fl_O2', 'byp_bld.Fl_I')
+        self.pyc_connect_flow('byp_bld.Fl_O', 'duct15.Fl_I')
+        self.pyc_connect_flow('duct15.Fl_O', 'byp_nozz.Fl_I')
 
         #Bleed flows:
-        pyc.connect_flow(self, 'hpc.cool1', 'lpt.cool1', connect_stat=False)
-        pyc.connect_flow(self, 'hpc.cool2', 'lpt.cool2', connect_stat=False)
-        pyc.connect_flow(self, 'bld3.cool3', 'hpt.cool3', connect_stat=False)
-        pyc.connect_flow(self, 'bld3.cool4', 'hpt.cool4', connect_stat=False)
+        self.pyc_connect_flow('hpc.cool1', 'lpt.cool1', connect_stat=False)
+        self.pyc_connect_flow('hpc.cool2', 'lpt.cool2', connect_stat=False)
+        self.pyc_connect_flow('bld3.cool3', 'hpt.cool3', connect_stat=False)
+        self.pyc_connect_flow('bld3.cool4', 'hpt.cool4', connect_stat=False)
         
         #Specify solver settings:
         newton = self.nonlinear_solver = om.NewtonSolver()
@@ -269,8 +269,10 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
+    prob.model = pyc.MPCycle()
+
     # DESIGN CASE  
-    prob.model.add_subsystem('DESIGN', HBTF(), promotes=['hp_shaft.HPX']) # Create an instace of the High Bypass ratio Turbofan
+    prob.model.pyc_add_pnt('DESIGN', HBTF(), promotes=['hp_shaft.HPX']) # Create an instace of the High Bypass ratio Turbofan
     #Note that we promote hp_shaft.HPX because otherwise it's absolute name would be DESIGN.hp_shaft.HPX, which would cause a promotion mask error
     #and we would not be allowed to promote hp_shaft.HPX from the off-design cases to the name DESIGN.hp_shaft.HPX
 
@@ -278,7 +280,7 @@ if __name__ == "__main__":
     pts = ['OD1'] #,'OD2','OD3','OD4']
 
     for i_OD, pt in enumerate(pts):
-        ODpt = prob.model.add_subsystem(pt, HBTF(design=False), promotes=[('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), 
+        ODpt = prob.model.pyc_add_pnt(pt, HBTF(design=False), promotes=[('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), 
             ('duct4.dPqP', 'DESIGN.duct4.dPqP'), ('duct6.dPqP', 'DESIGN.duct6.dPqP'), ('burner.dPqP', 'DESIGN.burner.dPqP'),
             ('duct11.dPqP', 'DESIGN.duct11.dPqP'), ('duct13.dPqP', 'DESIGN.duct13.dPqP'), ('duct15.dPqP', 'DESIGN.duct15.dPqP'),
             ('core_nozz.Cv', 'DESIGN.core_nozz.Cv'), ('byp_bld.bypBld:frac_W', 'DESIGN.byp_bld.bypBld:frac_W'),
@@ -289,48 +291,48 @@ if __name__ == "__main__":
             ('hpt.cool4:frac_P', 'DESIGN.hpt.cool4:frac_P'), ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P'), ('lpt.cool2:frac_P', 'DESIGN.lpt.cool2:frac_P'), 'hp_shaft.HPX'])
 
         #Connect all DESIGN map scalars to the off design cases
-        prob.model.connect('DESIGN.fan.s_PR', pt+'.fan.s_PR')
-        prob.model.connect('DESIGN.fan.s_Wc', pt+'.fan.s_Wc')
-        prob.model.connect('DESIGN.fan.s_eff', pt+'.fan.s_eff')
-        prob.model.connect('DESIGN.fan.s_Nc', pt+'.fan.s_Nc')
-        prob.model.connect('DESIGN.lpc.s_PR', pt+'.lpc.s_PR')
-        prob.model.connect('DESIGN.lpc.s_Wc', pt+'.lpc.s_Wc')
-        prob.model.connect('DESIGN.lpc.s_eff', pt+'.lpc.s_eff')
-        prob.model.connect('DESIGN.lpc.s_Nc', pt+'.lpc.s_Nc')
-        prob.model.connect('DESIGN.hpc.s_PR', pt+'.hpc.s_PR')
-        prob.model.connect('DESIGN.hpc.s_Wc', pt+'.hpc.s_Wc')
-        prob.model.connect('DESIGN.hpc.s_eff', pt+'.hpc.s_eff')
-        prob.model.connect('DESIGN.hpc.s_Nc', pt+'.hpc.s_Nc')
-        prob.model.connect('DESIGN.hpt.s_PR', pt+'.hpt.s_PR')
-        prob.model.connect('DESIGN.hpt.s_Wp', pt+'.hpt.s_Wp')
-        prob.model.connect('DESIGN.hpt.s_eff', pt+'.hpt.s_eff')
-        prob.model.connect('DESIGN.hpt.s_Np', pt+'.hpt.s_Np')
-        prob.model.connect('DESIGN.lpt.s_PR', pt+'.lpt.s_PR')
-        prob.model.connect('DESIGN.lpt.s_Wp', pt+'.lpt.s_Wp')
-        prob.model.connect('DESIGN.lpt.s_eff', pt+'.lpt.s_eff')
-        prob.model.connect('DESIGN.lpt.s_Np', pt+'.lpt.s_Np')
+        prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
+        prob.model.pyc_connect_des_od('fan.s_Wc', 'fan.s_Wc')
+        prob.model.pyc_connect_des_od('fan.s_eff', 'fan.s_eff')
+        prob.model.pyc_connect_des_od('fan.s_Nc', 'fan.s_Nc')
+        prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
+        prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
+        prob.model.pyc_connect_des_od('lpc.s_eff', 'lpc.s_eff')
+        prob.model.pyc_connect_des_od('lpc.s_Nc', 'lpc.s_Nc')
+        prob.model.pyc_connect_des_od('hpc.s_PR', 'hpc.s_PR')
+        prob.model.pyc_connect_des_od('hpc.s_Wc', 'hpc.s_Wc')
+        prob.model.pyc_connect_des_od('hpc.s_eff', 'hpc.s_eff')
+        prob.model.pyc_connect_des_od('hpc.s_Nc', 'hpc.s_Nc')
+        prob.model.pyc_connect_des_od('hpt.s_PR', 'hpt.s_PR')
+        prob.model.pyc_connect_des_od('hpt.s_Wp', 'hpt.s_Wp')
+        prob.model.pyc_connect_des_od('hpt.s_eff', 'hpt.s_eff')
+        prob.model.pyc_connect_des_od('hpt.s_Np', 'hpt.s_Np')
+        prob.model.pyc_connect_des_od('lpt.s_PR', 'lpt.s_PR')
+        prob.model.pyc_connect_des_od('lpt.s_Wp', 'lpt.s_Wp')
+        prob.model.pyc_connect_des_od('lpt.s_eff', 'lpt.s_eff')
+        prob.model.pyc_connect_des_od('lpt.s_Np', 'lpt.s_Np')
         
         #Set up the RHS of the balances!
-        prob.model.connect('DESIGN.core_nozz.Throat:stat:area',pt+'.balance.rhs:W')
-        prob.model.connect('DESIGN.byp_nozz.Throat:stat:area',pt+'.balance.rhs:BPR')
+        prob.model.pyc_connect_des_od('core_nozz.Throat:stat:area','balance.rhs:W')
+        prob.model.pyc_connect_des_od('byp_nozz.Throat:stat:area','balance.rhs:BPR')
 
 
-        prob.model.connect('DESIGN.inlet.Fl_O:stat:area', pt+'.inlet.area')
-        prob.model.connect('DESIGN.fan.Fl_O:stat:area', pt+'.fan.area')
-        prob.model.connect('DESIGN.splitter.Fl_O1:stat:area', pt+'.splitter.area1')
-        prob.model.connect('DESIGN.splitter.Fl_O2:stat:area', pt+'.splitter.area2')
-        prob.model.connect('DESIGN.duct4.Fl_O:stat:area', pt+'.duct4.area')
-        prob.model.connect('DESIGN.lpc.Fl_O:stat:area', pt+'.lpc.area')
-        prob.model.connect('DESIGN.duct6.Fl_O:stat:area', pt+'.duct6.area')
-        prob.model.connect('DESIGN.hpc.Fl_O:stat:area', pt+'.hpc.area')
-        prob.model.connect('DESIGN.bld3.Fl_O:stat:area', pt+'.bld3.area')
-        prob.model.connect('DESIGN.burner.Fl_O:stat:area', pt+'.burner.area')
-        prob.model.connect('DESIGN.hpt.Fl_O:stat:area', pt+'.hpt.area')
-        prob.model.connect('DESIGN.duct11.Fl_O:stat:area', pt+'.duct11.area')
-        prob.model.connect('DESIGN.lpt.Fl_O:stat:area', pt+'.lpt.area')
-        prob.model.connect('DESIGN.duct13.Fl_O:stat:area', pt+'.duct13.area')
-        prob.model.connect('DESIGN.byp_bld.Fl_O:stat:area', pt+'.byp_bld.area')
-        prob.model.connect('DESIGN.duct15.Fl_O:stat:area', pt+'.duct15.area')
+        prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
+        prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
+        prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
+        prob.model.pyc_connect_des_od('splitter.Fl_O2:stat:area', 'splitter.area2')
+        prob.model.pyc_connect_des_od('duct4.Fl_O:stat:area', 'duct4.area')
+        prob.model.pyc_connect_des_od('lpc.Fl_O:stat:area', 'lpc.area')
+        prob.model.pyc_connect_des_od('duct6.Fl_O:stat:area', 'duct6.area')
+        prob.model.pyc_connect_des_od('hpc.Fl_O:stat:area', 'hpc.area')
+        prob.model.pyc_connect_des_od('bld3.Fl_O:stat:area', 'bld3.area')
+        prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
+        prob.model.pyc_connect_des_od('hpt.Fl_O:stat:area', 'hpt.area')
+        prob.model.pyc_connect_des_od('duct11.Fl_O:stat:area', 'duct11.area')
+        prob.model.pyc_connect_des_od('lpt.Fl_O:stat:area', 'lpt.area')
+        prob.model.pyc_connect_des_od('duct13.Fl_O:stat:area', 'duct13.area')
+        prob.model.pyc_connect_des_od('byp_bld.Fl_O:stat:area', 'byp_bld.area')
+        prob.model.pyc_connect_des_od('duct15.Fl_O:stat:area', 'duct15.area')
 
     prob.setup(check=False)
 

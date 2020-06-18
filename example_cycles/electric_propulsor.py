@@ -103,8 +103,8 @@ if __name__ == "__main__":
 
     prob.model = pyc.MPCycle()
 
-    design = prob.model.pyc_add_des_pnt('design', Propulsor(design=True))
-    od = prob.model.pyc_add_od_pnt('off_design', Propulsor(design=False))
+    design = prob.model.pyc_add_pnt('design', Propulsor(design=True))
+    od = prob.model.pyc_add_pnt('off_design', Propulsor(design=False))
 
     prob.model.pyc_add_cycle_param('pwr_target', 100.)
     prob.model.pyc_use_default_des_od_conns()
@@ -113,19 +113,20 @@ if __name__ == "__main__":
 
     prob.set_solver_print(level=-1)
     prob.set_solver_print(level=2, depth=2)
+    # prob.set_solver_print(level=2)
 
     prob.setup(check=False)
     prob.final_setup()
 
     prob.set_val('design.fc.alt', 10000, units='m')
     prob['design.fc.MN'] = 0.8
-    prob['design.inlet.MN'] = 0.6
-    prob['design.fan.PR'] = 1.2
+    prob['design.inlet.MN'] = 0.6#
+    prob['design.fan.PR'] = 1.2#
     prob['pwr_target'] = -3486.657 # -2600
-    prob['design.fan.eff'] = 0.96
+    prob['design.fan.eff'] = 0.96#
 
-    prob.set_val('off_design.fc.alt', 12000, units='m')
-    prob['off_design.fc.MN'] = 0.8
+    prob.set_val('off_design.fc.alt', 12000, units='m') #10000
+    prob['off_design.fc.MN'] = 0.8#
 
 
     design.nonlinear_solver.options['atol'] = 1e-6
@@ -133,7 +134,7 @@ if __name__ == "__main__":
 
     od.nonlinear_solver.options['atol'] = 1e-6
     od.nonlinear_solver.options['rtol'] = 1e-6
-    od.nonlinear_solver.options['maxiter'] = 10
+    # od.nonlinear_solver.options['maxiter'] = 0
 
     ########################
     # initial guesses
@@ -148,6 +149,8 @@ if __name__ == "__main__":
 
     st = time.time()
     prob.run_model()
+    # prob.model.list_outputs(residuals=True, residuals_tol=1e-2)
+    # exit()
     run_time = time.time() - st
 
     print("design")

@@ -26,7 +26,7 @@ des_vars.add_output('inlet:MN_out', 0.60),
 des_vars.add_output('comp:MN_out', 0.20),
 des_vars.add_output('burner:MN_out', 0.20),
 des_vars.add_output('turb:MN_out', 0.4),
-des_vars.add_output('pt:MN_out', 0.5),
+# des_vars.add_output('pt:MN_out', 0.5),#####
 
 # Off-design (point 1) inputs
 des_vars.add_output('OD1_MN', 0.000001),
@@ -41,9 +41,9 @@ prob.model.add_subsystem('DESIGN', Turboshaft())
 prob.model.connect('alt', 'DESIGN.fc.alt')
 prob.model.connect('MN', 'DESIGN.fc.MN')
 # prob.model.connect('Fn_des', 'DESIGN.balance.rhs:W')
-prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR')
-prob.model.connect('pwr_des', 'DESIGN.balance.rhs:pt_PR')
-prob.model.connect('nozz_PR', 'DESIGN.balance.rhs:W')
+prob.model.connect('T4max', 'DESIGN.balance.T4_target')
+prob.model.connect('pwr_des', 'DESIGN.balance.pwr_target')
+prob.model.connect('nozz_PR', 'DESIGN.balance.nozz_PR_target')
 
 prob.model.connect('comp:PRdes', 'DESIGN.comp.PR')
 prob.model.connect('comp:effDes', 'DESIGN.comp.eff')
@@ -71,7 +71,7 @@ for pt in pts:
     prob.model.connect(pt+'_alt', pt+'.fc.alt')
     prob.model.connect(pt+'_MN', pt+'.fc.MN')
     prob.model.connect(pt+'_LP_Nmech', pt+'.LP_Nmech')
-    prob.model.connect(pt+'_pwr', pt+'.balance.rhs:FAR')
+    prob.model.connect(pt+'_pwr', pt+'.balance.pwr_target')
 
     prob.model.connect('DESIGN.comp.s_PR', pt+'.comp.s_PR')
     prob.model.connect('DESIGN.comp.s_Wc', pt+'.comp.s_Wc')
@@ -112,7 +112,7 @@ prob['DESIGN.fc.balance.Tt'] = 518.665288153
 for pt in pts:
     prob[pt+'.balance.W'] = 27.265
     prob[pt+'.balance.FAR'] = 0.0175506829934
-    prob[pt+'.balance.HP_Nmech'] = 8070.0
+    prob[pt+'.balance.HP_Nmech'] = 8070.0###
     prob[pt+'.fc.balance.Pt'] = 15.703
     prob[pt+'.fc.balance.Tt'] = 558.31
     prob[pt+'.turb.PR'] = 3.8768

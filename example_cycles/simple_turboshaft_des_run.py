@@ -26,7 +26,7 @@ des_vars.add_output('inlet:MN_out', 0.60),
 des_vars.add_output('comp:MN_out', 0.20),
 des_vars.add_output('burner:MN_out', 0.20),
 des_vars.add_output('turb:MN_out', 0.4),
-des_vars.add_output('pt:MN_out', 0.5),
+# des_vars.add_output('pt:MN_out', 0.5),
 
 # Create design instance of model
 prob.model.add_subsystem('DESIGN', Turboshaft())
@@ -35,9 +35,9 @@ prob.model.add_subsystem('DESIGN', Turboshaft())
 prob.model.connect('alt', 'DESIGN.fc.alt')
 prob.model.connect('MN', 'DESIGN.fc.MN')
 # prob.model.connect('Fn_des', 'DESIGN.balance.rhs:W')
-prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR')
-prob.model.connect('pwr_des', 'DESIGN.balance.rhs:pt_PR')
-prob.model.connect('nozz_PR', 'DESIGN.balance.rhs:W')
+prob.model.connect('T4max', 'DESIGN.balance.T4_target')
+prob.model.connect('pwr_des', 'DESIGN.balance.pwr_target')
+prob.model.connect('nozz_PR', 'DESIGN.balance.nozz_PR_target')
 
 prob.model.connect('comp:PRdes', 'DESIGN.comp.PR')
 prob.model.connect('comp:effDes', 'DESIGN.comp.eff')
