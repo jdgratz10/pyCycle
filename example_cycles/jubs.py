@@ -104,8 +104,8 @@ if __name__ == "__main__":
 
     prob.model = pyc.MPCycle()
 
-    design = prob.model.pyc_add_des_pnt('design', Propulsor(design=True))
-    od = prob.model.pyc_add_od_pnt('off_design', Propulsor(design=False))
+    design = prob.model.pyc_add_pnt('design', Propulsor(design=True))
+    od = prob.model.pyc_add_pnt('off_design', Propulsor(design=False))
 
     prob.model.pyc_add_cycle_param('pwr_target', 100.)
     # prob.model.pyc_use_default_des_od_conns()
