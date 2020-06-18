@@ -233,9 +233,9 @@ if __name__ == "__main__":
     element_params = prob.model.add_subsystem('element_params', om.IndepVarComp(), promotes=["*"])
 
     # FOR DESIGN
-    # des_vars.add_output('alt', 35000., units='ft') #DV
-    # des_vars.add_output('MN', 0.8) #DV
-    # des_vars.add_output('Fn_des', 5500.0, units='lbf')
+    des_vars.add_output('alt', 35000., units='ft') #DV
+    des_vars.add_output('MN', 0.8) #DV
+    des_vars.add_output('Fn_des', 5500.0, units='lbf')
     des_vars.add_output('T4max', 3200, units='degR')
 
     des_vars.add_output('T4maxab', 3400, units='degR')
@@ -251,8 +251,6 @@ if __name__ == "__main__":
     des_vars.add_output('fan:PRdes', 3.3) #ADV
     element_params.add_output('fan:effDes', 0.8948)
     element_params.add_output('fan:MN_out', 0.4578)
-
-    # element_params.add_output('splitter:BPR', 5.105) not needed for mixed flow turbofan. balanced based on mixer total pressure ratio
     element_params.add_output('splitter:MN_out1', 0.3104)
     element_params.add_output('splitter:MN_out2', 0.4518)
 
@@ -321,9 +319,9 @@ if __name__ == "__main__":
     # prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True), promotes=['balance.rhs:FAR_ab'])
     prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True))
 
-    # prob.model.connect('alt', 'DESIGN.fc.alt')
-    # prob.model.connect('MN', 'DESIGN.fc.MN')
-    # prob.model.connect('Fn_des', 'DESIGN.balance.rhs:W')
+    prob.model.connect('alt', 'DESIGN.fc.alt')
+    prob.model.connect('MN', 'DESIGN.fc.MN')
+    prob.model.connect('Fn_des', 'DESIGN.balance.rhs:W')
     prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR_core')
 
     prob.model.connect('T4maxab', 'DESIGN.balance.rhs:FAR_ab')
@@ -340,7 +338,6 @@ if __name__ == "__main__":
     prob.model.connect('fan:effDes', 'DESIGN.fan.eff')
     prob.model.connect('fan:MN_out', 'DESIGN.fan.MN')
 
-    # prob.model.connect('splitter:BPR', 'DESIGN.splitter.BPR')
     prob.model.connect('splitter:MN_out1', 'DESIGN.splitter.MN1')
     prob.model.connect('splitter:MN_out2', 'DESIGN.splitter.MN2')
 
@@ -404,7 +401,6 @@ if __name__ == "__main__":
     # OFF DESIGN CASES
     ####################
     od_pts = ['OD0',]
-    # od_pts = []
 
     od_alts = [35000,]
     od_MNs = [0.8, ]
@@ -449,58 +445,58 @@ if __name__ == "__main__":
         prob.model.connect('hpt:cool3:frac_P', pt+'.hpt.cool3:frac_P')
         prob.model.connect('lpt:cool1:frac_P', pt+'.lpt.cool1:frac_P')
 
-        # map scalars
-        prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
-        prob.model.pyc_connect_des_od('fan.s_Wc', 'fan.s_Wc')
-        prob.model.pyc_connect_des_od('fan.s_eff', 'fan.s_eff')
-        prob.model.pyc_connect_des_od('fan.s_Nc', 'fan.s_Nc')
-        prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
-        prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
-        prob.model.pyc_connect_des_od('lpc.s_eff', 'lpc.s_eff')
-        prob.model.pyc_connect_des_od('lpc.s_Nc', 'lpc.s_Nc')
-        prob.model.pyc_connect_des_od('hpc.s_PR', 'hpc.s_PR')
-        prob.model.pyc_connect_des_od('hpc.s_Wc', 'hpc.s_Wc')
-        prob.model.pyc_connect_des_od('hpc.s_eff', 'hpc.s_eff')
-        prob.model.pyc_connect_des_od('hpc.s_Nc', 'hpc.s_Nc')
-        prob.model.pyc_connect_des_od('hpt.s_PR', 'hpt.s_PR')
-        prob.model.pyc_connect_des_od('hpt.s_Wp', 'hpt.s_Wp')
-        prob.model.pyc_connect_des_od('hpt.s_eff', 'hpt.s_eff')
-        prob.model.pyc_connect_des_od('hpt.s_Np', 'hpt.s_Np')
-        prob.model.pyc_connect_des_od('lpt.s_PR', 'lpt.s_PR')
-        prob.model.pyc_connect_des_od('lpt.s_Wp', 'lpt.s_Wp')
-        prob.model.pyc_connect_des_od('lpt.s_eff', 'lpt.s_eff')
-        prob.model.pyc_connect_des_od('lpt.s_Np', 'lpt.s_Np')
+    # map scalars
+    prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
+    prob.model.pyc_connect_des_od('fan.s_Wc', 'fan.s_Wc')
+    prob.model.pyc_connect_des_od('fan.s_eff', 'fan.s_eff')
+    prob.model.pyc_connect_des_od('fan.s_Nc', 'fan.s_Nc')
+    prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
+    prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
+    prob.model.pyc_connect_des_od('lpc.s_eff', 'lpc.s_eff')
+    prob.model.pyc_connect_des_od('lpc.s_Nc', 'lpc.s_Nc')
+    prob.model.pyc_connect_des_od('hpc.s_PR', 'hpc.s_PR')
+    prob.model.pyc_connect_des_od('hpc.s_Wc', 'hpc.s_Wc')
+    prob.model.pyc_connect_des_od('hpc.s_eff', 'hpc.s_eff')
+    prob.model.pyc_connect_des_od('hpc.s_Nc', 'hpc.s_Nc')
+    prob.model.pyc_connect_des_od('hpt.s_PR', 'hpt.s_PR')
+    prob.model.pyc_connect_des_od('hpt.s_Wp', 'hpt.s_Wp')
+    prob.model.pyc_connect_des_od('hpt.s_eff', 'hpt.s_eff')
+    prob.model.pyc_connect_des_od('hpt.s_Np', 'hpt.s_Np')
+    prob.model.pyc_connect_des_od('lpt.s_PR', 'lpt.s_PR')
+    prob.model.pyc_connect_des_od('lpt.s_Wp', 'lpt.s_Wp')
+    prob.model.pyc_connect_des_od('lpt.s_eff', 'lpt.s_eff')
+    prob.model.pyc_connect_des_od('lpt.s_Np', 'lpt.s_Np')
 
-        # flow areas
-        prob.model.pyc_connect_des_od('mixed_nozz.Throat:stat:area', 'balance.rhs:W')
+    # flow areas
+    prob.model.pyc_connect_des_od('mixed_nozz.Throat:stat:area', 'balance.rhs:W')
 
-        prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-        prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
-        prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
-        prob.model.pyc_connect_des_od('splitter.Fl_O2:stat:area', 'splitter.area2')
-        prob.model.pyc_connect_des_od('splitter_core_duct.Fl_O:stat:area', 'splitter_core_duct.area')
-        prob.model.pyc_connect_des_od('lpc.Fl_O:stat:area', 'lpc.area')
-        prob.model.pyc_connect_des_od('lpc_duct.Fl_O:stat:area', 'lpc_duct.area')
-        prob.model.pyc_connect_des_od('hpc.Fl_O:stat:area', 'hpc.area')
-        prob.model.pyc_connect_des_od('bld3.Fl_O:stat:area', 'bld3.area')
-        prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-        prob.model.pyc_connect_des_od('hpt.Fl_O:stat:area', 'hpt.area')
-        prob.model.pyc_connect_des_od('hpt_duct.Fl_O:stat:area', 'hpt_duct.area')
-        prob.model.pyc_connect_des_od('lpt.Fl_O:stat:area', 'lpt.area')
-        prob.model.pyc_connect_des_od('lpt_duct.Fl_O:stat:area', 'lpt_duct.area')
-        prob.model.pyc_connect_des_od('bypass_duct.Fl_O:stat:area', 'bypass_duct.area')
-        prob.model.pyc_connect_des_od('mixer.Fl_O:stat:area', 'mixer.area')
-        prob.model.pyc_connect_des_od('mixer.Fl_I1_calc:stat:area', 'mixer.Fl_I1_stat_calc.area')
-        prob.model.pyc_connect_des_od('mixer_duct.Fl_O:stat:area', 'mixer_duct.area')
-        prob.model.pyc_connect_des_od('afterburner.Fl_O:stat:area', 'afterburner.area')
+    prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
+    prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
+    prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
+    prob.model.pyc_connect_des_od('splitter.Fl_O2:stat:area', 'splitter.area2')
+    prob.model.pyc_connect_des_od('splitter_core_duct.Fl_O:stat:area', 'splitter_core_duct.area')
+    prob.model.pyc_connect_des_od('lpc.Fl_O:stat:area', 'lpc.area')
+    prob.model.pyc_connect_des_od('lpc_duct.Fl_O:stat:area', 'lpc_duct.area')
+    prob.model.pyc_connect_des_od('hpc.Fl_O:stat:area', 'hpc.area')
+    prob.model.pyc_connect_des_od('bld3.Fl_O:stat:area', 'bld3.area')
+    prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
+    prob.model.pyc_connect_des_od('hpt.Fl_O:stat:area', 'hpt.area')
+    prob.model.pyc_connect_des_od('hpt_duct.Fl_O:stat:area', 'hpt_duct.area')
+    prob.model.pyc_connect_des_od('lpt.Fl_O:stat:area', 'lpt.area')
+    prob.model.pyc_connect_des_od('lpt_duct.Fl_O:stat:area', 'lpt_duct.area')
+    prob.model.pyc_connect_des_od('bypass_duct.Fl_O:stat:area', 'bypass_duct.area')
+    prob.model.pyc_connect_des_od('mixer.Fl_O:stat:area', 'mixer.area')
+    prob.model.pyc_connect_des_od('mixer.Fl_I1_calc:stat:area', 'mixer.Fl_I1_stat_calc.area')
+    prob.model.pyc_connect_des_od('mixer_duct.Fl_O:stat:area', 'mixer_duct.area')
+    prob.model.pyc_connect_des_od('afterburner.Fl_O:stat:area', 'afterburner.area')
 
 
     # setup problem
     prob.setup(check=False)#True)
 
-    prob.set_val('DESIGN.fc.alt', 35000., units='ft') #DV
-    prob.set_val('DESIGN.fc.MN', 0.8) #DV
-    prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')
+    # prob.set_val('DESIGN.fc.alt', 35000., units='ft') #DV
+    # prob.set_val('DESIGN.fc.MN', 0.8) #DV
+    # prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')
     # prob.set_val('DESIGN.balance.rhs:FAR_core', 3200, units='degR')
 
     # prob.set_val('balance.rhs:FAR_ab', 1.05 ,units=None) # defined as 1 over 2
