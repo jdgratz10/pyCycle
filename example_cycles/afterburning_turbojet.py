@@ -5,7 +5,7 @@ import openmdao.api as om
 
 import pycycle.api as pyc
 
-class ABTurbojet(om.Group):
+class ABTurbojet(pyc.Cycle):
 
     def initialize(self):
         self.options.declare('design', default=True,
@@ -16,24 +16,24 @@ class ABTurbojet(om.Group):
         thermo_spec = pyc.species_data.janaf
         design = self.options['design']
 
-        self.add_subsystem('fc', pyc.FlightConditions(thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('duct1', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
-        self.add_subsystem('comp', pyc.Compressor(map_data=pyc.AXI5, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
+        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('duct1', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        self.pyc_add_element('comp', pyc.Compressor(map_data=pyc.AXI5, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX,
                                         bleed_names=['cool1','cool2'], map_extrap=True),promotes_inputs=['Nmech'])
-        self.add_subsystem('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
+        self.pyc_add_element('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
                                         inflow_elements=pyc.AIR_MIX,
                                         air_fuel_elements=pyc.AIR_FUEL_MIX,
                                         fuel_type='JP-7'))
-        self.add_subsystem('turb', pyc.Turbine(map_data=pyc.LPT2269, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
+        self.pyc_add_element('turb', pyc.Turbine(map_data=pyc.LPT2269, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
                                         bleed_names=['cool1','cool2'], map_extrap=True),promotes_inputs=['Nmech'])
-        self.add_subsystem('ab', pyc.Combustor(design=design,thermo_data=thermo_spec,
+        self.pyc_add_element('ab', pyc.Combustor(design=design,thermo_data=thermo_spec,
                                         inflow_elements=pyc.AIR_FUEL_MIX,
                                         air_fuel_elements=pyc.AIR_FUEL_MIX,
                                         fuel_type='JP-7'))
-        self.add_subsystem('nozz', pyc.Nozzle(nozzType='CD', lossCoef='Cv', thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, internal_solver=True))
-        self.add_subsystem('shaft', pyc.Shaft(num_ports=2),promotes_inputs=['Nmech'])
-        self.add_subsystem('perf', pyc.Performance(num_nozzles=1, num_burners=2))
+        self.pyc_add_element('nozz', pyc.Nozzle(nozzType='CD', lossCoef='Cv', thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, internal_solver=True))
+        self.pyc_add_element('shaft', pyc.Shaft(num_ports=2),promotes_inputs=['Nmech'])
+        self.pyc_add_element('perf', pyc.Performance(num_nozzles=1, num_burners=2))
 
         self.connect('duct1.Fl_O:tot:P', 'perf.Pt2')
         self.connect('comp.Fl_O:tot:P', 'perf.Pt3')
@@ -83,16 +83,16 @@ class ABTurbojet(om.Group):
             self.set_order(['balance', 'fc', 'inlet', 'duct1', 'comp', 'burner', 'turb', 'ab', 'nozz', 'shaft', 'perf'])
 
 
-        pyc.connect_flow(self, 'fc.Fl_O', 'inlet.Fl_I', connect_w=False)
-        pyc.connect_flow(self, 'inlet.Fl_O', 'duct1.Fl_I', connect_stat=False)
-        pyc.connect_flow(self, 'duct1.Fl_O', 'comp.Fl_I', connect_stat=False)
-        pyc.connect_flow(self, 'comp.Fl_O', 'burner.Fl_I', connect_stat=False)
-        pyc.connect_flow(self, 'burner.Fl_O', 'turb.Fl_I', connect_stat=False)
-        pyc.connect_flow(self, 'turb.Fl_O', 'ab.Fl_I', connect_stat=False)
-        pyc.connect_flow(self, 'ab.Fl_O', 'nozz.Fl_I', connect_stat=False)
+        self.pyc_connect_flow('fc.Fl_O', 'inlet.Fl_I', connect_w=False)
+        self.pyc_connect_flow('inlet.Fl_O', 'duct1.Fl_I', connect_stat=False)
+        self.pyc_connect_flow('duct1.Fl_O', 'comp.Fl_I', connect_stat=False)
+        self.pyc_connect_flow('comp.Fl_O', 'burner.Fl_I', connect_stat=False)
+        self.pyc_connect_flow('burner.Fl_O', 'turb.Fl_I', connect_stat=False)
+        self.pyc_connect_flow('turb.Fl_O', 'ab.Fl_I', connect_stat=False)
+        self.pyc_connect_flow('ab.Fl_O', 'nozz.Fl_I', connect_stat=False)
 
-        pyc.connect_flow(self, 'comp.cool1', 'turb.cool1', connect_stat=False)
-        pyc.connect_flow(self, 'comp.cool2', 'turb.cool2', connect_stat=False)
+        self.pyc_connect_flow('comp.cool1', 'turb.cool1', connect_stat=False)
+        self.pyc_connect_flow('comp.cool2', 'turb.cool2', connect_stat=False)
 
         newton = self.nonlinear_solver = om.NewtonSolver()
         newton.options['atol'] = 1e-6
@@ -160,175 +160,95 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    des_vars = prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
-
-    # FOR DESIGN
-    des_vars.add_output('alt', 0.0, units='ft'),
-    des_vars.add_output('MN', 0.000001),
-    des_vars.add_output('T4max', 2370.0, units='degR'),
-    des_vars.add_output('Fn_des', 11800.0, units='lbf'),
-    des_vars.add_output('duct1:dPqP', 0.02),
-    des_vars.add_output('comp:PRdes', 13.5),
-    des_vars.add_output('comp:effDes', 0.83),
-    des_vars.add_output('burn:dPqP', 0.03),
-    des_vars.add_output('turb:effDes', 0.86),
-    des_vars.add_output('ab:dPqP', 0.06),
-    des_vars.add_output('nozz:Cv', 0.99),
-    des_vars.add_output('shaft:Nmech', 8070.0, units='rpm'),
-    des_vars.add_output('inlet:MN_out', 0.60),
-    des_vars.add_output('duct1:MN_out', 0.60),
-    des_vars.add_output('comp:MN_out', 0.20),
-    des_vars.add_output('burner:MN_out', 0.20),
-    des_vars.add_output('turb:MN_out', 0.4),
-    des_vars.add_output('ab:MN_out',0.4),
-    des_vars.add_output('ab:FAR', 0.000),
-    des_vars.add_output('comp:cool1:frac_W', 0.0789),
-    des_vars.add_output('comp:cool1:frac_P', 1.0),
-    des_vars.add_output('comp:cool1:frac_work', 1.0),
-    des_vars.add_output('comp:cool2:frac_W', 0.0383),
-    des_vars.add_output('comp:cool2:frac_P', 1.0),
-    des_vars.add_output('comp:cool2:frac_work', 1.0),
-    des_vars.add_output('turb:cool1:frac_P', 1.0),
-    des_vars.add_output('turb:cool2:frac_P', 0.0),
-    # OFF DESIGN 1
-
-    des_vars.add_output('OD1_MN', 0.000001),
-    des_vars.add_output('OD1_alt', 0.0, units='ft'),
-    des_vars.add_output('OD1_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD1_ab_FAR', 0.031523391),
-    des_vars.add_output('OD1_Rline', 2.0),
-    # OFF DESIGN 2
-    des_vars.add_output('OD2_MN', 0.8),
-    des_vars.add_output('OD2_alt', 0.0, units='ft'),
-    des_vars.add_output('OD2_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD2_ab_FAR', 0.022759941),
-    des_vars.add_output('OD2_Rline', 2.0),
-    # OFF DESIGN 3
-    des_vars.add_output('OD3_MN', 1.0),
-    des_vars.add_output('OD3_alt', 15000.0, units='ft'),
-    des_vars.add_output('OD3_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD3_ab_FAR', 0.036849745),
-    des_vars.add_output('OD3_Rline', 2.0),
-    # OFF DESIGN 4
-    des_vars.add_output('OD4_MN', 1.2),
-    des_vars.add_output('OD4_alt', 25000.0, units='ft'),
-    des_vars.add_output('OD4_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD4_ab_FAR', 0.035266091),
-    des_vars.add_output('OD4_Rline', 2.0),
-    # OFF DESIGN 5
-    des_vars.add_output('OD5_MN', 0.6),
-    des_vars.add_output('OD5_alt', 35000.0, units='ft'),
-    des_vars.add_output('OD5_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD5_ab_FAR', 0.020216221),
-    des_vars.add_output('OD5_Rline', 2.0),
-    # OFF DESIGN 6
-    des_vars.add_output('OD6_MN', 1.6),
-    des_vars.add_output('OD6_alt', 35000.0, units='ft'),
-    des_vars.add_output('OD6_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD6_ab_FAR', 0.038532787),
-    des_vars.add_output('OD6_Rline', 2.0),
-    # OFF DESIGN 7
-    des_vars.add_output('OD7_MN', 1.6),
-    des_vars.add_output('OD7_alt', 50000.0, units='ft'),
-    des_vars.add_output('OD7_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD7_ab_FAR', 0.038532787),
-    des_vars.add_output('OD7_Rline', 2.0),
-    # OFF DESIGN 8
-    des_vars.add_output('OD8_MN', 1.8),
-    des_vars.add_output('OD8_alt', 70000.0, units='ft'),
-    des_vars.add_output('OD8_T4', 2370.0, units='degR'),
-    des_vars.add_output('OD8_ab_FAR', 0.038532787),
-    des_vars.add_output('OD8_Rline', 2.0),
+    prob.model = pyc.MPCycle()
 
     # DESIGN CASE
-    prob.model.add_subsystem('DESIGN', ABTurbojet())
-
-    prob.model.connect('alt', 'DESIGN.fc.alt')
-    prob.model.connect('MN', 'DESIGN.fc.MN')
-    prob.model.connect('Fn_des', 'DESIGN.balance.rhs:W')
-    prob.model.connect('T4max', 'DESIGN.balance.rhs:FAR')
-
-    prob.model.connect('duct1:dPqP', 'DESIGN.duct1.dPqP')
-    prob.model.connect('comp:PRdes', 'DESIGN.comp.PR')
-    prob.model.connect('comp:effDes', 'DESIGN.comp.eff')
-    prob.model.connect('burn:dPqP', 'DESIGN.burner.dPqP')
-    prob.model.connect('turb:effDes', 'DESIGN.turb.eff')
-    prob.model.connect('ab:dPqP', 'DESIGN.ab.dPqP')
-    prob.model.connect('nozz:Cv', 'DESIGN.nozz.Cv')
-    prob.model.connect('shaft:Nmech', 'DESIGN.Nmech')
-
-    prob.model.connect('inlet:MN_out', 'DESIGN.inlet.MN')
-    prob.model.connect('duct1:MN_out', 'DESIGN.duct1.MN')
-    prob.model.connect('comp:MN_out', 'DESIGN.comp.MN')
-    prob.model.connect('burner:MN_out', 'DESIGN.burner.MN')
-    prob.model.connect('turb:MN_out', 'DESIGN.turb.MN')
-    prob.model.connect('ab:MN_out', 'DESIGN.ab.MN')
-    prob.model.connect('ab:FAR', 'DESIGN.ab.Fl_I:FAR')
-
-    prob.model.connect('comp:cool1:frac_W', 'DESIGN.comp.cool1:frac_W')
-    prob.model.connect('comp:cool1:frac_P', 'DESIGN.comp.cool1:frac_P')
-    prob.model.connect('comp:cool1:frac_work', 'DESIGN.comp.cool1:frac_work')
-
-    prob.model.connect('comp:cool2:frac_W', 'DESIGN.comp.cool2:frac_W')
-    prob.model.connect('comp:cool2:frac_P', 'DESIGN.comp.cool2:frac_P')
-    prob.model.connect('comp:cool2:frac_work', 'DESIGN.comp.cool2:frac_work')
-
-    prob.model.connect('turb:cool1:frac_P', 'DESIGN.turb.cool1:frac_P')
-    prob.model.connect('turb:cool2:frac_P', 'DESIGN.turb.cool2:frac_P')
-
-    # # DESIGN CASE (Fixed)
-    # prob.root.add('DESIGN', Turbojet_Fixed_Design())
+    prob.model.pyc_add_pnt('DESIGN', ABTurbojet(design=True))
 
     # OFF DESIGN CASES
-    pts = ['OD5',]
-    # pts = [] #'OD1','OD2','OD3','OD4','OD5','OD6','OD7','OD8'
+    # pts = ['OD5',]
+    pts = ['OD1','OD2','OD3','OD4','OD5','OD6','OD7','OD8'] 
 
     for pt in pts:
-        prob.model.add_subsystem(pt, ABTurbojet(design=False))
+        prob.model.pyc_add_pnt(pt, ABTurbojet(design=False), promotes=[('duct1.dPqP', 'DESIGN.duct1.dPqP'), ('burner.dPqP', 'DESIGN.burner.dPqP'),
+            ('ab.dPqP', 'DESIGN.ab.dPqP'), ('nozz.Cv', 'DESIGN.nozz.Cv'), ('comp.cool1:frac_W', 'DESIGN.comp.cool1:frac_W'), 
+            ('comp.cool1:frac_P', 'DESIGN.comp.cool1:frac_P'), ('comp.cool1:frac_work', 'DESIGN.comp.cool1:frac_work'),
+            ('comp.cool2:frac_W', 'DESIGN.comp.cool2:frac_W'), ('comp.cool2:frac_P', 'DESIGN.comp.cool2:frac_P'), 
+            ('comp.cool2:frac_work', 'DESIGN.comp.cool2:frac_work'), ('turb.cool1:frac_P', 'DESIGN.turb.cool1:frac_P'), 
+            ('turb.cool2:frac_P', 'DESIGN.turb.cool2:frac_P')])
 
-        prob.model.connect('duct1:dPqP', pt+'.duct1.dPqP')
-        prob.model.connect('burn:dPqP', pt+'.burner.dPqP')
-        prob.model.connect('ab:dPqP', pt+'.ab.dPqP')
-        prob.model.connect('nozz:Cv', pt+'.nozz.Cv')
+    prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
+    prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
+    prob.model.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
+    prob.model.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
 
-        prob.model.connect('comp:cool1:frac_W', pt+'.comp.cool1:frac_W')
-        prob.model.connect('comp:cool1:frac_P', pt+'.comp.cool1:frac_P')
-        prob.model.connect('comp:cool1:frac_work', pt+'.comp.cool1:frac_work')
-
-        prob.model.connect('comp:cool2:frac_W', pt+'.comp.cool2:frac_W')
-        prob.model.connect('comp:cool2:frac_P', pt+'.comp.cool2:frac_P')
-        prob.model.connect('comp:cool2:frac_work', pt+'.comp.cool2:frac_work')
-
-        prob.model.connect('turb:cool1:frac_P', pt+'.turb.cool1:frac_P')
-        prob.model.connect('turb:cool2:frac_P', pt+'.turb.cool2:frac_P')
-
-        prob.model.connect(pt+'_alt', pt+'.fc.alt')
-        prob.model.connect(pt+'_MN', pt+'.fc.MN')
-
-        prob.model.connect('DESIGN.comp.s_PR', pt+'.comp.s_PR')
-        prob.model.connect('DESIGN.comp.s_Wc', pt+'.comp.s_Wc')
-        prob.model.connect('DESIGN.comp.s_eff', pt+'.comp.s_eff')
-        prob.model.connect('DESIGN.comp.s_Nc', pt+'.comp.s_Nc')
-
-        prob.model.connect('DESIGN.turb.s_PR', pt+'.turb.s_PR')
-        prob.model.connect('DESIGN.turb.s_Wp', pt+'.turb.s_Wp')
-        prob.model.connect('DESIGN.turb.s_eff', pt+'.turb.s_eff')
-        prob.model.connect('DESIGN.turb.s_Np', pt+'.turb.s_Np')
+    prob.model.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
+    prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
+    prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
+    prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
 
 
-        prob.model.connect('DESIGN.inlet.Fl_O:stat:area', pt+'.inlet.area')
-        prob.model.connect('DESIGN.duct1.Fl_O:stat:area', pt+'.duct1.area')
-        prob.model.connect('DESIGN.comp.Fl_O:stat:area', pt+'.comp.area')
-        prob.model.connect('DESIGN.burner.Fl_O:stat:area', pt+'.burner.area')
-        prob.model.connect('DESIGN.turb.Fl_O:stat:area', pt+'.turb.area')
-        prob.model.connect('DESIGN.ab.Fl_O:stat:area', pt+'.ab.area')
-
-        prob.model.connect(pt+'_T4', pt+'.balance.rhs:FAR')
-        prob.model.connect(pt+'_Rline', pt+'.balance.rhs:W')
-        prob.model.connect(pt+'_ab_FAR', pt+'.ab.Fl_I:FAR')
-
+    prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
+    prob.model.pyc_connect_des_od('duct1.Fl_O:stat:area', 'duct1.area')
+    prob.model.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
+    prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
+    prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
+    prob.model.pyc_connect_des_od('ab.Fl_O:stat:area', 'ab.area')
 
     prob.setup(check=False)
+
+    prob.set_val('DESIGN.fc.alt', 0.0, units='ft'),
+    prob.set_val('DESIGN.fc.MN', 0.000001),
+    prob.set_val('DESIGN.balance.rhs:W', 11800.0, units='lbf'),
+    prob.set_val('DESIGN.balance.rhs:FAR', 2370.0, units='degR'),
+
+    prob.set_val('DESIGN.duct1.dPqP', 0.02),
+    prob.set_val('DESIGN.comp.PR', 13.5),
+    prob.set_val('DESIGN.comp.eff', 0.83),
+    prob.set_val('DESIGN.burner.dPqP', 0.03),
+    prob.set_val('DESIGN.turb.eff', 0.86),
+    prob.set_val('DESIGN.ab.dPqP', 0.06),
+    prob.set_val('DESIGN.nozz.Cv', 0.99),
+    prob.set_val('DESIGN.Nmech', 8070.0, units='rpm'),
+
+    prob.set_val('DESIGN.inlet.MN', 0.60),
+    prob.set_val('DESIGN.duct1.MN', 0.60),
+    prob.set_val('DESIGN.comp.MN', 0.20),
+    prob.set_val('DESIGN.burner.MN', 0.20),
+    prob.set_val('DESIGN.turb.MN', 0.4),
+    prob.set_val('DESIGN.ab.MN',0.4),
+    prob.set_val('DESIGN.ab.Fl_I:FAR', 0.000),
+
+    prob.set_val('DESIGN.comp.cool1:frac_W', 0.0789),
+    prob.set_val('DESIGN.comp.cool1:frac_P', 1.0),
+    prob.set_val('DESIGN.comp.cool1:frac_work', 1.0),
+
+    prob.set_val('DESIGN.comp.cool2:frac_W', 0.0383),
+    prob.set_val('DESIGN.comp.cool2:frac_P', 1.0),
+    prob.set_val('DESIGN.comp.cool2:frac_work', 1.0),
+    
+    prob.set_val('DESIGN.turb.cool1:frac_P', 1.0),
+    prob.set_val('DESIGN.turb.cool2:frac_P', 0.0),
+
+    MNs = [0.000001, 0.8, 1.0, 1.2, 0.6, 1.6, 1.6, 1.8]
+    alts = [0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
+    T4s = [2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0]
+    ab_FARs = [0.031523391, 0.022759941, 0.036849745, 0.035266091, 0.020216221, 0.038532787, 0.038532787, 0.038532787]
+    Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+
+    # MNs = [.6, ]
+    # alts = [35000, ]
+    # T4s = [2370, ]
+    # ab_FARs = [0.020216221,]
+    # Rlines = [2,]
+
+    for i, pt in enumerate(pts):
+        prob.set_val(pt+'.fc.alt', alts[i], units='ft'),
+        prob.set_val(pt+'.fc.MN', MNs[i]),
+
+        prob.set_val(pt+'.balance.rhs:FAR', T4s[i], units='degR'),
+        prob.set_val(pt+'.balance.rhs:W', Rlines[i]),
+        prob.set_val(pt+'.ab.Fl_I:FAR', ab_FARs[i]),
 
     # initial guesses
     prob['DESIGN.balance.FAR'] = 0.0175506829934
@@ -338,13 +258,6 @@ if __name__ == "__main__":
     prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
     for pt in pts:
-        # prob[pt+'.Rline_balance.indep'] = 1.0 #168.453135137
-        # prob[pt+'.temp_balance.indep'] = 0.0175506829934
-        # prob[pt+'.shaft_balance.indep'] = 8070.0
-        # prob[pt+'.fc.balance.Pt'] = 14.6955113159
-        # prob[pt+'.fc.balance.Tt'] = 518.665288153
-        # prob[pt+'.turb.PR'] = 4.46138725662
-
         # OD3 Guesses
         prob[pt+'.balance.W'] = 166.073
         prob[pt+'.balance.FAR'] = 0.01680
@@ -352,9 +265,6 @@ if __name__ == "__main__":
         prob[pt+'.fc.balance.Pt'] = 15.703
         prob[pt+'.fc.balance.Tt'] = 558.31
         prob[pt+'.turb.PR'] = 4.6690
-
-
-        print(pt, prob[pt+'.balance.W'], prob[pt+'.balance.Nmech'])
 
     st = time.time()
 

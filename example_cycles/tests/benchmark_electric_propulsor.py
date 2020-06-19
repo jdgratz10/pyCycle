@@ -80,4 +80,5 @@ class ElectricPropulsorTestCase(unittest.TestCase):
         assert_near_equal(prob['off_design.fan.SMN'], 22.13770023, tol)
         assert_near_equal(prob['off_design.fan.SMW'], 18.95649282, tol)
 
-
+if __name__ == "__main__":
+    unittest.main()
