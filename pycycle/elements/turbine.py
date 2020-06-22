@@ -487,53 +487,7 @@ class EnthalpyAndPower(om.ExplicitComponent):
 
 
 class Turbine(om.Group):
-    """
-    An Assembly that models a turbine
-
-    --------------
-    Flow Stations
-    --------------
-    Fl_I
-    Fl_O
-
-    -------------
-    Design
-    -------------
-        inputs
-        --------
-        map.PRdes
-        map.effDes
-        alphaMap
-        MN
-
-        outputs
-        --------
-        s_PR
-        s_Wc
-        s_eff
-        s_Nc
-
-    -------------
-    Off-Design
-    -------------
-        inputs
-        --------
-        s_PR
-        s_Wc
-        s_eff
-        s_Nc
-        area
-
-        outputs
-        --------
-        Wp
-        PR
-        eff
-        eff_poly
-        Np
-        power
-        trq
-    """
+    """An Assembly that models a turbine"""
 
     def initialize(self):
         self.options.declare('map_data', default=LPT2269)
@@ -553,16 +507,6 @@ class Turbine(om.Group):
                               desc='Method to use for map interpolation. \
                               Options are `slinear`, `cubic`, `quintic`.')
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
-
-
-        self.default_des_od_conns = [
-            # (design src, off-design target)
-            ('s_WpDes', 's_WpDes'),
-            ('s_PRdes', 's_PRdes'),
-            ('s_effDes', 's_effDes'), 
-            ('s_NpDes', 's_NpDes'), 
-            ('Fl_O:stat:area', 'area')
-        ]
 
     def setup(self):
 
@@ -606,8 +550,8 @@ class Turbine(om.Group):
                                promotes_outputs=['PR', 'eff'])
 
         # Calculate pressure drop across turbine
-        self.add_subsystem('press_drop', PressureDrop(), 
-                           promotes_inputs=['PR', ('Pt_in', 'Fl_I:tot:P')])
+        self.add_subsystem('press_drop', PressureDrop(), promotes_inputs=[
+                           'PR', ('Pt_in', 'Fl_I:tot:P')])
 
         # Calculate ideal flow station properties
         self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements),
@@ -625,7 +569,7 @@ class Turbine(om.Group):
                                '{}:*'.format(BN)])
 
         # Calculate bleed parameters
-        blds = Bleeds(bleed_names=bleeds, main_flow_elements=elements, bld_flow_elements = bleed_elements)
+        blds = Bleeds(bleed_names=bleeds, main_flow_elements=elements)
         self.add_subsystem('blds', blds,
                            promotes_inputs=[('W_in', 'Fl_I:stat:W'),
                                             ('Pt_in', 'Fl_I:tot:P'), ('n_in', 'Fl_I:tot:n')] +
@@ -674,8 +618,8 @@ class Turbine(om.Group):
         self.connect('press_drop.Pt_out', 'real_flow_b4bld.P')
 
         # Calculate Polytropic efficiency
-        self.add_subsystem('eff_poly_calc', eff_poly_calc(), 
-                            promotes_inputs=['PR',('S_in','Fl_I:tot:S'), ('Rt','Fl_I:tot:R')],
+        self.add_subsystem('eff_poly_calc',eff_poly_calc(),promotes_inputs=['PR',('S_in','Fl_I:tot:S'),
+                            ('Rt','Fl_I:tot:R')],
                             promotes_outputs=['eff_poly'])
         self.connect('real_flow_b4bld.Fl_O_b4bld:tot:S','eff_poly_calc.S_out')
 
@@ -689,7 +633,7 @@ class Turbine(om.Group):
         self.connect("blds.n_out", "real_flow.init_prod_amounts")
 
         self.add_subsystem('FAR_passthru', PassThrough(
-            'Fl_I:FAR', 'Fl_O:FAR', 0.0), promotes=['*'])
+            'Fl_I:FAR', 'Fl_O:FAR', 1.0), promotes=['*'])
 
        # Calculate static properties
         if statics:
@@ -729,13 +673,6 @@ class Turbine(om.Group):
                 'W_out', 'Fl_O:stat:W', 1.0, units="lbm/s"), promotes=['*'])
             self.set_order(['in_flow', 'corrinputs', 'map', 'press_drop', 'ideal_flow'] + bleeds + ['blds'] + bleed_names2 +
                            ['pwr_turb','real_flow_b4bld', 'eff_poly_calc', 'real_flow', 'FAR_passthru', 'W_passthru'])
-
-
-        self.set_input_defaults('Fl_I:FAR', val=0., units=None)
-        self.set_input_defaults('eff', val=0.99, units=None)
-        if not designFlag: 
-            self.set_input_defaults('area', val=1, units='inch**2')   
-
 
 
 if __name__ == "__main__":

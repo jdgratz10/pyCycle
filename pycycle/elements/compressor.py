@@ -368,11 +368,10 @@ class Compressor(om.Group):
     -------------
         inputs
         --------
-        s_PR
-        s_Wc
-        s_eff
-        s_Nc
-        area
+        s_PRdes
+        s_WcDes
+        s_effDes
+        s_NcDes
 
         outputs
         --------
@@ -404,14 +403,6 @@ class Compressor(om.Group):
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
 
 
-        self.default_des_od_conns = [
-            # (design src, off-design target)
-            ('s_Wc', 's_Wc'),
-            ('s_PR', 's_PR'),
-            ('s_eff', 's_eff'), 
-            ('s_Nc', 's_Nc'), 
-            ('Fl_O:stat:area', 'area')
-        ]
 
     def setup(self):
         #(self, mapclass=NCP01map(), design=True, thermo_data=species_data.janaf, elements=AIR_MIX, bleeds=[],statics=True):
@@ -518,9 +509,7 @@ class Compressor(om.Group):
             self.connect(BN + ':Pt', BN + "_flow.P")
 
         self.add_subsystem('FAR_passthru', PassThrough(
-            'Fl_I:FAR', 'Fl_O:FAR', 1), promotes=['*'])
-
-
+            'Fl_I:FAR', 'Fl_O:FAR', 1.0), promotes=['*'])
 
         if statics:
             if design:
@@ -570,14 +559,6 @@ class Compressor(om.Group):
                             'real_flow','eff_poly_calc' , 'blds_pwr',
                             'FAR_passthru'] + bleed_names + ['W_passthru'])
 
-
-        # define the group level defaults
-        self.set_input_defaults('Fl_I:FAR', val=0., units=None)
-        self.set_input_defaults('PR', val=2., units=None)
-        self.set_input_defaults('eff', val=0.99, units=None)
-
-        if not design: 
-            self.set_input_defaults('area', val=1, units='inch**2')    
 
 if __name__ == "__main__":
 
