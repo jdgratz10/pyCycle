@@ -3,6 +3,7 @@ import unittest
 import os
 
 import openmdao.api as om
+import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_rel_error
 
 from example_cycles.afterburning_turbojet import ABTurbojet
@@ -14,7 +15,9 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         self.prob = om.Problem()
 
-        self.prob.model.add_subsystem('OD', ABTurbojet(design=False))
+        self.prob.model = pyc.MPCycle()
+
+        self.prob.model.pyc_add_pnt('OD', ABTurbojet(design=False))
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
@@ -67,7 +70,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
         self.prob['OD.fc.balance.Tt'] = 518.665288153
         self.prob['OD.turb.PR'] = 4.46138725662
 
-    def benchmark_case1(self):
+    def zbenchmark_case1(self):
         # ADP Point
         np.seterr(divide='raise')
 
@@ -113,7 +116,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case2(self):
+    def zbenchmark_case2(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 0.8
         self.prob['OD.fc.alt'] = 0.0
@@ -163,7 +166,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case3(self):
+    def zbenchmark_case3(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 1.00001  # set to 1.00001 to get model to converge
         self.prob['OD.fc.alt'] = 15000.0
@@ -213,7 +216,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case4(self):
+    def zbenchmark_case4(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 1.2
         self.prob['OD.fc.alt'] = 25000.0
@@ -263,7 +266,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case5(self):
+    def zbenchmark_case5(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 0.6
         self.prob['OD.fc.alt'] = 35000.0
@@ -315,7 +318,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case6(self):
+    def zbenchmark_case6(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 1.6
         self.prob['OD.fc.alt'] = 35000.0
@@ -365,7 +368,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case7(self):
+    def zbenchmark_case7(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 1.6
         self.prob['OD.fc.alt'] = 50000.0
@@ -416,7 +419,7 @@ class J79OffdesignDryTestCase(unittest.TestCase):
         print()
 
     #TODO: there seems to be a regression here, but its the only one so I think we'll just skip it for now
-    def benchmark_case8(self):
+    def zbenchmark_case8(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 1.8
         self.prob['OD.fc.alt'] = 70000.0

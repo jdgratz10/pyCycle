@@ -475,33 +475,59 @@ if __name__ == "__main__":
         prob.set_val(pt+'.fc.dTs', OD_dTs[i_OD], units='degR')
         prob.set_val(pt+'.hpc.cust:frac_W', OD_W[i_OD])
 
+    prob.set_val('OD1.fc.MN', 0.8)
+    prob.set_val('OD1.fc.alt', 35000.0, units='ft')
+    prob.set_val('OD1.balance.rhs:FAR', 5500.0, units='lbf')  # 8950.0
+    prob.set_val('OD1.fc.dTs', 0.0, units='degR')
+    prob.set_val('OD1.hpc.cust:frac_W', 0.0445)
+
     # ====== END DECLARING DESIGN VARIABLES ======
 
     # initial guesses
+    # prob['DESIGN.balance.FAR'] = 0.025
+    # prob['DESIGN.balance.W'] = 100.
+    # prob['DESIGN.balance.lpt_PR'] = 4.0
+    # prob['DESIGN.balance.hpt_PR'] = 3.0
+    # prob['DESIGN.fc.balance.Pt'] = 5.2
+    # prob['DESIGN.fc.balance.Tt'] = 440.0
+
     prob['DESIGN.balance.FAR'] = 0.025
-    prob['DESIGN.balance.W'] = 100.
-    prob['DESIGN.balance.lpt_PR'] = 4.0
-    prob['DESIGN.balance.hpt_PR'] = 3.0
+    prob['DESIGN.balance.W'] = 316.0
+    prob['DESIGN.balance.lpt_PR'] = 4.4
+    prob['DESIGN.balance.hpt_PR'] = 3.6
     prob['DESIGN.fc.balance.Pt'] = 5.2
     prob['DESIGN.fc.balance.Tt'] = 440.0
 
-    W_guesses = [300, 300, 700, 700]
-    for i, pt in enumerate(pts):
-        # ADP and TOC guesses
-        prob[pt+'.balance.FAR'] = 0.02467
-        prob[pt+'.balance.W'] = W_guesses[i]
-        prob[pt+'.balance.BPR'] = 5.105
-        prob[pt+'.balance.lp_Nmech'] = 5000 # 4666.1
-        prob[pt+'.balance.hp_Nmech'] = 15000 # 14705.7
-        # prob[pt+'.fc.balance.Pt'] = 5.2
-        # prob[pt+'.fc.balance.Tt'] = 440.0
-        prob[pt+'.hpt.PR'] = 3.
-        prob[pt+'.lpt.PR'] = 4.
-        prob[pt+'.fan.map.RlineMap'] = 2.0
-        prob[pt+'.lpc.map.RlineMap'] = 2.0
-        prob[pt+'.hpc.map.RlineMap'] = 2.0
+    # W_guesses = [300, 300, 700, 700]
+    # for i, pt in enumerate(pts):
+    #     # ADP and TOC guesses
+    #     prob[pt+'.balance.FAR'] = 0.02467
+    #     prob[pt+'.balance.W'] = W_guesses[i]
+    #     prob[pt+'.balance.BPR'] = 5.105
+    #     prob[pt+'.balance.lp_Nmech'] = 5000 # 4666.1
+    #     prob[pt+'.balance.hp_Nmech'] = 15000 # 14705.7
+    #     # prob[pt+'.fc.balance.Pt'] = 5.2
+    #     # prob[pt+'.fc.balance.Tt'] = 440.0
+    #     prob[pt+'.hpt.PR'] = 3.
+    #     prob[pt+'.lpt.PR'] = 4.
+    #     prob[pt+'.fan.map.RlineMap'] = 2.0
+    #     prob[pt+'.lpc.map.RlineMap'] = 2.0
+    #     prob[pt+'.hpc.map.RlineMap'] = 2.0
 
     st = time.time()
+
+    prob['OD1.balance.FAR'] = 0.02467
+    prob['OD1.balance.W'] = 320.931
+    prob['OD1.balance.BPR'] = 5.105
+    prob['OD1.balance.lp_Nmech'] = 4666.1
+    prob['OD1.balance.hp_Nmech'] = 14705.7
+    prob['OD1.fc.balance.Pt'] = 5.2
+    prob['OD1.fc.balance.Tt'] = 440.0
+    prob['OD1.hpt.PR'] = 3.6200
+    prob['OD1.lpt.PR'] = 4.3645
+    prob['OD1.fan.map.RlineMap'] = 2.0
+    prob['OD1.lpc.map.RlineMap'] = 2.0
+    prob['OD1.hpc.map.RlineMap'] = 2.0
 
     prob.set_solver_print(level=-1)
     prob.set_solver_print(level=2, depth=1)
@@ -513,4 +539,14 @@ if __name__ == "__main__":
 
     print()
     print("Run time", time.time() - st)
+    print(prob['OD1.inlet.Fl_O:stat:W'][0])
+    print(prob['OD1.perf.OPR'][0])
+    print(prob['OD1.balance.FAR'][0])
+    print(prob['OD1.balance.hp_Nmech'][0])
+    print(prob['OD1.balance.lp_Nmech'][0])
+    print(prob['OD1.perf.Fg'][0])
+    print(prob['OD1.perf.TSFC'][0])
+    print(prob['OD1.bld3.Fl_O:tot:T'][0])
+    print(prob['OD1.balance.BPR'][0])
+
 

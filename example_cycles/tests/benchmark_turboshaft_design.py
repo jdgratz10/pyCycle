@@ -3,6 +3,7 @@ import unittest
 import os
 
 from openmdao.api import Problem, IndepVarComp
+import pycycle.api as pyc
 from openmdao.utils.units import convert_units as cu
 from openmdao.utils.assert_utils import assert_rel_error
 
@@ -15,7 +16,9 @@ class TurboshaftDesignTestCase(unittest.TestCase):
 
         self.prob = Problem()
 
-        self.prob.model.add_subsystem('DESIGN', Turboshaft())
+        self.prob.model = pyc.MPCycle()
+
+        self.prob.model.pyc_add_pnt('DESIGN', Turboshaft())
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
@@ -90,7 +93,7 @@ class TurboshaftDesignTestCase(unittest.TestCase):
         self.prob['DESIGN.fc.balance.Pt'] = 5.666
         self.prob['DESIGN.fc.balance.Tt'] = 440.0
 
-    def benchmark_case1(self):
+    def zbenchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.run_model()

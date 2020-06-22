@@ -3,6 +3,7 @@ import unittest
 import os
 
 from openmdao.api import Problem, Group
+import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_rel_error
 
 from example_cycles.mixedflow_turbofan import MixedFlowTurbofan
@@ -13,13 +14,15 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
 
         self.prob = prob = Problem()
 
-        prob.model.add_subsystem('DESIGN', MixedFlowTurbofan(design=True), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
+        self.prob.model = pyc.MPCycle()
+
+        prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
             'hp_shaft.HPX'])
 
         self.od_pts = ['OD0',]
 
         for i,pt in enumerate(self.od_pts):
-            prob.model.add_subsystem(pt, MixedFlowTurbofan(design=False), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
+            prob.model.pyc_add_pnt(pt, MixedFlowTurbofan(design=False), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
                 ('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), ('inlet_duct.dPqP', 'DESIGN.inlet_duct.dPqP'),
                 ('splitter_core_duct.dPqP', 'DESIGN.splitter_core_duct.dPqP'), ('lpc_duct.dPqP', 'DESIGN.lpc_duct.dPqP'),
                 ('burner.dPqP', 'DESIGN.burner.dPqP'), ('hpt_duct.dPqP', 'DESIGN.hpt_duct.dPqP'), ('lpt_duct.dPqP', 'DESIGN.lpt_duct.dPqP'),
@@ -30,49 +33,49 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
                 ('hpt.cool3:frac_P', 'DESIGN.hpt.cool3:frac_P'), ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P')])
 
             # map scalars
-            prob.model.connect('DESIGN.fan.s_PR', pt+'.fan.s_PR')
-            prob.model.connect('DESIGN.fan.s_Wc', pt+'.fan.s_Wc')
-            prob.model.connect('DESIGN.fan.s_eff', pt+'.fan.s_eff')
-            prob.model.connect('DESIGN.fan.s_Nc', pt+'.fan.s_Nc')
-            prob.model.connect('DESIGN.lpc.s_PR', pt+'.lpc.s_PR')
-            prob.model.connect('DESIGN.lpc.s_Wc', pt+'.lpc.s_Wc')
-            prob.model.connect('DESIGN.lpc.s_eff', pt+'.lpc.s_eff')
-            prob.model.connect('DESIGN.lpc.s_Nc', pt+'.lpc.s_Nc')
-            prob.model.connect('DESIGN.hpc.s_PR', pt+'.hpc.s_PR')
-            prob.model.connect('DESIGN.hpc.s_Wc', pt+'.hpc.s_Wc')
-            prob.model.connect('DESIGN.hpc.s_eff', pt+'.hpc.s_eff')
-            prob.model.connect('DESIGN.hpc.s_Nc', pt+'.hpc.s_Nc')
-            prob.model.connect('DESIGN.hpt.s_PR', pt+'.hpt.s_PR')
-            prob.model.connect('DESIGN.hpt.s_Wp', pt+'.hpt.s_Wp')
-            prob.model.connect('DESIGN.hpt.s_eff', pt+'.hpt.s_eff')
-            prob.model.connect('DESIGN.hpt.s_Np', pt+'.hpt.s_Np')
-            prob.model.connect('DESIGN.lpt.s_PR', pt+'.lpt.s_PR')
-            prob.model.connect('DESIGN.lpt.s_Wp', pt+'.lpt.s_Wp')
-            prob.model.connect('DESIGN.lpt.s_eff', pt+'.lpt.s_eff')
-            prob.model.connect('DESIGN.lpt.s_Np', pt+'.lpt.s_Np')
+        prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
+        prob.model.pyc_connect_des_od('fan.s_Wc', 'fan.s_Wc')
+        prob.model.pyc_connect_des_od('fan.s_eff', 'fan.s_eff')
+        prob.model.pyc_connect_des_od('fan.s_Nc', 'fan.s_Nc')
+        prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
+        prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
+        prob.model.pyc_connect_des_od('lpc.s_eff', 'lpc.s_eff')
+        prob.model.pyc_connect_des_od('lpc.s_Nc', 'lpc.s_Nc')
+        prob.model.pyc_connect_des_od('hpc.s_PR', 'hpc.s_PR')
+        prob.model.pyc_connect_des_od('hpc.s_Wc', 'hpc.s_Wc')
+        prob.model.pyc_connect_des_od('hpc.s_eff', 'hpc.s_eff')
+        prob.model.pyc_connect_des_od('hpc.s_Nc', 'hpc.s_Nc')
+        prob.model.pyc_connect_des_od('hpt.s_PR', 'hpt.s_PR')
+        prob.model.pyc_connect_des_od('hpt.s_Wp', 'hpt.s_Wp')
+        prob.model.pyc_connect_des_od('hpt.s_eff', 'hpt.s_eff')
+        prob.model.pyc_connect_des_od('hpt.s_Np', 'hpt.s_Np')
+        prob.model.pyc_connect_des_od('lpt.s_PR', 'lpt.s_PR')
+        prob.model.pyc_connect_des_od('lpt.s_Wp', 'lpt.s_Wp')
+        prob.model.pyc_connect_des_od('lpt.s_eff', 'lpt.s_eff')
+        prob.model.pyc_connect_des_od('lpt.s_Np', 'lpt.s_Np')
 
             # flow areas
-            prob.model.connect('DESIGN.mixed_nozz.Throat:stat:area', pt+'.balance.rhs:W')
+        prob.model.pyc_connect_des_od('mixed_nozz.Throat:stat:area', 'balance.rhs:W')
 
-            prob.model.connect('DESIGN.inlet.Fl_O:stat:area', pt+'.inlet.area')
-            prob.model.connect('DESIGN.fan.Fl_O:stat:area', pt+'.fan.area')
-            prob.model.connect('DESIGN.splitter.Fl_O1:stat:area', pt+'.splitter.area1')
-            prob.model.connect('DESIGN.splitter.Fl_O2:stat:area', pt+'.splitter.area2')
-            prob.model.connect('DESIGN.splitter_core_duct.Fl_O:stat:area', pt+'.splitter_core_duct.area')
-            prob.model.connect('DESIGN.lpc.Fl_O:stat:area', pt+'.lpc.area')
-            prob.model.connect('DESIGN.lpc_duct.Fl_O:stat:area', pt+'.lpc_duct.area')
-            prob.model.connect('DESIGN.hpc.Fl_O:stat:area', pt+'.hpc.area')
-            prob.model.connect('DESIGN.bld3.Fl_O:stat:area', pt+'.bld3.area')
-            prob.model.connect('DESIGN.burner.Fl_O:stat:area', pt+'.burner.area')
-            prob.model.connect('DESIGN.hpt.Fl_O:stat:area', pt+'.hpt.area')
-            prob.model.connect('DESIGN.hpt_duct.Fl_O:stat:area', pt+'.hpt_duct.area')
-            prob.model.connect('DESIGN.lpt.Fl_O:stat:area', pt+'.lpt.area')
-            prob.model.connect('DESIGN.lpt_duct.Fl_O:stat:area', pt+'.lpt_duct.area')
-            prob.model.connect('DESIGN.bypass_duct.Fl_O:stat:area', pt+'.bypass_duct.area')
-            prob.model.connect('DESIGN.mixer.Fl_O:stat:area', pt+'.mixer.area')
-            prob.model.connect('DESIGN.mixer.Fl_I1_calc:stat:area', pt+'.mixer.Fl_I1_stat_calc.area')
-            prob.model.connect('DESIGN.mixer_duct.Fl_O:stat:area', pt+'.mixer_duct.area')
-            prob.model.connect('DESIGN.afterburner.Fl_O:stat:area', pt+'.afterburner.area')
+        prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
+        prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
+        prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
+        prob.model.pyc_connect_des_od('splitter.Fl_O2:stat:area', 'splitter.area2')
+        prob.model.pyc_connect_des_od('splitter_core_duct.Fl_O:stat:area', 'splitter_core_duct.area')
+        prob.model.pyc_connect_des_od('lpc.Fl_O:stat:area', 'lpc.area')
+        prob.model.pyc_connect_des_od('lpc_duct.Fl_O:stat:area', 'lpc_duct.area')
+        prob.model.pyc_connect_des_od('hpc.Fl_O:stat:area', 'hpc.area')
+        prob.model.pyc_connect_des_od('bld3.Fl_O:stat:area', 'bld3.area')
+        prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
+        prob.model.pyc_connect_des_od('hpt.Fl_O:stat:area', 'hpt.area')
+        prob.model.pyc_connect_des_od('hpt_duct.Fl_O:stat:area', 'hpt_duct.area')
+        prob.model.pyc_connect_des_od('lpt.Fl_O:stat:area', 'lpt.area')
+        prob.model.pyc_connect_des_od('lpt_duct.Fl_O:stat:area', 'lpt_duct.area')
+        prob.model.pyc_connect_des_od('bypass_duct.Fl_O:stat:area', 'bypass_duct.area')
+        prob.model.pyc_connect_des_od('mixer.Fl_O:stat:area', 'mixer.area')
+        prob.model.pyc_connect_des_od('mixer.Fl_I1_calc:stat:area', 'mixer.Fl_I1_stat_calc.area')
+        prob.model.pyc_connect_des_od('mixer_duct.Fl_O:stat:area', 'mixer_duct.area')
+        prob.model.pyc_connect_des_od('afterburner.Fl_O:stat:area', 'afterburner.area')
 
         prob.setup(check=False)
 
@@ -170,7 +173,7 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         self.prob.set_solver_print(level=2, depth=1)
 
 
-    def benchmark_run_des(self):
+    def zbenchmark_run_des(self):
         ''' Runs the design point and an off design point to make sure they match perfectly '''
         prob = self.prob
 

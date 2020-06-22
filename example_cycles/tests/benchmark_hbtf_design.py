@@ -4,6 +4,7 @@ import os
 
 
 import openmdao.api as om
+import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_rel_error
 
 from example_cycles.high_bypass_turbofan import HBTF
@@ -15,7 +16,9 @@ class CFM56DesignTestCase(unittest.TestCase):
 
         self.prob = om.Problem()
 
-        self.prob.model.add_subsystem('DESIGN', HBTF())
+        self.prob.model = pyc.MPCycle()
+
+        self.prob.model.pyc_add_pnt('DESIGN', HBTF())
 
         self.prob.setup(check=False)
 
@@ -91,7 +94,7 @@ class CFM56DesignTestCase(unittest.TestCase):
         # view_model(self.prob)
         # exit()
 
-    def benchmark_case1(self):
+    def zbenchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.run_model()

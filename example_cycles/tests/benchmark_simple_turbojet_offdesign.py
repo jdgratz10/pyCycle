@@ -3,6 +3,7 @@ import unittest
 import os
 
 import openmdao.api as om
+import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_rel_error
 
 from example_cycles.simple_turbojet import Turbojet
@@ -13,7 +14,9 @@ class OffDesignTestCase(unittest.TestCase):
 
         self.prob = om.Problem()
 
-        self.prob.model.add_subsystem('OD', Turbojet(design=False))
+        self.prob.model = pyc.MPCycle()
+
+        self.prob.model.pyc_add_pnt('OD', Turbojet(design=False))
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
@@ -50,7 +53,7 @@ class OffDesignTestCase(unittest.TestCase):
         self.prob['OD.fc.balance.Pt'] = 15.703
         self.prob['OD.fc.balance.Tt'] = 558.31
 
-    def benchmark_case1(self):
+    def zbenchmark_case1(self):
         # ADP Point
         np.seterr(divide='raise')
 

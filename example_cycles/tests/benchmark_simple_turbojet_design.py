@@ -3,6 +3,7 @@ import unittest
 import os
 
 import openmdao.api as om
+import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_rel_error
 
 from example_cycles.simple_turbojet import Turbojet
@@ -13,7 +14,9 @@ class DesignTestCase(unittest.TestCase):
 
         self.prob = om.Problem()
 
-        self.prob.model.add_subsystem('DESIGN', Turbojet())
+        self.prob.model = pyc.MPCycle()
+
+        self.prob.model.pyc_add_pnt('DESIGN', Turbojet())
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
@@ -44,7 +47,7 @@ class DesignTestCase(unittest.TestCase):
         self.prob['DESIGN.fc.balance.Pt'] = 14.6955113159
         self.prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
-    def benchmark_case1(self):
+    def zbenchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.run_model()
