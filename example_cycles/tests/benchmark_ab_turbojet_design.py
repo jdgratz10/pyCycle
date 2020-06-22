@@ -62,7 +62,7 @@ class DesignTestCase(unittest.TestCase):
         self.prob['DESIGN.fc.balance.Pt'] = 14.6955113159
         self.prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
-    def zbenchmark_case1(self):
+    def benchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.run_model()

@@ -53,7 +53,7 @@ class OffDesignTestCase(unittest.TestCase):
         self.prob['OD.fc.balance.Pt'] = 15.703
         self.prob['OD.fc.balance.Tt'] = 558.31
 
-    def zbenchmark_case1(self):
+    def benchmark_case1(self):
         # ADP Point
         np.seterr(divide='raise')
 

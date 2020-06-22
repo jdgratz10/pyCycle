@@ -290,7 +290,7 @@ class CFM56TestCase(unittest.TestCase):
         self.prob['OD.hpc.map.RlineMap'] = 2.0
 
     
-    def benchmark_case1(self):
+    def zbenchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.set_solver_print(level=-1)
@@ -341,7 +341,7 @@ class CFM56TestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case2(self):
+    def zbenchmark_case2(self):
         # ADP Point
         np.seterr(divide='raise')
 
@@ -411,7 +411,7 @@ class CFM56TestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case3(self):
+    def zbenchmark_case3(self):
         # TOC Point
         np.seterr(divide='raise')
 
@@ -488,7 +488,7 @@ class CFM56TestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case4(self):
+    def zbenchmark_case4(self):
         # RTO Point
         np.seterr(divide='raise')
 
@@ -565,7 +565,7 @@ class CFM56TestCase(unittest.TestCase):
 
         print()
 
-    def benchmark_case5(self):
+    def zbenchmark_case5(self):
         # SLS Point
         np.seterr(divide='raise')
 

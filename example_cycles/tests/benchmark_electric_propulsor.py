@@ -13,7 +13,7 @@ from example_cycles.electric_propulsor import Propulsor
 class ElectricPropulsorTestCase(unittest.TestCase): 
 
 
-    def zbenchmark_case1(self): 
+    def benchmark_case1(self): 
 
         prob = om.Problem()
 

@@ -94,7 +94,7 @@ class CFM56DesignTestCase(unittest.TestCase):
         # view_model(self.prob)
         # exit()
 
-    def zbenchmark_case1(self):
+    def benchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.run_model()

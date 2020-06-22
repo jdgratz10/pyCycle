@@ -93,7 +93,7 @@ class TurboshaftDesignTestCase(unittest.TestCase):
         self.prob['DESIGN.fc.balance.Pt'] = 5.666
         self.prob['DESIGN.fc.balance.Tt'] = 440.0
 
-    def zbenchmark_case1(self):
+    def benchmark_case1(self):
         np.seterr(divide='raise')
 
         self.prob.run_model()

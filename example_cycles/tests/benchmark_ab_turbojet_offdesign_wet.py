@@ -71,7 +71,7 @@ class ABTurbojetOffdesignWetTestCase(unittest.TestCase):
         self.prob['OD.fc.balance.Tt'] = 518.665288153
         self.prob['OD.turb.PR'] = 4.46138725662
 
-    def zbenchmark_case1(self):
+    def benchmark_case1(self):
         # ADP Point
         np.seterr(divide='raise')
 
@@ -117,7 +117,7 @@ class ABTurbojetOffdesignWetTestCase(unittest.TestCase):
 
         print()
 
-    def zbenchmark_case2(self):
+    def benchmark_case2(self):
         np.seterr(divide='raise')
         self.prob['OD.fc.MN'] = 0.8
         self.prob['OD.fc.alt'] = 0.0
