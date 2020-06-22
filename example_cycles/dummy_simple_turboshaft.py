@@ -31,7 +31,7 @@ class Turboshaft(om.Group):
         self.add_subsystem('hpc_centri', pyc.Compressor(map_data=pyc.HPCMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX),
                            promotes_inputs=[('Nmech','HP_Nmech')])
         self.add_subsystem('bld3', pyc.BleedOut(design=design, bleed_names=['cool3','cool4']))
-        self.add_subsystem('duct6', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
+        # self.add_subsystem('duct6', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_MIX))
         self.add_subsystem('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
                                     inflow_elements=pyc.AIR_MIX,
                                     air_fuel_elements=pyc.AIR_FUEL_MIX,
@@ -39,6 +39,7 @@ class Turboshaft(om.Group):
         self.add_subsystem('hpt', pyc.Turbine(map_data=pyc.LPT2269, design=design,
                                     thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, bleed_names=['cool3','cool4']),
                                     promotes_inputs=[('Nmech', 'HP_Nmech')])
+        self.add_subsystem('duct43', pyc.Duct(design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
         self.add_subsystem('lpt', pyc.Turbine(map_data=pyc.LPTMap, design=design, thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,
                             bleed_names=['cool1','cool2']),
                            promotes_inputs=[('Nmech','IP_Nmech')])
@@ -123,10 +124,11 @@ class Turboshaft(om.Group):
         pyc.connect_flow(self, 'hpc_axi.Fl_O', 'bld25.Fl_I')
         pyc.connect_flow(self, 'bld25.Fl_O', 'hpc_centri.Fl_I')
         pyc.connect_flow(self, 'hpc_centri.Fl_O', 'bld3.Fl_I')
-        pyc.connect_flow(self, 'bld3.Fl_O', 'duct6.Fl_I')
-        pyc.connect_flow(self, 'duct6.Fl_O', 'burner.Fl_I')
+        pyc.connect_flow(self, 'bld3.Fl_O', 'burner.Fl_I')
+        # pyc.connect_flow(self, 'duct6.Fl_O', 'burner.Fl_I')
         pyc.connect_flow(self, 'burner.Fl_O', 'hpt.Fl_I')
-        pyc.connect_flow(self, 'hpt.Fl_O', 'lpt.Fl_I')
+        pyc.connect_flow(self, 'hpt.Fl_O', 'duct43.Fl_I')
+        pyc.connect_flow(self, 'duct43.Fl_O', 'lpt.Fl_I')
         pyc.connect_flow(self, 'lpt.Fl_O', 'pt.Fl_I')
         pyc.connect_flow(self, 'pt.Fl_O', 'nozz.Fl_I')
 
@@ -175,8 +177,8 @@ def viewer(prob, pt, file=sys.stdout):
 
     fs_names = ['fc.Fl_O','inlet.Fl_O','duct1.Fl_O', 'lpc.Fl_O', 'icduct.Fl_O', 
                 'hpc_axi.Fl_O', 'bld25.Fl_O',
-                'hpc_centri.Fl_O', 'bld3.Fl_O', 'duct6.Fl_O'
-                'burner.Fl_O','hpt.Fl_O','lpt.Fl_O', 'pt.Fl_O',
+                'hpc_centri.Fl_O', 'bld3.Fl_O',
+                'burner.Fl_O','hpt.Fl_O', 'duct43', 'lpt.Fl_O', 'pt.Fl_O',
                 'nozz.Fl_O']
     fs_full_names = [f'{pt}.{fs}' for fs in fs_names]
     pyc.print_flow_station(prob, fs_full_names, file=file)
@@ -238,12 +240,14 @@ if __name__ == "__main__":
     des_vars.add_output('DESIGNbld3_cool3_frac_W', 0.1705),
     des_vars.add_output('DESIGNbld3_cool4_frac_W', 0.1209),
     des_vars.add_output('DESIGNbld3_MN_out', 0.2000),
-    des_vars.add_output('DESIGNduct6_dPqP', 0.00),
-    des_vars.add_output('DESIGNduct6_MN_out', 0.2000),
+    # des_vars.add_output('DESIGNduct6_dPqP', 0.00),
+    # des_vars.add_output('DESIGNduct6_MN_out', 0.2000),
     des_vars.add_output('DESIGNburner_dPqP', 0.05)
     des_vars.add_output('DESIGNhpt_eff', 0.89)
     des_vars.add_output('DESIGNhpt_cool3_frac_P', 1.0),
     des_vars.add_output('DESIGNhpt_cool4_frac_P', 0.0),
+    des_vars.add_output('DESIGNduct43_dPqP', 0.0051),
+    des_vars.add_output('DESIGNduct43_MN_out', 0.30),
     des_vars.add_output('DESIGNpt_eff', 0.9)
     des_vars.add_output('DESIGNlpt_eff', .9)
     des_vars.add_output('DESIGNlpt_cool1_frac_P', 1.0),
@@ -316,12 +320,14 @@ if __name__ == "__main__":
     prob.model.connect('DESIGNbld3_cool3_frac_W', 'DESIGN.bld3.cool3:frac_W')
     prob.model.connect('DESIGNbld3_cool4_frac_W', 'DESIGN.bld3.cool4:frac_W')
     prob.model.connect('DESIGNbld3_MN_out', 'DESIGN.bld3.MN')
-    prob.model.connect('DESIGNduct6_dPqP', 'DESIGN.duct6.dPqP')
-    prob.model.connect('DESIGNduct6_MN_out', 'DESIGN.duct6.MN')
+    # prob.model.connect('DESIGNduct6_dPqP', 'DESIGN.duct6.dPqP')
+    # prob.model.connect('DESIGNduct6_MN_out', 'DESIGN.duct6.MN')
     prob.model.connect('DESIGNburner_dPqP', 'DESIGN.burner.dPqP')
     prob.model.connect('DESIGNhpt_eff', 'DESIGN.hpt.eff')
     prob.model.connect('DESIGNhpt_cool3_frac_P', 'DESIGN.hpt.cool3:frac_P')
     prob.model.connect('DESIGNhpt_cool4_frac_P', 'DESIGN.hpt.cool4:frac_P')
+    prob.model.connect('DESIGNduct43_dPqP', 'DESIGN.duct43.dPqP')
+    prob.model.connect('DESIGNduct43_MN_out', 'DESIGN.duct43.MN')
     prob.model.connect('DESIGNpt_eff', 'DESIGN.pt.eff')
     prob.model.connect('DESIGNlpt_eff', 'DESIGN.lpt.eff')
     prob.model.connect('DESIGNnozz_Cv', 'DESIGN.nozz.Cv')
@@ -369,7 +375,8 @@ if __name__ == "__main__":
     prob.model.connect('DESIGN.hpt.s_Np', 'OD1.hpt.s_Np')
 
     prob.model.connect('DESIGNicduct_dPqP', 'OD1.icduct.dPqP')
-    prob.model.connect('DESIGNduct6_dPqP', 'OD1.duct6.dPqP')
+    # prob.model.connect('DESIGNduct6_dPqP', 'OD1.duct6.dPqP')
+    prob.model.connect('DESIGNduct43_dPqP', 'OD1.duct43.dPqP')
 
     prob.model.connect('DESIGN.pt.s_PR', 'OD1.pt.s_PR')
     prob.model.connect('DESIGN.pt.s_Wp', 'OD1.pt.s_Wp')
@@ -391,6 +398,7 @@ if __name__ == "__main__":
     prob.model.connect('DESIGN.bld3.Fl_O:stat:area', 'OD1.bld3.area')
     prob.model.connect('DESIGN.burner.Fl_O:stat:area', 'OD1.burner.area')
     prob.model.connect('DESIGN.hpt.Fl_O:stat:area', 'OD1.hpt.area')
+    prob.model.connect('DESIGN.duct43.Fl_O:stat:area', 'OD1.duct43.area')
     prob.model.connect('DESIGN.pt.Fl_O:stat:area', 'OD1.pt.area')
     prob.model.connect('DESIGN.lpt.Fl_O:stat:area', 'OD1.lpt.area')
 
