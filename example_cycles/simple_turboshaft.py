@@ -170,6 +170,8 @@ if __name__ == "__main__":
 
     # Create design instance of model
     prob.model.pyc_add_pnt('DESIGN', Turboshaft())
+    prob.model.pyc_add_cycle_param('burner.dPqP', .03)
+    prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
 
     # Connect off-design and required design inputs to model
     od_pts = ['OD1', 'OD2']
@@ -220,10 +222,8 @@ if __name__ == "__main__":
 
     prob.set_val('DESIGN.comp.PR', 13.5)
     prob.set_val('DESIGN.comp.eff', 0.83)
-    prob.set_val('DESIGN.burner.dPqP', 0.03)
     prob.set_val('DESIGN.turb.eff', 0.86)
     prob.set_val('DESIGN.pt.eff', 0.9)
-    prob.set_val('DESIGN.nozz.Cv', 0.99)
     prob.set_val('DESIGN.HP_Nmech', 8070.0, units='rpm')
     prob.set_val('DESIGN.LP_Nmech', 5000.0, units='rpm')
 
@@ -237,14 +237,11 @@ if __name__ == "__main__":
     prob['DESIGN.balance.FAR'] = 0.0175506829934
     prob['DESIGN.balance.W'] = 27.265
     prob['DESIGN.balance.turb_PR'] = 3.8768
-    prob['DESIGN.balance.pt_PR'] = 2.8148
-    prob['DESIGN.fc.balance.Pt'] = 14.6955113159
+    prob['DESIGN.balance.pt_PR'] = 2.
+    prob['DESIGN.fc.balance.Pt'] = 14.69551131598148
     prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
     for i,pt in enumerate(od_pts):
-
-        prob[pt+'.burner.dPqP'] = 0.03
-        prob[pt+'.nozz.Cv'] = 0.99
 
         prob.set_val(pt+'.fc.alt', od_alts[i], units='ft')
         prob.set_val(pt+'.fc.MN', od_MNs[i])

@@ -272,23 +272,40 @@ if __name__ == "__main__":
     prob.model = pyc.MPCycle()
 
     # DESIGN CASE  
-    prob.model.pyc_add_pnt('DESIGN', HBTF(), promotes=['hp_shaft.HPX']) # Create an instace of the High Bypass ratio Turbofan
+    prob.model.pyc_add_pnt('DESIGN', HBTF()) # Create an instace of the High Bypass ratio Turbofan
     #Note that we promote hp_shaft.HPX because otherwise it's absolute name would be DESIGN.hp_shaft.HPX, which would cause a promotion mask error
     #and we would not be allowed to promote hp_shaft.HPX from the off-design cases to the name DESIGN.hp_shaft.HPX
-
+    prob.model.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
+    prob.model.pyc_add_cycle_param('duct4.dPqP', 0.0048)
+    prob.model.pyc_add_cycle_param('duct6.dPqP', 0.0101)
+    prob.model.pyc_add_cycle_param('burner.dPqP', 0.0540)
+    prob.model.pyc_add_cycle_param('duct11.dPqP', 0.0051)
+    prob.model.pyc_add_cycle_param('duct13.dPqP', 0.0107)
+    prob.model.pyc_add_cycle_param('duct15.dPqP', 0.0149)
+    prob.model.pyc_add_cycle_param('core_nozz.Cv', 0.9933)
+    prob.model.pyc_add_cycle_param('byp_bld.bypBld:frac_W', 0.005)
+    prob.model.pyc_add_cycle_param('byp_nozz.Cv', 0.9939)
+    prob.model.pyc_add_cycle_param('hpc.cool1:frac_W', 0.050708)
+    prob.model.pyc_add_cycle_param('hpc.cool1:frac_P', 0.5)
+    prob.model.pyc_add_cycle_param('hpc.cool1:frac_work', 0.5)
+    prob.model.pyc_add_cycle_param('hpc.cool2:frac_W', 0.020274)
+    prob.model.pyc_add_cycle_param('hpc.cool2:frac_P', 0.55)
+    prob.model.pyc_add_cycle_param('hpc.cool2:frac_work', 0.5)
+    prob.model.pyc_add_cycle_param('bld3.cool3:frac_W', 0.067214)
+    prob.model.pyc_add_cycle_param('bld3.cool4:frac_W', 0.101256)
+    prob.model.pyc_add_cycle_param('hpc.cust:frac_P', 0.5)
+    prob.model.pyc_add_cycle_param('hpc.cust:frac_work', 0.5)
+    prob.model.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('hpt.cool4:frac_P', 0.0)
+    prob.model.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
+    prob.model.pyc_add_cycle_param('hp_shaft.HPX', 250.0, units='hp')
+    
     # OFF DESIGN CASES
     pts = ['OD1'] #,'OD2','OD3','OD4']
 
     for i_OD, pt in enumerate(pts):
-        ODpt = prob.model.pyc_add_pnt(pt, HBTF(design=False), promotes=[('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), 
-            ('duct4.dPqP', 'DESIGN.duct4.dPqP'), ('duct6.dPqP', 'DESIGN.duct6.dPqP'), ('burner.dPqP', 'DESIGN.burner.dPqP'),
-            ('duct11.dPqP', 'DESIGN.duct11.dPqP'), ('duct13.dPqP', 'DESIGN.duct13.dPqP'), ('duct15.dPqP', 'DESIGN.duct15.dPqP'),
-            ('core_nozz.Cv', 'DESIGN.core_nozz.Cv'), ('byp_bld.bypBld:frac_W', 'DESIGN.byp_bld.bypBld:frac_W'),
-            ('byp_nozz.Cv', 'DESIGN.byp_nozz.Cv'), ('hpc.cool1:frac_W', 'DESIGN.hpc.cool1:frac_W'), ('hpc.cool1:frac_P', 'DESIGN.hpc.cool1:frac_P'),
-            ('hpc.cool1:frac_work', 'DESIGN.hpc.cool1:frac_work'), ('hpc.cool2:frac_W', 'DESIGN.hpc.cool2:frac_W'), ('hpc.cool2:frac_P', 'DESIGN.hpc.cool2:frac_P'),
-            ('hpc.cool2:frac_work', 'DESIGN.hpc.cool2:frac_work'), ('bld3.cool3:frac_W', 'DESIGN.bld3.cool3:frac_W'), ('bld3.cool4:frac_W', 'DESIGN.bld3.cool4:frac_W'),
-            ('hpc.cust:frac_P', 'DESIGN.hpc.cust:frac_P'), ('hpc.cust:frac_work', 'DESIGN.hpc.cust:frac_work'), ('hpt.cool3:frac_P', 'DESIGN.hpt.cool3:frac_P'),
-            ('hpt.cool4:frac_P', 'DESIGN.hpt.cool4:frac_P'), ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P'), ('lpt.cool2:frac_P', 'DESIGN.lpt.cool2:frac_P'), 'hp_shaft.HPX'])
+        ODpt = prob.model.pyc_add_pnt(pt, HBTF(design=False))
 
         #Connect all DESIGN map scalars to the off design cases
         prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
@@ -350,7 +367,6 @@ if __name__ == "__main__":
 
     # Component level setup
     # --- INLET -----
-    prob.set_val('DESIGN.inlet.ram_recovery', 0.9990)
     prob.set_val('DESIGN.inlet.MN', 0.751)
 
     # ---------------
@@ -367,7 +383,6 @@ if __name__ == "__main__":
 
     # ---------------
     # --- DUCT 4 -----
-    prob.set_val('DESIGN.duct4.dPqP', 0.0048)
     prob.set_val('DESIGN.duct4.MN', 0.3121)
     prob.set_val('DESIGN.lpc.PR', 1.935)
 
@@ -378,7 +393,6 @@ if __name__ == "__main__":
 
     # ---------------
     # --- DUCT 6 -----
-    prob.set_val('DESIGN.duct6.dPqP', 0.0101),
     prob.set_val('DESIGN.duct6.MN', 0.3563),
 
     # ---------------
@@ -393,7 +407,6 @@ if __name__ == "__main__":
 
     # ---------------
     # --- BURNER -----
-    prob.set_val('DESIGN.burner.dPqP', 0.0540),
     prob.set_val('DESIGN.burner.MN', 0.1025),
 
     # ---------------
@@ -403,7 +416,6 @@ if __name__ == "__main__":
 
     # ---------------
     # --- DUCT -----
-    prob.set_val('DESIGN.duct11.dPqP', 0.0051),
     prob.set_val('DESIGN.duct11.MN', 0.3063),
 
     # ---------------
@@ -413,26 +425,15 @@ if __name__ == "__main__":
 
     # ---------------
     # --- DUCT 13 -----
-    prob.set_val('DESIGN.duct13.dPqP', 0.0107),
     prob.set_val('DESIGN.duct13.MN', 0.4463),
 
     # ---------------
-    # --- CORE NOZZLE -----
-    prob.set_val('DESIGN.core_nozz.Cv', 0.9933),
-
-    # ---------------
     # --- BLEED -----
-    prob.set_val('DESIGN.byp_bld.bypBld:frac_W', 0.005),
     prob.set_val('DESIGN.byp_bld.MN', 0.4489),
 
     # ---------------
     # --- DUCT 15 -----
-    prob.set_val('DESIGN.duct15.dPqP', 0.0149),
     prob.set_val('DESIGN.duct15.MN', 0.4589),
-
-    # ---------------
-    # --- BYPASS NOZZ -----
-    prob.set_val('DESIGN.byp_nozz.Cv', 0.9939),
 
     # ---------------
     # --- LP SHAFT -----
@@ -441,24 +442,9 @@ if __name__ == "__main__":
     # ---------------
     # --- HP SHAFT -----
     prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm'),
-    prob.set_val('DESIGN.hp_shaft.HPX', 250.0, units='hp'),
 
     # --- Set up bleed values -----
-    prob.set_val('DESIGN.hpc.cool1:frac_W', 0.050708),
-    prob.set_val('DESIGN.hpc.cool1:frac_P', 0.5),
-    prob.set_val('DESIGN.hpc.cool1:frac_work', 0.5),
-    prob.set_val('DESIGN.hpc.cool2:frac_W', 0.020274),
-    prob.set_val('DESIGN.hpc.cool2:frac_P', 0.55),
-    prob.set_val('DESIGN.hpc.cool2:frac_work', 0.5),
-    prob.set_val('DESIGN.bld3.cool3:frac_W', 0.067214),
-    prob.set_val('DESIGN.bld3.cool4:frac_W', 0.101256),
     prob.set_val('DESIGN.hpc.cust:frac_W', 0.0445),
-    prob.set_val('DESIGN.hpc.cust:frac_P', 0.5),
-    prob.set_val('DESIGN.hpc.cust:frac_work', 0.5),
-    prob.set_val('DESIGN.hpt.cool3:frac_P', 1.0),
-    prob.set_val('DESIGN.hpt.cool4:frac_P', 0.0),
-    prob.set_val('DESIGN.lpt.cool1:frac_P', 1.0),
-    prob.set_val('DESIGN.lpt.cool2:frac_P', 0.0),
 
     # OFF DESIGN
     # The arrays represent multiple flight conditions. 
@@ -475,59 +461,33 @@ if __name__ == "__main__":
         prob.set_val(pt+'.fc.dTs', OD_dTs[i_OD], units='degR')
         prob.set_val(pt+'.hpc.cust:frac_W', OD_W[i_OD])
 
-    prob.set_val('OD1.fc.MN', 0.8)
-    prob.set_val('OD1.fc.alt', 35000.0, units='ft')
-    prob.set_val('OD1.balance.rhs:FAR', 5500.0, units='lbf')  # 8950.0
-    prob.set_val('OD1.fc.dTs', 0.0, units='degR')
-    prob.set_val('OD1.hpc.cust:frac_W', 0.0445)
-
     # ====== END DECLARING DESIGN VARIABLES ======
 
     # initial guesses
-    # prob['DESIGN.balance.FAR'] = 0.025
-    # prob['DESIGN.balance.W'] = 100.
-    # prob['DESIGN.balance.lpt_PR'] = 4.0
-    # prob['DESIGN.balance.hpt_PR'] = 3.0
-    # prob['DESIGN.fc.balance.Pt'] = 5.2
-    # prob['DESIGN.fc.balance.Tt'] = 440.0
-
     prob['DESIGN.balance.FAR'] = 0.025
-    prob['DESIGN.balance.W'] = 316.0
-    prob['DESIGN.balance.lpt_PR'] = 4.4
-    prob['DESIGN.balance.hpt_PR'] = 3.6
+    prob['DESIGN.balance.W'] = 100.
+    prob['DESIGN.balance.lpt_PR'] = 4.0
+    prob['DESIGN.balance.hpt_PR'] = 3.0
     prob['DESIGN.fc.balance.Pt'] = 5.2
     prob['DESIGN.fc.balance.Tt'] = 440.0
 
-    # W_guesses = [300, 300, 700, 700]
-    # for i, pt in enumerate(pts):
-    #     # ADP and TOC guesses
-    #     prob[pt+'.balance.FAR'] = 0.02467
-    #     prob[pt+'.balance.W'] = W_guesses[i]
-    #     prob[pt+'.balance.BPR'] = 5.105
-    #     prob[pt+'.balance.lp_Nmech'] = 5000 # 4666.1
-    #     prob[pt+'.balance.hp_Nmech'] = 15000 # 14705.7
-    #     # prob[pt+'.fc.balance.Pt'] = 5.2
-    #     # prob[pt+'.fc.balance.Tt'] = 440.0
-    #     prob[pt+'.hpt.PR'] = 3.
-    #     prob[pt+'.lpt.PR'] = 4.
-    #     prob[pt+'.fan.map.RlineMap'] = 2.0
-    #     prob[pt+'.lpc.map.RlineMap'] = 2.0
-    #     prob[pt+'.hpc.map.RlineMap'] = 2.0
+    W_guesses = [300, 300, 700, 700]
+    for i, pt in enumerate(pts):
+        # ADP and TOC guesses
+        prob[pt+'.balance.FAR'] = 0.02467
+        prob[pt+'.balance.W'] = W_guesses[i]
+        prob[pt+'.balance.BPR'] = 5.105
+        prob[pt+'.balance.lp_Nmech'] = 5000 # 4666.1
+        prob[pt+'.balance.hp_Nmech'] = 15000 # 14705.7
+        # prob[pt+'.fc.balance.Pt'] = 5.2
+        # prob[pt+'.fc.balance.Tt'] = 440.0
+        prob[pt+'.hpt.PR'] = 3.
+        prob[pt+'.lpt.PR'] = 4.
+        prob[pt+'.fan.map.RlineMap'] = 2.0
+        prob[pt+'.lpc.map.RlineMap'] = 2.0
+        prob[pt+'.hpc.map.RlineMap'] = 2.0
 
     st = time.time()
-
-    prob['OD1.balance.FAR'] = 0.02467
-    prob['OD1.balance.W'] = 320.931
-    prob['OD1.balance.BPR'] = 5.105
-    prob['OD1.balance.lp_Nmech'] = 4666.1
-    prob['OD1.balance.hp_Nmech'] = 14705.7
-    prob['OD1.fc.balance.Pt'] = 5.2
-    prob['OD1.fc.balance.Tt'] = 440.0
-    prob['OD1.hpt.PR'] = 3.6200
-    prob['OD1.lpt.PR'] = 4.3645
-    prob['OD1.fan.map.RlineMap'] = 2.0
-    prob['OD1.lpc.map.RlineMap'] = 2.0
-    prob['OD1.hpc.map.RlineMap'] = 2.0
 
     prob.set_solver_print(level=-1)
     prob.set_solver_print(level=2, depth=1)
@@ -539,14 +499,3 @@ if __name__ == "__main__":
 
     print()
     print("Run time", time.time() - st)
-    print(prob['OD1.inlet.Fl_O:stat:W'][0])
-    print(prob['OD1.perf.OPR'][0])
-    print(prob['OD1.balance.FAR'][0])
-    print(prob['OD1.balance.hp_Nmech'][0])
-    print(prob['OD1.balance.lp_Nmech'][0])
-    print(prob['OD1.perf.Fg'][0])
-    print(prob['OD1.perf.TSFC'][0])
-    print(prob['OD1.bld3.Fl_O:tot:T'][0])
-    print(prob['OD1.balance.BPR'][0])
-
-

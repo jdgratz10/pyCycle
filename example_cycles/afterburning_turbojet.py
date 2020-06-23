@@ -164,18 +164,25 @@ if __name__ == "__main__":
 
     # DESIGN CASE
     prob.model.pyc_add_pnt('DESIGN', ABTurbojet(design=True))
+    prob.model.pyc_add_cycle_param('duct1.dPqP', 0.02)
+    prob.model.pyc_add_cycle_param('burner.dPqP', 0.03)
+    prob.model.pyc_add_cycle_param('ab.dPqP', 0.06)
+    prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
+    prob.model.pyc_add_cycle_param('comp.cool1:frac_W', 0.0789)
+    prob.model.pyc_add_cycle_param('comp.cool1:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('comp.cool1:frac_work', 1.0)
+    prob.model.pyc_add_cycle_param('comp.cool2:frac_W', 0.0383)
+    prob.model.pyc_add_cycle_param('comp.cool2:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('comp.cool2:frac_work', 1.0)
+    prob.model.pyc_add_cycle_param('turb.cool1:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('turb.cool2:frac_P', 0.0)
 
     # OFF DESIGN CASES
     # pts = ['OD5',]
     pts = ['OD1','OD2','OD3','OD4','OD5','OD6','OD7','OD8'] 
 
     for pt in pts:
-        prob.model.pyc_add_pnt(pt, ABTurbojet(design=False), promotes=[('duct1.dPqP', 'DESIGN.duct1.dPqP'), ('burner.dPqP', 'DESIGN.burner.dPqP'),
-            ('ab.dPqP', 'DESIGN.ab.dPqP'), ('nozz.Cv', 'DESIGN.nozz.Cv'), ('comp.cool1:frac_W', 'DESIGN.comp.cool1:frac_W'), 
-            ('comp.cool1:frac_P', 'DESIGN.comp.cool1:frac_P'), ('comp.cool1:frac_work', 'DESIGN.comp.cool1:frac_work'),
-            ('comp.cool2:frac_W', 'DESIGN.comp.cool2:frac_W'), ('comp.cool2:frac_P', 'DESIGN.comp.cool2:frac_P'), 
-            ('comp.cool2:frac_work', 'DESIGN.comp.cool2:frac_work'), ('turb.cool1:frac_P', 'DESIGN.turb.cool1:frac_P'), 
-            ('turb.cool2:frac_P', 'DESIGN.turb.cool2:frac_P')])
+        prob.model.pyc_add_pnt(pt, ABTurbojet(design=False))
 
     prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
     prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
@@ -202,13 +209,9 @@ if __name__ == "__main__":
     prob.set_val('DESIGN.balance.rhs:W', 11800.0, units='lbf'),
     prob.set_val('DESIGN.balance.rhs:FAR', 2370.0, units='degR'),
 
-    prob.set_val('DESIGN.duct1.dPqP', 0.02),
     prob.set_val('DESIGN.comp.PR', 13.5),
     prob.set_val('DESIGN.comp.eff', 0.83),
-    prob.set_val('DESIGN.burner.dPqP', 0.03),
     prob.set_val('DESIGN.turb.eff', 0.86),
-    prob.set_val('DESIGN.ab.dPqP', 0.06),
-    prob.set_val('DESIGN.nozz.Cv', 0.99),
     prob.set_val('DESIGN.Nmech', 8070.0, units='rpm'),
 
     prob.set_val('DESIGN.inlet.MN', 0.60),
@@ -219,28 +222,18 @@ if __name__ == "__main__":
     prob.set_val('DESIGN.ab.MN',0.4),
     prob.set_val('DESIGN.ab.Fl_I:FAR', 0.000),
 
-    prob.set_val('DESIGN.comp.cool1:frac_W', 0.0789),
-    prob.set_val('DESIGN.comp.cool1:frac_P', 1.0),
-    prob.set_val('DESIGN.comp.cool1:frac_work', 1.0),
-
-    prob.set_val('DESIGN.comp.cool2:frac_W', 0.0383),
-    prob.set_val('DESIGN.comp.cool2:frac_P', 1.0),
-    prob.set_val('DESIGN.comp.cool2:frac_work', 1.0),
-    
-    prob.set_val('DESIGN.turb.cool1:frac_P', 1.0),
-    prob.set_val('DESIGN.turb.cool2:frac_P', 0.0),
-
     MNs = [0.000001, 0.8, 1.0, 1.2, 0.6, 1.6, 1.6, 1.8]
     alts = [0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
     T4s = [2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0]
     ab_FARs = [0.031523391, 0.022759941, 0.036849745, 0.035266091, 0.020216221, 0.038532787, 0.038532787, 0.038532787]
     Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
-    # MNs = [.6, ]
-    # alts = [35000, ]
-    # T4s = [2370, ]
-    # ab_FARs = [0.020216221,]
-    # Rlines = [2,]
+    # initial guesses
+    prob['DESIGN.balance.FAR'] = 0.0175506829934
+    prob['DESIGN.balance.W'] = 168.453135137
+    prob['DESIGN.balance.turb_PR'] = 4.46138725662
+    prob['DESIGN.fc.balance.Pt'] = 14.6955113159
+    prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
     for i, pt in enumerate(pts):
         prob.set_val(pt+'.fc.alt', alts[i], units='ft'),
@@ -250,21 +243,13 @@ if __name__ == "__main__":
         prob.set_val(pt+'.balance.rhs:W', Rlines[i]),
         prob.set_val(pt+'.ab.Fl_I:FAR', ab_FARs[i]),
 
-    # initial guesses
-    prob['DESIGN.balance.FAR'] = 0.0175506829934
-    prob['DESIGN.balance.W'] = 168.453135137
-    prob['DESIGN.balance.turb_PR'] = 4.46138725662
-    prob['DESIGN.fc.balance.Pt'] = 14.6955113159
-    prob['DESIGN.fc.balance.Tt'] = 518.665288153
-
-    for pt in pts:
         # OD3 Guesses
         prob[pt+'.balance.W'] = 166.073
         prob[pt+'.balance.FAR'] = 0.01680
         prob[pt+'.balance.Nmech'] = 4000 #8197.38
         prob[pt+'.fc.balance.Pt'] = 15.703
         prob[pt+'.fc.balance.Tt'] = 558.31
-        prob[pt+'.turb.PR'] = 4.6690
+        prob[pt+'.turb.PR'] = 4.6690       
 
     st = time.time()
 
