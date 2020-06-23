@@ -4,7 +4,7 @@ import os
 
 import openmdao.api as om
 import pycycle.api as pyc
-from openmdao.utils.assert_utils import assert_rel_error
+from openmdao.utils.assert_utils import assert_near_equal
 
 from example_cycles.high_bypass_turbofan import HBTF
 
@@ -55,7 +55,6 @@ class CFM56TestCase(unittest.TestCase):
         self.prob.model.pyc_connect_des_od('core_nozz.Throat:stat:area','balance.rhs:W')
         self.prob.model.pyc_connect_des_od('byp_nozz.Throat:stat:area','balance.rhs:BPR')
 
-
         self.prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
         self.prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
         self.prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
@@ -75,110 +74,48 @@ class CFM56TestCase(unittest.TestCase):
 
         self.prob.setup(check=False)
 
-        #Flight conditions
         self.prob.set_val('DESIGN.fc.alt', 35000., units='ft')
         self.prob.set_val('DESIGN.fc.MN', 0.8)
-
-    #Target Tt4 and Fn_design for the balances
         self.prob.set_val('DESIGN.balance.rhs:FAR', 2857, units='degR')
         self.prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')  
-
-    # Component level setup
-    # --- INLET -----
         self.prob.set_val('DESIGN.inlet.ram_recovery', 0.9990)
         self.prob.set_val('DESIGN.inlet.MN', 0.751)
-
-    # ---------------
-    # ----- FAN -----
         self.prob.set_val('DESIGN.fan.PR', 1.685)
         self.prob.set_val('DESIGN.fan.eff', 0.8948)
         self.prob.set_val('DESIGN.fan.MN', 0.4578)
-
-    # ---------------
-    # --- SPLITTER ---
         self.prob.set_val('DESIGN.splitter.BPR', 5.105)
         self.prob.set_val('DESIGN.splitter.MN1', 0.3104)
         self.prob.set_val('DESIGN.splitter.MN2', 0.4518)
-
-    # ---------------
-    # --- DUCT 4 -----
         self.prob.set_val('DESIGN.duct4.dPqP', 0.0048)
         self.prob.set_val('DESIGN.duct4.MN', 0.3121)
         self.prob.set_val('DESIGN.lpc.PR', 1.935)
-
-    # ---------------
-    # --- LPC -----
         self.prob.set_val('DESIGN.lpc.eff', 0.9243)
         self.prob.set_val('DESIGN.lpc.MN', 0.3059)
-
-    # ---------------
-    # --- DUCT 6 -----
         self.prob.set_val('DESIGN.duct6.dPqP', 0.0101),
         self.prob.set_val('DESIGN.duct6.MN', 0.3563),
-
-    # ---------------
-    # ---  HPC -----
         self.prob.set_val('DESIGN.hpc.PR', 9.369),
         self.prob.set_val('DESIGN.hpc.eff', 0.8707),
         self.prob.set_val('DESIGN.hpc.MN', 0.2442),
-
-    # ---------------
-    # --- BLEED -----
         self.prob.set_val('DESIGN.bld3.MN', 0.3000)
-
-    # ---------------
-    # --- BURNER -----
         self.prob.set_val('DESIGN.burner.dPqP', 0.0540),
         self.prob.set_val('DESIGN.burner.MN', 0.1025),
-
-    # ---------------
-    # --- HPT -----
         self.prob.set_val('DESIGN.hpt.eff', 0.8888),
         self.prob.set_val('DESIGN.hpt.MN', 0.3650),
-
-    # ---------------
-    # --- DUCT -----
         self.prob.set_val('DESIGN.duct11.dPqP', 0.0051),
         self.prob.set_val('DESIGN.duct11.MN', 0.3063),
-
-    # ---------------
-    # --- LPT -----
         self.prob.set_val('DESIGN.lpt.eff', 0.8996),
         self.prob.set_val('DESIGN.lpt.MN', 0.4127),
-
-    # ---------------
-    # --- DUCT 13 -----
         self.prob.set_val('DESIGN.duct13.dPqP', 0.0107),
         self.prob.set_val('DESIGN.duct13.MN', 0.4463),
-
-    # ---------------
-    # --- CORE NOZZLE -----
         self.prob.set_val('DESIGN.core_nozz.Cv', 0.9933),
-
-    # ---------------
-    # --- BLEED -----
         self.prob.set_val('DESIGN.byp_bld.bypBld:frac_W', 0.005),
         self.prob.set_val('DESIGN.byp_bld.MN', 0.4489),
-
-    # ---------------
-    # --- DUCT 15 -----
         self.prob.set_val('DESIGN.duct15.dPqP', 0.0149),
         self.prob.set_val('DESIGN.duct15.MN', 0.4589),
-
-    # ---------------
-    # --- BYPASS NOZZ -----
         self.prob.set_val('DESIGN.byp_nozz.Cv', 0.9939),
-
-    # ---------------
-    # --- LP SHAFT -----
         self.prob.set_val('DESIGN.LP_Nmech', 4666.1, units='rpm'),
-
-    # ---------------
-    # --- HP SHAFT -----
         self.prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm'),
         self.prob.set_val('DESIGN.hp_shaft.HPX', 250.0, units='hp'),
-
-    # --- Set up bleed values -----
         self.prob.set_val('DESIGN.hpc.cool1:frac_W', 0.050708),
         self.prob.set_val('DESIGN.hpc.cool1:frac_P', 0.5),
         self.prob.set_val('DESIGN.hpc.cool1:frac_work', 0.5),
@@ -232,87 +169,87 @@ class CFM56TestCase(unittest.TestCase):
         reg_data = 321.253
         pyc = self.prob['DESIGN.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 30.094
         pyc = self.prob['DESIGN.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.02491
         pyc = self.prob['DESIGN.balance.FAR'][0]
         print('FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 3.6228
         pyc = self.prob['DESIGN.balance.hpt_PR'][0]
         print('HPT PR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4.3687
         pyc = self.prob['DESIGN.balance.lpt_PR'][0]
         print('LPT PR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 13274.4
         pyc = self.prob['DESIGN.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.63101
         pyc = self.prob['DESIGN.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1276.48
         pyc = self.prob['DESIGN.bld3.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 321.251
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 30.094
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.02491
         pyc = self.prob['OD.balance.FAR'][0]
         print('FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 14705.7
         pyc = self.prob['OD.balance.hp_Nmech'][0]
         print('HPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4666.1
         pyc = self.prob['OD.balance.lp_Nmech'][0]
         print('LPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 13274.4
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.63101
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1276.48
         pyc = self.prob['OD.bld3.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 5.105
         pyc = self.prob['OD.balance.BPR'][0]
         print('BPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 
@@ -349,47 +286,47 @@ class CFM56TestCase(unittest.TestCase):
         reg_data = 327.265
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 32.415
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.02616
         pyc = self.prob['OD.balance.FAR'][0]
         print('FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 14952.3
         pyc = self.prob['OD.balance.hp_Nmech'][0]
         print('HPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4933.4
         pyc = self.prob['OD.balance.lp_Nmech'][0]
         print('LPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 13889.9
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.64539
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1317.31
         pyc = self.prob['OD.bld3.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4.898
         pyc = self.prob['OD.balance.BPR'][0]
         print('BPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 
@@ -426,47 +363,47 @@ class CFM56TestCase(unittest.TestCase):
         reg_data = 825.049
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 28.998
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.02975
         pyc = self.prob['OD.balance.FAR'][0]
         print('FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 16222.1
         pyc = self.prob['OD.balance.hp_Nmech'][0]
         print('HPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 5050
         pyc = self.prob['OD.balance.lp_Nmech'][0]
         print('LPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 29930.8
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.47488
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1536.94
         pyc = self.prob['OD.bld3.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 5.243
         pyc = self.prob['OD.balance.BPR'][0]
         print('BPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 
@@ -503,47 +440,47 @@ class CFM56TestCase(unittest.TestCase):
         reg_data = 786.741
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 28.418
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.02912
         pyc = self.prob['OD.balance.FAR'][0]
         print('FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 16065.1
         pyc = self.prob['OD.balance.hp_Nmech'][0]
         print('HPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4949.1
         pyc = self.prob['OD.balance.lp_Nmech'][0]
         print('LPT Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 27113.3
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.36662
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1509.41
         pyc = self.prob['OD.bld3.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 5.282
         pyc = self.prob['OD.balance.BPR'][0]
         print('BPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 

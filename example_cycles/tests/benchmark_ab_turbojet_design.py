@@ -4,7 +4,7 @@ import os
 
 import openmdao.api as om
 import pycycle.api as pyc
-from openmdao.utils.assert_utils import assert_rel_error
+from openmdao.utils.assert_utils import assert_near_equal
 
 from example_cycles.afterburning_turbojet import ABTurbojet
 
@@ -72,37 +72,37 @@ class DesignTestCase(unittest.TestCase):
         reg_data = 168.005
         pyc = self.prob['DESIGN.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 13.500
         pyc = self.prob['DESIGN.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.01755
         pyc = self.prob['DESIGN.balance.FAR'][0]
         print('Main FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4.4613
         pyc = self.prob['DESIGN.balance.turb_PR'][0]
         print('HPT PR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 11800.0
         pyc = self.prob['DESIGN.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.79415
         pyc = self.prob['DESIGN.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1190.18
         pyc = self.prob['DESIGN.comp.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 

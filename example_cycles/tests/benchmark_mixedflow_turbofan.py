@@ -4,7 +4,7 @@ import os
 
 from openmdao.api import Problem, Group
 import pycycle.api as pyc
-from openmdao.utils.assert_utils import assert_rel_error
+from openmdao.utils.assert_utils import assert_near_equal
 
 from example_cycles.mixedflow_turbofan import MixedFlowTurbofan
 
@@ -19,10 +19,7 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
             'hp_shaft.HPX'])
 
-        self.od_pts = ['OD0',]
-
-        for i,pt in enumerate(self.od_pts):
-            prob.model.pyc_add_pnt(pt, MixedFlowTurbofan(design=False), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
+        prob.model.pyc_add_pnt('OD', MixedFlowTurbofan(design=False), promotes=['balance.rhs:FAR_core', 'balance.rhs:FAR_ab', 
                 ('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), ('inlet_duct.dPqP', 'DESIGN.inlet_duct.dPqP'),
                 ('splitter_core_duct.dPqP', 'DESIGN.splitter_core_duct.dPqP'), ('lpc_duct.dPqP', 'DESIGN.lpc_duct.dPqP'),
                 ('burner.dPqP', 'DESIGN.burner.dPqP'), ('hpt_duct.dPqP', 'DESIGN.hpt_duct.dPqP'), ('lpt_duct.dPqP', 'DESIGN.lpt_duct.dPqP'),
@@ -158,16 +155,8 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         self.prob.set_val('DESIGN.hpt.cool3:frac_P', 1.0)
         self.prob.set_val('DESIGN.lpt.cool1:frac_P', 1.0)
 
-        # ####################
-        # # OFF DESIGN CASES
-        # ####################
-
-        od_alts = [35000,]
-        od_MNs = [0.8, ]
-
-        for i,pt in enumerate(self.od_pts):
-            self.prob.set_val(pt+'.fc.alt', od_alts[i], units='ft')
-            self.prob.set_val(pt+'.fc.MN', od_MNs[i])
+        self.prob.set_val('OD.fc.alt', 35000, units='ft')
+        self.prob.set_val('OD.fc.MN', .8)
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
@@ -188,24 +177,23 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         self.prob['DESIGN.fc.balance.Tt'] = 440.0
         self.prob['DESIGN.mixer.balance.P_tot']=100
 
-        for pt in self.od_pts:
-            self.prob[pt+'.balance.FAR_core'] = 0.031
-            self.prob[pt+'.balance.FAR_ab'] = 0.038
-            self.prob[pt+'.balance.BPR'] = 2.2
-            self.prob[pt+'.balance.W'] = 60
+        self.prob['OD.balance.FAR_core'] = 0.031
+        self.prob['OD.balance.FAR_ab'] = 0.038
+        self.prob['OD.balance.BPR'] = 2.2
+        self.prob['OD.balance.W'] = 60
 
-            # really sensitive to these initial guesses
-            self.prob[pt+'.balance.HP_Nmech'] = 15000
-            self.prob[pt+'.balance.LP_Nmech'] = 5000
+        # really sensitive to these initial guesses
+        self.prob['OD.balance.HP_Nmech'] = 15000
+        self.prob['OD.balance.LP_Nmech'] = 5000
 
-            self.prob[pt+'.fc.balance.Pt'] = 5.2
-            self.prob[pt+'.fc.balance.Tt'] = 440.0
-            self.prob[pt+'.mixer.balance.P_tot']= 100
-            self.prob[pt+'.hpt.PR'] = 2.5
-            self.prob[pt+'.lpt.PR'] = 3.5
-            self.prob[pt+'.fan.map.RlineMap'] = 2.0
-            self.prob[pt+'.lpc.map.RlineMap'] = 2.0
-            self.prob[pt+'.hpc.map.RlineMap'] = 2.0
+        self.prob['OD.fc.balance.Pt'] = 5.2
+        self.prob['OD.fc.balance.Tt'] = 440.0
+        self.prob['OD.mixer.balance.P_tot']= 100
+        self.prob['OD.hpt.PR'] = 2.5
+        self.prob['OD.lpt.PR'] = 3.5
+        self.prob['OD.fan.map.RlineMap'] = 2.0
+        self.prob['OD.lpc.map.RlineMap'] = 2.0
+        self.prob['OD.hpc.map.RlineMap'] = 2.0
 
         self.prob.run_model()
 
@@ -214,51 +202,51 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         reg_data = 53.83467876114857
         pyc = self.prob['DESIGN.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.inlet.Fl_O:stat:W'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.0311108
         pyc = self.prob['DESIGN.balance.FAR_core'][0]
         print('Main FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.balance.FAR_core'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.balance.FAR_core'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.038716210473225536
         pyc = self.prob['DESIGN.balance.FAR_ab'][0]
         print('Main FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.balance.FAR_ab'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.balance.FAR_ab'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 2.0430265465465354
         pyc = self.prob['DESIGN.balance.hpt_PR'][0]
         print('HPT PR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.hpt.PR'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.hpt.PR'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 4.098132533864145
         pyc = self.prob['DESIGN.balance.lpt_PR'][0]
         print('HPT PR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.lpt.PR'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.lpt.PR'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 6802.813118292415
         pyc = self.prob['DESIGN.mixed_nozz.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.mixed_nozz.Fg'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.mixed_nozz.Fg'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1287.084732
         pyc = self.prob['DESIGN.hpc.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
-        pyc = self.prob['OD0.hpc.Fl_O:tot:T'][0]
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
+        pyc = self.prob['OD.hpc.Fl_O:tot:T'][0]
+        assert_near_equal(pyc, reg_data, tol)
 
 if __name__ == "__main__":
     unittest.main()

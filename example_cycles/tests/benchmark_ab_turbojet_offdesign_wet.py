@@ -4,7 +4,7 @@ import os
 
 import openmdao.api as om
 import pycycle.api as pyc
-from openmdao.utils.assert_utils import assert_rel_error
+from openmdao.utils.assert_utils import assert_near_equal
 
 from example_cycles.afterburning_turbojet import ABTurbojet
 
@@ -83,37 +83,37 @@ class ABTurbojetOffdesignWetTestCase(unittest.TestCase):
         reg_data = 168.005
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 13.500
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.01755
         pyc = self.prob['OD.balance.FAR'][0]
         print('Main FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 8070.00
         pyc = self.prob['OD.balance.Nmech'][0]
         print('HP Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 17799.7
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1.61420
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1190.18
         pyc = self.prob['OD.comp.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 
@@ -133,37 +133,37 @@ class ABTurbojetOffdesignWetTestCase(unittest.TestCase):
         reg_data = 225.917
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 11.971
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 0.01629
         pyc = self.prob['OD.balance.FAR'][0]
         print('Main FAR:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 8288.85
         pyc = self.prob['OD.balance.Nmech'][0]
         print('HP Nmech:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 24085.2
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1.71066
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         reg_data = 1280.18
         pyc = self.prob['OD.comp.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
-        assert_rel_error(self, pyc, reg_data, tol)
+        assert_near_equal(pyc, reg_data, tol)
 
         print()
 
