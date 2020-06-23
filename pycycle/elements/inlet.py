@@ -91,6 +91,7 @@ class Inlet(om.Group):
             ('Fl_O:stat:area', 'area'),
         ]
 
+
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']
@@ -153,8 +154,8 @@ class Inlet(om.Group):
             self.add_subsystem('W_passthru', PassThrough('Fl_I:stat:W', 'Fl_O:stat:W', 0.0, units= "lbm/s"),
                                promotes=['*'])
 
-        if not design: 
-            self.set_input_defaults('area', val=1, units='inch**2')            
+        # if not design: 
+        #     self.set_input_defaults('area', val=1, units='in**2') 
 
 
 if __name__ == "__main__":

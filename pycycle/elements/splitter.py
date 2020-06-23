@@ -27,7 +27,9 @@ class BPRcalc(om.ExplicitComponent):
             # (design src, off-design target)
             ('Fl_O1:stat:area', 'area1'), 
             ('Fl_O2:stat:area', 'area2'), 
-        ]
+        ]    
+
+
 
     def compute(self, inputs, outputs):
         BPR = inputs['BPR']
@@ -184,10 +186,6 @@ class Splitter(om.Group):
                                promotes=['*'])
             self.connect('split_calc.W1', 'split_calc_W1')
             self.connect('split_calc.W2', 'split_calc_W2')
-
-        if not design:
-            self.set_input_defaults('area1', val=1, units='inch**2')
-            self.set_input_defaults('area2', val=1, units='inch**2')
 
 
 if __name__ == "__main__":

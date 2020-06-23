@@ -402,6 +402,15 @@ class Compressor(om.Group):
                               Options are `slinear`, `cubic`, `quintic`.')
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
 
+        self.default_des_od_conns = [
+            # (design src, off-design target)
+            ('s_Wc', 's_Wc'),
+            ('s_PR', 's_PR'),
+            ('s_eff', 's_eff'), 
+            ('s_Nc', 's_Nc'), 
+            ('Fl_O:stat:area', 'area')
+        ]
+
 
 
     def setup(self):
@@ -558,6 +567,15 @@ class Compressor(om.Group):
                             'press_rise','ideal_flow', 'enth_rise',
                             'real_flow','eff_poly_calc' , 'blds_pwr',
                             'FAR_passthru'] + bleed_names + ['W_passthru'])
+
+
+        # define the group level defaults
+        self.set_input_defaults('Fl_I:FAR', val=0., units=None)
+        self.set_input_defaults('PR', val=2., units=None)
+        self.set_input_defaults('eff', val=0.99, units=None)
+
+        # if not design: 
+        #     self.set_input_defaults('area', val=1, units='inch**2')
 
 
 if __name__ == "__main__":
