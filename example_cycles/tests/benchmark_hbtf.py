@@ -17,7 +17,7 @@ class CFM56TestCase(unittest.TestCase):
 
         self.prob.model = pyc.MPCycle()
 
-        self.prob.model.pyc_add_pnt('DESIGN', HBTF())
+        self.prob.model.pyc_add_pnt('DESIGN', HBTF(), promotes=['hp_shaft.HPX'])
 
         self.prob.model.pyc_add_pnt('OD', HBTF(design=False), promotes=[('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), 
             ('duct4.dPqP', 'DESIGN.duct4.dPqP'), ('duct6.dPqP', 'DESIGN.duct6.dPqP'), ('burner.dPqP', 'DESIGN.burner.dPqP'),
@@ -74,74 +74,6 @@ class CFM56TestCase(unittest.TestCase):
         self.prob.model.pyc_connect_des_od('duct15.Fl_O:stat:area', 'duct15.area')
 
         self.prob.setup(check=False)
-
-        # self.prob.set_val('OD.inlet.ram_recovery', 0.9990)
-        # self.prob.set_val('OD.duct4.dPqP', 0.0048)
-        # self.prob.set_val('OD.duct6.dPqP', 0.0101)
-        # self.prob.set_val('OD.burner.dPqP', 0.0540)
-        # self.prob.set_val('OD.duct11.dPqP', 0.0051)
-        # self.prob.set_val('OD.duct13.dPqP', 0.0107)
-        # self.prob.set_val('OD.core_nozz.Cv', 0.9933)
-        # self.prob.set_val('OD.byp_bld.bypBld:frac_W', 0.005)
-        # self.prob.set_val('OD.duct15.dPqP', 0.0149)
-        # self.prob.set_val('OD.byp_nozz.Cv', 0.9939)
-        # self.prob.set_val('OD.hp_shaft.HPX', 250.0, units='hp')
-
-        # self.prob.set_val('OD.hpc.cool1:frac_W', 0.050708)
-        # self.prob.set_val('OD.hpc.cool1:frac_P', 0.5)
-        # self.prob.set_val('OD.hpc.cool1:frac_work', 0.5)
-        # self.prob.set_val('OD.hpc.cool2:frac_W', 0.020274) 
-        # self.prob.set_val('OD.hpc.cool2:frac_P', 0.55)
-        # self.prob.set_val('OD.hpc.cool2:frac_work', 0.5)
-        # self.prob.set_val('OD.bld3.cool3:frac_W', 0.067214)
-        # self.prob.set_val('OD.bld3.cool4:frac_W', 0.101256)
-        # self.prob.set_val('OD.hpc.cust:frac_P', 0.5)
-        # self.prob.set_val('OD.hpc.cust:frac_work', 0.5)
-        # self.prob.set_val('OD.hpt.cool3:frac_P', 1.0)
-        # self.prob.set_val('OD.hpt.cool4:frac_P', 0.0)
-        # self.prob.set_val('OD.lpt.cool1:frac_P', 1.0)
-        # self.prob.set_val('OD.lpt.cool2:frac_P', 0.0)
-        
-        # self.prob.set_val('OD.fan.s_PR', 0.999912416431)
-        # self.prob.set_val('OD.fan.s_Wc', 1.03246959658)
-        # self.prob.set_val('OD.fan.s_eff', 1.00013412617)
-        # self.prob.set_val('OD.fan.s_Nc', 5091.84571411)
-        # self.prob.set_val('OD.lpc.s_PR', 1.0)
-        # self.prob.set_val('OD.lpc.s_Wc', 1.00411122011)
-        # self.prob.set_val('OD.lpc.s_eff', 0.999972953236)
-        # self.prob.set_val('OD.lpc.s_Nc', 4640.80978341)
-        # self.prob.set_val('OD.hpc.s_PR', 0.999352552331)
-        # self.prob.set_val('OD.hpc.s_Wc', 1.02817130922)
-        # self.prob.set_val('OD.hpc.s_eff', 1.00007580683)
-        # self.prob.set_val('OD.hpc.s_Nc', 13544.2035253)
-        # self.prob.set_val('OD.hpt.s_PR', 0.524557693866)
-        # self.prob.set_val('OD.hpt.s_Wp', 1.39329803688)
-        # self.prob.set_val('OD.hpt.s_eff', 0.987775061125)
-        # self.prob.set_val('OD.hpt.s_Np', 2.75125333383)
-        # self.prob.set_val('OD.lpt.s_PR', 0.673736258118)
-        # self.prob.set_val('OD.lpt.s_Wp', 1.48034371393)
-        # self.prob.set_val('OD.lpt.s_eff', 0.974542303109)
-        # self.prob.set_val('OD.lpt.s_Np', 1.03027097635)
-
-        # self.prob.set_val('OD.balance.rhs:W', 397.755002537, units='inch**2')
-        # self.prob.set_val('OD.balance.rhs:BPR', 1316.25610748, units='inch**2')
-
-        # self.prob.set_val('OD.inlet.area', 2566.76100868, units='inch**2')
-        # self.prob.set_val('OD.fan.area', 2228.37737592, units='inch**2')
-        # self.prob.set_val('OD.splitter.area1', 504.011122272, units='inch**2')
-        # self.prob.set_val('OD.splitter.area2', 1882.18932965, units='inch**2')
-        # self.prob.set_val('OD.duct4.area', 503.997116848, units='inch**2')
-        # self.prob.set_val('OD.lpc.area', 293.579637404, units='inch**2')
-        # self.prob.set_val('OD.duct6.area', 259.649232657, units='inch**2') 
-        # self.prob.set_val('OD.hpc.area', 49.0540725574, units='inch**2')
-        # self.prob.set_val('OD.bld3.area', 33.7913500831, units='inch**2') 
-        # self.prob.set_val('OD.burner.area', 157.7233536, units='inch**2')
-        # self.prob.set_val('OD.hpt.area', 172.74350706, units='inch**2')
-        # self.prob.set_val('OD.duct11.area', 202.354676631, units='inch**2')
-        # self.prob.set_val('OD.lpt.area', 613.494988147, units='inch**2')
-        # self.prob.set_val('OD.duct13.area', 582.849448774, units='inch**2')
-        # self.prob.set_val('OD.byp_bld.area', 1882.04141644, units='inch**2')
-        # self.prob.set_val('OD.duct15.area', 1878.67377328, units='inch**2')
 
         #Flight conditions
         self.prob.set_val('DESIGN.fc.alt', 35000., units='ft')
@@ -274,25 +206,23 @@ class CFM56TestCase(unittest.TestCase):
         self.prob['DESIGN.balance.lpt_PR'] = 4.4
         self.prob['DESIGN.balance.hpt_PR'] = 3.6
         self.prob['DESIGN.fc.balance.Pt'] = 5.2
-        self.prob['DESIGN.fc.balance.Tt'] = 440.0
+        self.prob['DESIGN.fc.balance.Tt'] = 440.0    
+
+    def benchmark_case1(self):
+        np.seterr(divide='raise')
 
         self.prob['OD.balance.FAR'] = 0.02467
-        self.prob['OD.balance.W'] = 300
+        self.prob['OD.balance.W'] = 320.931
         self.prob['OD.balance.BPR'] = 5.105
-        self.prob['OD.balance.lp_Nmech'] = 5000 # 4666.1
-        self.prob['OD.balance.hp_Nmech'] = 15000 # 14705.7
-        # self.prob['OD.fc.balance.Pt'] = 5.2
-        # self.prob['OD.fc.balance.Tt'] = 440.0
-        self.prob['OD.hpt.PR'] = 3.
-        self.prob['OD.lpt.PR'] = 4.
+        self.prob['OD.balance.lp_Nmech'] = 4666.1
+        self.prob['OD.balance.hp_Nmech'] = 14705.7
+        self.prob['OD.fc.balance.Pt'] = 5.2
+        self.prob['OD.fc.balance.Tt'] = 440.0
+        self.prob['OD.hpt.PR'] = 3.6200
+        self.prob['OD.lpt.PR'] = 4.3645
         self.prob['OD.fan.map.RlineMap'] = 2.0
         self.prob['OD.lpc.map.RlineMap'] = 2.0
         self.prob['OD.hpc.map.RlineMap'] = 2.0
-
-    
-    def zbenchmark_case1(self):
-        np.seterr(divide='raise')
-
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
         self.prob.run_model()
@@ -339,79 +269,54 @@ class CFM56TestCase(unittest.TestCase):
         print('Tt3:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        print()
-
-    def zbenchmark_case2(self):
-        # ADP Point
-        np.seterr(divide='raise')
-
-        self.prob['OD.balance.FAR'] = 0.02467
-        self.prob['OD.balance.W'] = 320.931
-        self.prob['OD.balance.BPR'] = 5.105
-        self.prob['OD.balance.lp_Nmech'] = 4666.1
-        self.prob['OD.balance.hp_Nmech'] = 14705.7
-        self.prob['OD.fc.balance.Pt'] = 5.2
-        self.prob['OD.fc.balance.Tt'] = 440.0
-        self.prob['OD.hpt.PR'] = 3.6200
-        self.prob['OD.lpt.PR'] = 4.3645
-        self.prob['OD.fan.map.RlineMap'] = 2.0
-        self.prob['OD.lpc.map.RlineMap'] = 2.0
-        self.prob['OD.hpc.map.RlineMap'] = 2.0
-        self.prob.set_solver_print(level=-1)
-        self.prob.set_solver_print(level=2, depth=1)
-        self.prob.run_model()
-        tol = 1e-3
-
-        print()
-
-        reg_data = 321.2576516536743
+        reg_data = 321.251
         pyc = self.prob['OD.inlet.Fl_O:stat:W'][0]
         print('W:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 30.093715097400015
+        reg_data = 30.094
         pyc = self.prob['OD.perf.OPR'][0]
         print('OPR:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 0.024908640676361525
+        reg_data = 0.02491
         pyc = self.prob['OD.balance.FAR'][0]
         print('FAR:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 14705.700000001483
+        reg_data = 14705.7
         pyc = self.prob['OD.balance.hp_Nmech'][0]
         print('HPT Nmech:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 4666.100000001389
+        reg_data = 4666.1
         pyc = self.prob['OD.balance.lp_Nmech'][0]
         print('LPT Nmech:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 13274.51807173412
+        reg_data = 13274.4
         pyc = self.prob['OD.perf.Fg'][0]
         print('Fg:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 0.6310187278013992
+        reg_data = 0.63101
         pyc = self.prob['OD.perf.TSFC'][0]
         print('TSFC:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 1276.476135662249
+        reg_data = 1276.48
         pyc = self.prob['OD.bld3.Fl_O:tot:T'][0]
         print('Tt3:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
-        reg_data = 5.104999999998233
+        reg_data = 5.105
         pyc = self.prob['OD.balance.BPR'][0]
         print('BPR:', reg_data, pyc)
         assert_rel_error(self, pyc, reg_data, tol)
 
         print()
 
-    def zbenchmark_case3(self):
+    def benchmark_case2(self):
         # TOC Point
         np.seterr(divide='raise')
 
@@ -488,7 +393,7 @@ class CFM56TestCase(unittest.TestCase):
 
         print()
 
-    def zbenchmark_case4(self):
+    def benchmark_case3(self):
         # RTO Point
         np.seterr(divide='raise')
 
@@ -565,7 +470,7 @@ class CFM56TestCase(unittest.TestCase):
 
         print()
 
-    def zbenchmark_case5(self):
+    def benchmark_case4(self):
         # SLS Point
         np.seterr(divide='raise')
 
