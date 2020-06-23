@@ -173,7 +173,7 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         self.prob.set_solver_print(level=2, depth=1)
 
 
-    def benchmark_run_des(self):
+    def benchmark_case1(self):
         ''' Runs the design point and an off design point to make sure they match perfectly '''
         prob = self.prob
 

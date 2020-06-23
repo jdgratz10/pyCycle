@@ -10,7 +10,7 @@ from openmdao.utils.assert_utils import assert_rel_error
 from example_cycles.Turboshaft import Turboshaft
 
 
-class TurboshaftDesignTestCase(unittest.TestCase):
+class TurboshaftTestCase(unittest.TestCase):
 
     def setUp(self):
 
