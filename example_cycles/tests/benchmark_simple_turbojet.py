@@ -19,6 +19,10 @@ class SimpleTurbojetTestCase(unittest.TestCase):
         prob.model = pyc.MPCycle()
 
         prob.model.pyc_add_pnt('DESIGN', Turbojet())
+
+        prob.model.pyc_add_cycle_param('burner.dPqP', 0.03)
+        prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
+
         prob.model.pyc_add_pnt('OD', Turbojet(design=False))
 
         prob.set_solver_print(level=-1)
@@ -52,9 +56,7 @@ class SimpleTurbojetTestCase(unittest.TestCase):
 
         prob.set_val('DESIGN.comp.PR', 13.5) 
         prob.set_val('DESIGN.comp.eff', 0.83)
-        prob.set_val('DESIGN.burner.dPqP', 0.03)####
         prob.set_val('DESIGN.turb.eff', 0.86)
-        prob.set_val('DESIGN.nozz.Cv', 0.99)#####
         prob.set_val('DESIGN.Nmech', 8070.0, units='rpm')
 
         prob.set_val('DESIGN.inlet.MN', 0.60)
@@ -65,8 +67,6 @@ class SimpleTurbojetTestCase(unittest.TestCase):
         prob.set_val('OD.fc.alt', 0, units='ft')
         prob.set_val('OD.fc.MN', 0.000001)
         prob.set_val('OD.balance.Fn_target', 11000.0, units='lbf')
-        prob.set_val('OD.burner.dPqP', 0.03)######
-        prob.set_val('OD.nozz.Cv', 0.99)########
 
         # Set initial guesses for balances
         prob['DESIGN.balance.FAR'] = 0.0175506829934
