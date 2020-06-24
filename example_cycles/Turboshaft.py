@@ -208,18 +208,29 @@ if __name__ == "__main__":
 
     # DESIGN CASE
     prob.model.pyc_add_pnt('DESIGN', Turboshaft())
+    prob.model.pyc_add_cycle_param('inlet.ram_recovery', 1.0)
+    prob.model.pyc_add_cycle_param('duct1.dPqP', 0.0)
+    prob.model.pyc_add_cycle_param('icduct.dPqP', 0.002)
+    prob.model.pyc_add_cycle_param('bld25.cool1:frac_W', 0.024)
+    prob.model.pyc_add_cycle_param('bld25.cool2:frac_W', 0.0146)
+    prob.model.pyc_add_cycle_param('duct6.dPqP', 0.00)
+    prob.model.pyc_add_cycle_param('burner.dPqP', 0.050)
+    prob.model.pyc_add_cycle_param('bld3.cool3:frac_W', 0.1705)
+    prob.model.pyc_add_cycle_param('bld3.cool4:frac_W', 0.1209)
+    prob.model.pyc_add_cycle_param('duct43.dPqP', 0.0051)
+    prob.model.pyc_add_cycle_param('itduct.dPqP', 0.00)
+    prob.model.pyc_add_cycle_param('duct12.dPqP', 0.00)
+    prob.model.pyc_add_cycle_param('nozzle.Cv', 0.99)
+    prob.model.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('hpt.cool4:frac_P', 0.0)
+    prob.model.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
 
     # OFF DESIGN CASES
     pts = ['OD1'] 
 
     for pt in pts:
-        ODpt = prob.model.pyc_add_pnt(pt, Turboshaft(design=False, maxiter=10), promotes=[('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'),
-            ('duct1.dPqP', 'DESIGN.duct1.dPqP'), ('icduct.dPqP', 'DESIGN.icduct.dPqP'), ('bld25.cool1:frac_W', 'DESIGN.bld25.cool1:frac_W'),
-            ('bld25.cool2:frac_W', 'DESIGN.bld25.cool2:frac_W'), ('duct6.dPqP', 'DESIGN.duct6.dPqP'), ('burner.dPqP', 'DESIGN.burner.dPqP'),
-            ('bld3.cool3:frac_W', 'DESIGN.bld3.cool3:frac_W'), ('bld3.cool4:frac_W', 'DESIGN.bld3.cool4:frac_W'), ('duct43.dPqP', 'DESIGN.duct43.dPqP'),
-            ('itduct.dPqP', 'DESIGN.itduct.dPqP'), ('duct12.dPqP', 'DESIGN.duct12.dPqP'), ('nozzle.Cv', 'DESIGN.nozzle.Cv'), 
-            ('hpt.cool3:frac_P', 'DESIGN.hpt.cool3:frac_P'), ('hpt.cool4:frac_P', 'DESIGN.hpt.cool4:frac_P'), ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P'),
-            ('lpt.cool2:frac_P', 'DESIGN.lpt.cool2:frac_P')])
+        ODpt = prob.model.pyc_add_pnt(pt, Turboshaft(design=False, maxiter=10))
 
     prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
     prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
@@ -269,57 +280,40 @@ if __name__ == "__main__":
     prob.set_val('DESIGN.fc.MN', 0.5),
     prob.set_val('DESIGN.balance.rhs:FAR', 2740.0, units='degR'),
     prob.set_val('DESIGN.balance.rhs:W', 1.1)
-    prob.set_val('DESIGN.inlet.ram_recovery', 1.0),
 
     prob.set_val('DESIGN.inlet.MN', 0.4),
-    prob.set_val('DESIGN.duct1.dPqP', 0.0),
     prob.set_val('DESIGN.duct1.MN', 0.4),
     prob.set_val('DESIGN.lpc.PR', 5.000),
     prob.set_val('DESIGN.lpc.eff', 0.8900),
 
     prob.set_val('DESIGN.lpc.MN', 0.3),
-    prob.set_val('DESIGN.icduct.dPqP', 0.002),
     prob.set_val('DESIGN.icduct.MN', 0.3),
     prob.set_val('DESIGN.hpc_axi.PR', 3.0),
     prob.set_val('DESIGN.hpc_axi.eff', 0.8900),
 
     prob.set_val('DESIGN.hpc_axi.MN', 0.25),
-    prob.set_val('DESIGN.bld25.cool1:frac_W', 0.024),
-    prob.set_val('DESIGN.bld25.cool2:frac_W', 0.0146),
     prob.set_val('DESIGN.bld25.MN', 0.3000),
     prob.set_val('DESIGN.hpc_centri.PR', 2.7),
 
     prob.set_val('DESIGN.hpc_centri.eff', 0.8800),
     prob.set_val('DESIGN.hpc_centri.MN', 0.20),
-    prob.set_val('DESIGN.bld3.cool3:frac_W', 0.1705),
-    prob.set_val('DESIGN.bld3.cool4:frac_W', 0.1209),
     prob.set_val('DESIGN.bld3.MN', 0.2000),
 
-    prob.set_val('DESIGN.duct6.dPqP', 0.00),
     prob.set_val('DESIGN.duct6.MN', 0.2000),
-    prob.set_val('DESIGN.burner.dPqP', 0.050),
     prob.set_val('DESIGN.burner.MN', 0.15),
     prob.set_val('DESIGN.hpt.eff', 0.89),
 
-    prob.set_val('DESIGN.hpt.cool3:frac_P', 1.0),
-    prob.set_val('DESIGN.hpt.cool4:frac_P', 0.0),
     prob.set_val('DESIGN.hpt.MN', 0.30),
-    prob.set_val('DESIGN.duct43.dPqP', 0.0051),
     prob.set_val('DESIGN.duct43.MN', 0.30),
 
     prob.set_val('DESIGN.lpt.eff', 0.9),
-    prob.set_val('DESIGN.lpt.cool1:frac_P', 1.0),
-    prob.set_val('DESIGN.lpt.cool2:frac_P', 0.0),
     prob.set_val('DESIGN.lpt.MN', 0.4),
-    prob.set_val('DESIGN.itduct.dPqP', 0.00),
 
     prob.set_val('DESIGN.itduct.MN', 0.4),
     prob.set_val('DESIGN.pt.eff', 0.85),
     prob.set_val('DESIGN.pt.MN', 0.4),
-    prob.set_val('DESIGN.duct12.dPqP', 0.00),
     prob.set_val('DESIGN.duct12.MN', 0.4),
 
-    prob.set_val('DESIGN.nozzle.Cv', 0.99),
     prob.set_val('DESIGN.LP_Nmech', 12750., units='rpm'),
     prob.set_val('DESIGN.lp_shaft.HPX', 1800.0, units='hp'),
     prob.set_val('DESIGN.IP_Nmech', 12000., units='rpm'),

@@ -95,7 +95,6 @@ class CFM56TestCase(unittest.TestCase):
         self.prob.set_val('DESIGN.fc.MN', 0.8)
         self.prob.set_val('DESIGN.balance.rhs:FAR', 2857, units='degR')
         self.prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')  
-        # self.prob.set_val('DESIGN.inlet.ram_recovery', 0.9990)
         self.prob.set_val('DESIGN.inlet.MN', 0.751)
         self.prob.set_val('DESIGN.fan.PR', 1.685)
         self.prob.set_val('DESIGN.fan.eff', 0.8948)
@@ -103,52 +102,28 @@ class CFM56TestCase(unittest.TestCase):
         self.prob.set_val('DESIGN.splitter.BPR', 5.105)
         self.prob.set_val('DESIGN.splitter.MN1', 0.3104)
         self.prob.set_val('DESIGN.splitter.MN2', 0.4518)
-        # self.prob.set_val('DESIGN.duct4.dPqP', 0.0048)
         self.prob.set_val('DESIGN.duct4.MN', 0.3121)
         self.prob.set_val('DESIGN.lpc.PR', 1.935)
         self.prob.set_val('DESIGN.lpc.eff', 0.9243)
         self.prob.set_val('DESIGN.lpc.MN', 0.3059)
-        # self.prob.set_val('DESIGN.duct6.dPqP', 0.0101),
         self.prob.set_val('DESIGN.duct6.MN', 0.3563),
         self.prob.set_val('DESIGN.hpc.PR', 9.369),
         self.prob.set_val('DESIGN.hpc.eff', 0.8707),
         self.prob.set_val('DESIGN.hpc.MN', 0.2442),
         self.prob.set_val('DESIGN.bld3.MN', 0.3000)
-        # self.prob.set_val('DESIGN.burner.dPqP', 0.0540),
         self.prob.set_val('DESIGN.burner.MN', 0.1025),
         self.prob.set_val('DESIGN.hpt.eff', 0.8888),
         self.prob.set_val('DESIGN.hpt.MN', 0.3650),
-        # self.prob.set_val('DESIGN.duct11.dPqP', 0.0051),
         self.prob.set_val('DESIGN.duct11.MN', 0.3063),
         self.prob.set_val('DESIGN.lpt.eff', 0.8996),
         self.prob.set_val('DESIGN.lpt.MN', 0.4127),
-        # self.prob.set_val('DESIGN.duct13.dPqP', 0.0107),
         self.prob.set_val('DESIGN.duct13.MN', 0.4463),
-        # self.prob.set_val('DESIGN.core_nozz.Cv', 0.9933),
-        # self.prob.set_val('DESIGN.byp_bld.bypBld:frac_W', 0.005),
         self.prob.set_val('DESIGN.byp_bld.MN', 0.4489),
-        # self.prob.set_val('DESIGN.duct15.dPqP', 0.0149),
         self.prob.set_val('DESIGN.duct15.MN', 0.4589),
-        # self.prob.set_val('DESIGN.byp_nozz.Cv', 0.9939),
         self.prob.set_val('DESIGN.LP_Nmech', 4666.1, units='rpm'),
         self.prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm'),
         self.prob.set_val('DESIGN.hp_shaft.HPX', 250.0, units='hp'),
-        # self.prob.set_val('DESIGN.hpc.cool1:frac_W', 0.050708),
-        # self.prob.set_val('DESIGN.hpc.cool1:frac_P', 0.5),
-        # self.prob.set_val('DESIGN.hpc.cool1:frac_work', 0.5),
-        # self.prob.set_val('DESIGN.hpc.cool2:frac_W', 0.020274),
-        # self.prob.set_val('DESIGN.hpc.cool2:frac_P', 0.55),
-        # self.prob.set_val('DESIGN.hpc.cool2:frac_work', 0.5),
-        # self.prob.set_val('DESIGN.bld3.cool3:frac_W', 0.067214),
-        # self.prob.set_val('DESIGN.bld3.cool4:frac_W', 0.101256),
         self.prob.set_val('DESIGN.hpc.cust:frac_W', 0.0445),
-        # self.prob.set_val('DESIGN.hpc.cust:frac_P', 0.5),
-        # self.prob.set_val('DESIGN.hpc.cust:frac_work', 0.5),
-        # self.prob.set_val('DESIGN.hpt.cool3:frac_P', 1.0),
-        # self.prob.set_val('DESIGN.hpt.cool4:frac_P', 0.0),
-        # self.prob.set_val('DESIGN.lpt.cool1:frac_P', 1.0),
-        # self.prob.set_val('DESIGN.lpt.cool2:frac_P', 0.0),
-
         self.prob.set_val('OD.fc.MN', 0.8)
         self.prob.set_val('OD.fc.alt', 35000.0, units='ft')
         self.prob.set_val('OD.balance.rhs:FAR', 5500.0, units='lbf')  # 8950.0

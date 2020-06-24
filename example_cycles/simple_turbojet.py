@@ -212,9 +212,6 @@ if __name__ == "__main__":
     prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
     for i,pt in enumerate(od_pts):
-        # prob[pt+'.burner.dPqP'] = 0.03
-        # prob[pt+'.nozz.Cv'] = 0.99
-
         prob[pt+'.fc.MN'] = od_MNs[i]
         prob.set_val(pt+'.fc.alt', od_alts[i], units='ft')
         prob.set_val(pt+'.balance.Fn_target', od_Fns[i], units='lbf')  

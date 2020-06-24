@@ -11,7 +11,7 @@ from example_cycles.simple_turboshaft import Turboshaft
 
 class SimpleTurboshaftTestCase(unittest.TestCase):
 
-    def zbenchmark_case1(self):
+    def benchmark_case1(self):
 
         prob = om.Problem()
 

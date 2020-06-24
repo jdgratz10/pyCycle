@@ -149,8 +149,6 @@ if __name__ == "__main__":
 
     st = time.time()
     prob.run_model()
-    # prob.model.list_outputs(residuals=True, residuals_tol=1e-2)
-    # exit()
     run_time = time.time() - st
 
     print("design")

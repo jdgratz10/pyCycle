@@ -204,8 +204,6 @@ if __name__ == "__main__":
     prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
     prob.model.pyc_connect_des_od('pt.Fl_O:stat:area', 'pt.area')
 
-    # prob.model.pyc_connect_des_od(p, 'balance.rhs:FAR')
-    # prob.model.pyc_connect_des_od(p', 'balance.rhs:FAR')
     prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
 

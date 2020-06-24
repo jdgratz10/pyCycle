@@ -233,7 +233,26 @@ if __name__ == "__main__":
     # DESIGN CASE
     #####################
 
-    prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True), promotes=['balance.rhs:FAR_ab', 'hp_shaft.HPX'])
+    prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True))
+    prob.model.pyc_add_cycle_param('balance.rhs:FAR_ab', 3400 ,units='degR')
+    prob.model.pyc_add_cycle_param('hp_shaft.HPX', 0.0, units='hp')
+    prob.model.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
+    prob.model.pyc_add_cycle_param('inlet_duct.dPqP', 0.0107)
+    prob.model.pyc_add_cycle_param('splitter_core_duct.dPqP', 0.0048)
+    prob.model.pyc_add_cycle_param('lpc_duct.dPqP', 0.0101)
+    prob.model.pyc_add_cycle_param('burner.dPqP', 0.0540)
+    prob.model.pyc_add_cycle_param('hpt_duct.dPqP', 0.0051)
+    prob.model.pyc_add_cycle_param('lpt_duct.dPqP', 0.0107)
+    prob.model.pyc_add_cycle_param('bypass_duct.dPqP', 0.0107)
+    prob.model.pyc_add_cycle_param('mixer_duct.dPqP', 0.0107)
+    prob.model.pyc_add_cycle_param('afterburner.dPqP', 0.0540)
+    prob.model.pyc_add_cycle_param('mixed_nozz.Cfg', 0.9933)
+    prob.model.pyc_add_cycle_param('hpc.cool1:frac_W', 0.050708)
+    prob.model.pyc_add_cycle_param('hpc.cool1:frac_P', 0.5)
+    prob.model.pyc_add_cycle_param('hpc.cool1:frac_work', 0.5)
+    prob.model.pyc_add_cycle_param('bld3.cool3:frac_W', 0.067214)
+    prob.model.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
+    prob.model.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
 
     ####################
     # OFF DESIGN CASES
@@ -244,16 +263,7 @@ if __name__ == "__main__":
     od_MNs = [0.8, ]
 
     for i,pt in enumerate(od_pts):
-        prob.model.pyc_add_pnt(pt, MixedFlowTurbofan(design=False), promotes=['balance.rhs:FAR_ab', 
-            ('inlet.ram_recovery', 'DESIGN.inlet.ram_recovery'), ('inlet_duct.dPqP', 'DESIGN.inlet_duct.dPqP'),
-            ('splitter_core_duct.dPqP', 'DESIGN.splitter_core_duct.dPqP'), ('lpc_duct.dPqP', 'DESIGN.lpc_duct.dPqP'),
-            ('burner.dPqP', 'DESIGN.burner.dPqP'), ('hpt_duct.dPqP', 'DESIGN.hpt_duct.dPqP'),
-            ('lpt_duct.dPqP', 'DESIGN.lpt_duct.dPqP'), ('bypass_duct.dPqP', 'DESIGN.bypass_duct.dPqP'),
-            ('mixer_duct.dPqP', 'DESIGN.mixer_duct.dPqP'), ('afterburner.dPqP', 'DESIGN.afterburner.dPqP'),
-            ('mixed_nozz.Cfg', 'DESIGN.mixed_nozz.Cfg'), 'hp_shaft.HPX', ('hpc.cool1:frac_W', 'DESIGN.hpc.cool1:frac_W'),
-            ('hpc.cool1:frac_P', 'DESIGN.hpc.cool1:frac_P'), ('hpc.cool1:frac_work', 'DESIGN.hpc.cool1:frac_work'),
-            ('bld3.cool3:frac_W', 'DESIGN.bld3.cool3:frac_W'), ('hpt.cool3:frac_P', 'DESIGN.hpt.cool3:frac_P'),
-            ('lpt.cool1:frac_P', 'DESIGN.lpt.cool1:frac_P')])
+        prob.model.pyc_add_pnt(pt, MixedFlowTurbofan(design=False))
 
     # map scalars
     prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
@@ -309,14 +319,10 @@ if __name__ == "__main__":
     prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')
     prob.set_val('DESIGN.balance.rhs:FAR_core', 3200, units='degR')
 
-    prob.set_val('balance.rhs:FAR_ab', 3400 ,units='degR') # defined as 1 over 2
-
     prob.set_val('DESIGN.balance.rhs:BPR', 1.05 ,units=None) # defined as 1 over 2
 
-    prob.set_val('DESIGN.inlet.ram_recovery', 0.9990)
     prob.set_val('DESIGN.inlet.MN', 0.751)
 
-    prob.set_val('DESIGN.inlet_duct.dPqP', 0.0107)
     prob.set_val('DESIGN.inlet_duct.MN', 0.4463)
 
     prob.set_val('DESIGN.fan.PR', 3.3) #ADV
@@ -325,15 +331,12 @@ if __name__ == "__main__":
 
     prob.set_val('DESIGN.splitter.MN1', 0.3104)
     prob.set_val('DESIGN.splitter.MN2', 0.4518)
-
-    prob.set_val('DESIGN.splitter_core_duct.dPqP', 0.0048)
     prob.set_val('DESIGN.splitter_core_duct.MN', 0.3121)
 
     prob.set_val('DESIGN.lpc.PR', 1.935)
     prob.set_val('DESIGN.lpc.eff', 0.9243)
     prob.set_val('DESIGN.lpc.MN', 0.3059)
 
-    prob.set_val('DESIGN.lpc_duct.dPqP', 0.0101)
     prob.set_val('DESIGN.lpc_duct.MN', 0.3563)
 
     prob.set_val('DESIGN.hpc.PR', 4.9)
@@ -342,44 +345,26 @@ if __name__ == "__main__":
 
     prob.set_val('DESIGN.bld3.MN', 0.3000)
 
-    prob.set_val('DESIGN.burner.dPqP', 0.0540)
     prob.set_val('DESIGN.burner.MN', 0.1025)
 
     prob.set_val('DESIGN.hpt.eff', 0.8888)
     prob.set_val('DESIGN.hpt.MN', 0.3650)
 
-    prob.set_val('DESIGN.hpt_duct.dPqP', 0.0051)
     prob.set_val('DESIGN.hpt_duct.MN', 0.3063)
 
     prob.set_val('DESIGN.lpt.eff', 0.8996)
     prob.set_val('DESIGN.lpt.MN', 0.4127)
 
-    prob.set_val('DESIGN.lpt_duct.dPqP', 0.0107)
     prob.set_val('DESIGN.lpt_duct.MN', 0.4463)
 
-    prob.set_val('DESIGN.bypass_duct.dPqP', 0.0107)
     prob.set_val('DESIGN.bypass_duct.MN', 0.4463)
 
-    prob.set_val('DESIGN.mixer_duct.dPqP', 0.0107)
     prob.set_val('DESIGN.mixer_duct.MN', 0.4463)
 
-    prob.set_val('DESIGN.afterburner.dPqP', 0.0540)
     prob.set_val('DESIGN.afterburner.MN', 0.1025)
-
-    prob.set_val('DESIGN.mixed_nozz.Cfg', 0.9933)
 
     prob.set_val('DESIGN.LP_Nmech', 4666.1, units='rpm')
     prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm')
-    prob.set_val('DESIGN.hp_shaft.HPX', 0.0, units='hp') #250
-
-    prob.set_val('DESIGN.hpc.cool1:frac_W', 0.050708)
-    prob.set_val('DESIGN.hpc.cool1:frac_P', 0.5)
-    prob.set_val('DESIGN.hpc.cool1:frac_work', 0.5)
-
-    prob.set_val('DESIGN.bld3.cool3:frac_W', 0.067214)
-
-    prob.set_val('DESIGN.hpt.cool3:frac_P', 1.0)
-    prob.set_val('DESIGN.lpt.cool1:frac_P', 1.0)
 
     # initial guesses
     prob['DESIGN.balance.FAR_core'] = 0.025
