@@ -179,7 +179,7 @@ if __name__ == "__main__":
 
     # OFF DESIGN CASES
     # pts = ['OD5',]
-    pts = ['OD1','OD2','OD3','OD4','OD5','OD6','OD7','OD8'] 
+    pts = ['OD1','OD2','OD1dry','OD2dry','OD3dry','OD4dry','OD5dry','OD6dry','OD7dry','OD8dry'] 
 
     for pt in pts:
         prob.model.pyc_add_pnt(pt, ABTurbojet(design=False))
@@ -193,7 +193,6 @@ if __name__ == "__main__":
     prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
     prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
     prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
-
 
     prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
     prob.model.pyc_connect_des_od('duct1.Fl_O:stat:area', 'duct1.area')
@@ -222,11 +221,11 @@ if __name__ == "__main__":
     prob.set_val('DESIGN.ab.MN',0.4),
     prob.set_val('DESIGN.ab.Fl_I:FAR', 0.000),
 
-    MNs = [0.000001, 0.8, 1.0, 1.2, 0.6, 1.6, 1.6, 1.8]
-    alts = [0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
-    T4s = [2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0]
-    ab_FARs = [0.031523391, 0.022759941, 0.036849745, 0.035266091, 0.020216221, 0.038532787, 0.038532787, 0.038532787]
-    Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+    MNs = [0.000001, 0.8, 0.000001, 0.8, 1.00001, 1.2, 0.6, 1.6, 1.6, 1.8]
+    alts = [0.0, 0.0, 0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
+    T4s = [2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0]
+    ab_FARs = [0.031523391, 0.022759941, 0, 0, 0, 0, 0, 0, 0, 0]
+    Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
     # initial guesses
     prob['DESIGN.balance.FAR'] = 0.0175506829934
@@ -262,4 +261,92 @@ if __name__ == "__main__":
 
     print()
     print("time", time.time() - st)
+
+    print('Design')
+    print(prob['DESIGN.inlet.Fl_O:stat:W'][0])
+    print(prob['DESIGN.perf.OPR'][0])
+    print(prob['DESIGN.balance.FAR'][0])
+    print(prob['DESIGN.balance.turb_PR'][0])
+    print(prob['DESIGN.perf.Fg'][0])
+    print(prob['DESIGN.perf.TSFC'][0])
+    print('.........................')
+    print('OD1')
+    print(prob['OD1.inlet.Fl_O:stat:W'][0])
+    print(prob['OD1.perf.OPR'][0])
+    print(prob['OD1.balance.FAR'][0])
+    print(prob['OD1.balance.Nmech'][0])
+    print(prob['OD1.perf.Fg'][0])
+    print(prob['OD1.perf.TSFC'][0])
+    print('.........................')
+    print('OD2')
+    print(prob['OD2.inlet.Fl_O:stat:W'][0])
+    print(prob['OD2.perf.OPR'][0])
+    print(prob['OD2.balance.FAR'][0])
+    print(prob['OD2.balance.Nmech'][0])
+    print(prob['OD2.perf.Fg'][0])
+    print(prob['OD2.perf.TSFC'][0])
+    print('.........................')
+    print('OD1dry')
+    print(prob['OD1dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD1dry.perf.OPR'][0])
+    print(prob['OD1dry.balance.FAR'][0])
+    print(prob['OD1dry.balance.Nmech'][0])
+    print(prob['OD1dry.perf.Fg'][0])
+    print(prob['OD1dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD2dry')
+    print(prob['OD2dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD2dry.perf.OPR'][0])
+    print(prob['OD2dry.balance.FAR'][0])
+    print(prob['OD2dry.balance.Nmech'][0])
+    print(prob['OD2dry.perf.Fg'][0])
+    print(prob['OD2dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD3dry')
+    print(prob['OD3dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD3dry.perf.OPR'][0])
+    print(prob['OD3dry.balance.FAR'][0])
+    print(prob['OD3dry.balance.Nmech'][0])
+    print(prob['OD3dry.perf.Fg'][0])
+    print(prob['OD3dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD4dry')
+    print(prob['OD4dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD4dry.perf.OPR'][0])
+    print(prob['OD4dry.balance.FAR'][0])
+    print(prob['OD4dry.balance.Nmech'][0])
+    print(prob['OD4dry.perf.Fg'][0])
+    print(prob['OD4dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD5dry')
+    print(prob['OD5dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD5dry.perf.OPR'][0])
+    print(prob['OD5dry.balance.FAR'][0])
+    print(prob['OD5dry.balance.Nmech'][0])
+    print(prob['OD5dry.perf.Fg'][0])
+    print(prob['OD5dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD6dry')
+    print(prob['OD6dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD6dry.perf.OPR'][0])
+    print(prob['OD6dry.balance.FAR'][0])
+    print(prob['OD6dry.balance.Nmech'][0])
+    print(prob['OD6dry.perf.Fg'][0])
+    print(prob['OD6dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD7dry')
+    print(prob['OD7dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD7dry.perf.OPR'][0])
+    print(prob['OD7dry.balance.FAR'][0])
+    print(prob['OD7dry.balance.Nmech'][0])
+    print(prob['OD7dry.perf.Fg'][0])
+    print(prob['OD7dry.perf.TSFC'][0])
+    print('.........................')
+    print('OD8dry')
+    print(prob['OD8dry.inlet.Fl_O:stat:W'][0])
+    print(prob['OD8dry.perf.OPR'][0])
+    print(prob['OD8dry.balance.FAR'][0])
+    print(prob['OD8dry.balance.Nmech'][0])
+    print(prob['OD8dry.perf.Fg'][0])
+    print(prob['OD8dry.perf.TSFC'][0])
 

@@ -7,66 +7,34 @@ from openmdao.utils.assert_utils import assert_near_equal
 
 import pycycle.api as pyc
 
-from example_cycles.simple_turbojet import Turbojet
+from example_cycles.simple_turbojet import MPTurbojet
 
 class SimpleTurbojetTestCase(unittest.TestCase):
 
-    
     def benchmark_case1(self):
 
         prob = om.Problem()
 
-        prob.model = pyc.MPCycle()
-
-        prob.model.pyc_add_pnt('DESIGN', Turbojet())
-
-        prob.model.pyc_add_cycle_param('burner.dPqP', 0.03)
-        prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
-
-        prob.model.pyc_add_pnt('OD', Turbojet(design=False))
+        prob.model = MPTurbojet()
 
         prob.set_solver_print(level=-1)
         prob.set_solver_print(level=2, depth=1)
-        
-
-        prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
-        prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
-        prob.model.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
-        prob.model.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
-
-        prob.model.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
-        prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
-        prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
-        prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
-
-        prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-        prob.model.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
-        prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-        prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
-
-        prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
         prob.setup(check=False)
 
-
+        ##Initial Conditions
         prob.set_val('DESIGN.fc.alt', 0, units='ft')
         prob.set_val('DESIGN.fc.MN', 0.000001)
         prob.set_val('DESIGN.balance.Fn_target', 11800.0, units='lbf')
         prob.set_val('DESIGN.balance.T4_target', 2370.0, units='degR') 
-
-        prob.set_val('DESIGN.comp.PR', 13.5) 
-        prob.set_val('DESIGN.comp.eff', 0.83)
-        prob.set_val('DESIGN.turb.eff', 0.86)
-        prob.set_val('DESIGN.Nmech', 8070.0, units='rpm')
-
-        prob.set_val('DESIGN.inlet.MN', 0.60)
-        prob.set_val('DESIGN.comp.MN', 0.020)#.2
-        prob.set_val('DESIGN.burner.MN', 0.020)#.2
-        prob.set_val('DESIGN.turb.MN', 0.4)
-
         prob.set_val('OD.fc.alt', 0, units='ft')
         prob.set_val('OD.fc.MN', 0.000001)
         prob.set_val('OD.balance.Fn_target', 11000.0, units='lbf')
+
+        ##Values that will go away when set_input_defaults is fixed
+        prob.set_val('DESIGN.comp.PR', 13.5) 
+        prob.set_val('DESIGN.comp.eff', 0.83)
+        prob.set_val('DESIGN.turb.eff', 0.86)
 
         # Set initial guesses for balances
         prob['DESIGN.balance.FAR'] = 0.0175506829934

@@ -76,9 +76,21 @@ class MPCycle(om.Group):
         self._cycle_params[name] = (val, units)
 
     def pyc_connect_des_od(self, src, target): 
+        if self._des_pnt is None:
+            raise ValueError('Cannot connect between design and off design because no design point has been created. Use pyc_add_pnt to add a design point.')
+
+        elif self._od_pnts == []:
+            raise ValueError('Cannot connect between design and off design because no off design point has been created. Use pyc_add_pnt to add an off design point.')
+
         self._des_od_connections.append((src, target))
 
     def pyc_use_default_des_od_conns(self): 
+        if self._des_pnt is None:
+            raise ValueError('Cannot connect between design and off design because no design point has been created. Use pyc_add_pnt to add a design point.')
+
+        elif self._od_pnts == []:
+            raise ValueError('Cannot connect between design and off design because no off design point has been created. Use pyc_add_pnt to add an off design point.')
+
         self._use_default_des_od_conns = True
 
     def pyc_add_pnt(self, name, pnt, **kwargs):

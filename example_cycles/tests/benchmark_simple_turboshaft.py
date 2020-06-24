@@ -7,7 +7,7 @@ from openmdao.utils.assert_utils import assert_near_equal
 
 import pycycle.api as pyc
 
-from example_cycles.simple_turboshaft import Turboshaft
+from example_cycles.simple_turboshaft import MPTurboshaft
 
 class SimpleTurboshaftTestCase(unittest.TestCase):
 
@@ -15,67 +15,47 @@ class SimpleTurboshaftTestCase(unittest.TestCase):
 
         prob = om.Problem()
 
-        prob.model = pyc.MPCycle()
-
-        # Create design instance of model
-        prob.model.pyc_add_pnt('DESIGN', Turboshaft())
-        prob.model.pyc_add_cycle_param('burner.dPqP', .03)
-        prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
-        prob.model.pyc_add_pnt('OD', Turboshaft(design=False))
+        prob.model = MPTurboshaft()
 
         prob.set_solver_print(level=-1)
         prob.set_solver_print(level=2, depth=1)
 
-        prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
-        prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
-        prob.model.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
-        prob.model.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
-
-        prob.model.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
-        prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
-        prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
-        prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
-
-        prob.model.pyc_connect_des_od('pt.s_PR', 'pt.s_PR')
-        prob.model.pyc_connect_des_od('pt.s_Wp', 'pt.s_Wp')
-        prob.model.pyc_connect_des_od('pt.s_eff', 'pt.s_eff')
-        prob.model.pyc_connect_des_od('pt.s_Np', 'pt.s_Np')
-
-        prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-        prob.model.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
-        prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-        prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
-        prob.model.pyc_connect_des_od('pt.Fl_O:stat:area', 'pt.area')
-
-        prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
-
         prob.setup(check=False)
 
-        # Connect design point inputs to model
+        ##Intial contitions
         prob.set_val('DESIGN.fc.alt', 0.0, units='ft')
         prob.set_val('DESIGN.fc.MN', 0.000001)
         prob.set_val('DESIGN.balance.T4_target', 2370.0, units='degR')
         prob.set_val('DESIGN.balance.pwr_target', 4000.0, units='hp')
         prob.set_val('DESIGN.balance.nozz_PR_target', 1.2)
 
+        ##Values will go away after set_input_defaults is fixed
         prob.set_val('DESIGN.comp.PR', 13.5)
         prob.set_val('DESIGN.comp.eff', 0.83)
-        # prob.set_val('DESIGN.burner.dPqP', 0.03)
         prob.set_val('DESIGN.turb.eff', 0.86)
         prob.set_val('DESIGN.pt.eff', 0.9)
-        # prob.set_val('DESIGN.nozz.Cv', 0.99)
-        prob.set_val('DESIGN.HP_Nmech', 8070.0, units='rpm')
-        prob.set_val('DESIGN.LP_Nmech', 5000.0, units='rpm')
 
-        prob.set_val('DESIGN.inlet.MN', 0.60)
-        prob.set_val('DESIGN.comp.MN', 0.20)
-        prob.set_val('DESIGN.burner.MN', 0.20)
-        prob.set_val('DESIGN.turb.MN', 0.4)
+        ##Initial conditions and initial balance guesses for OD points
+        od_pts = ['OD', 'OD2']
+        od_MNs = [0.1, 0.000001]
+        od_alts =[0.0, 0.0]
+        od_pwrs =[3500.0, 3500.0]
+        od_nmechs =[5000., 5000.]
 
-        prob.set_val('OD.fc.alt', 0.0, units='ft')
-        prob.set_val('OD.fc.MN', .1)
-        prob.set_val('OD.LP_Nmech', 5000., units='rpm')
-        prob.set_val('OD.balance.pwr_target', 3500., units='hp')
+        for i,pt in enumerate(od_pts):
+
+            prob.set_val(pt+'.fc.alt', od_alts[i], units='ft')
+            prob.set_val(pt+'.fc.MN', od_MNs[i])
+            prob.set_val(pt+'.LP_Nmech', od_nmechs[i], units='rpm')
+            prob.set_val(pt+'.balance.pwr_target', od_pwrs[i], units='hp')
+
+            prob[pt+'.balance.W'] = 27.265
+            prob[pt+'.balance.FAR'] = 0.0175506829934
+            prob[pt+'.balance.HP_Nmech'] = 8070.0
+            prob[pt+'.fc.balance.Pt'] = 15.703
+            prob[pt+'.fc.balance.Tt'] = 558.31
+            prob[pt+'.turb.PR'] = 3.8768
+            prob[pt+'.pt.PR'] = 2.8148
 
         # Set initial guesses for balances
         prob['DESIGN.balance.FAR'] = 0.0175506829934
@@ -84,17 +64,6 @@ class SimpleTurboshaftTestCase(unittest.TestCase):
         prob['DESIGN.balance.pt_PR'] = 2.8148
         prob['DESIGN.fc.balance.Pt'] = 14.6955113159
         prob['DESIGN.fc.balance.Tt'] = 518.665288153
-
-        # prob['OD.burner.dPqP'] = 0.03
-        # prob['OD.nozz.Cv'] = 0.99
-
-        prob['OD.balance.W'] = 27.265
-        prob['OD.balance.FAR'] = 0.0175506829934
-        prob['OD.balance.HP_Nmech'] = 8070.0
-        prob['OD.fc.balance.Pt'] = 15.703
-        prob['OD.fc.balance.Tt'] = 558.31
-        prob['OD.turb.PR'] = 3.8768
-        prob['OD.pt.PR'] = 2.8148
 
         np.seterr(divide='raise')
 

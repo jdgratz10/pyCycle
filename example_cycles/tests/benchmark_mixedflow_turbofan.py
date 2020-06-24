@@ -6,7 +6,7 @@ from openmdao.api import Problem, Group
 import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_near_equal
 
-from example_cycles.mixedflow_turbofan import MixedFlowTurbofan
+from example_cycles.mixedflow_turbofan import MPMixedFlowTurbofan
 
 class MixedFlowTurbofanTestCase(unittest.TestCase):
 
@@ -14,77 +14,7 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
 
         self.prob = prob = Problem()
 
-        self.prob.model = pyc.MPCycle()
-
-        prob.model.pyc_add_pnt('DESIGN', MixedFlowTurbofan(design=True))
-        prob.model.pyc_add_cycle_param('balance.rhs:FAR_core', 3200, units='degR')
-        prob.model.pyc_add_cycle_param('balance.rhs:FAR_ab', 3400, units='degR')
-        prob.model.pyc_add_cycle_param('hp_shaft.HPX', 250.0, units='hp')
-        prob.model.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
-        prob.model.pyc_add_cycle_param('inlet_duct.dPqP', 0.0107)
-        prob.model.pyc_add_cycle_param('splitter_core_duct.dPqP', 0.0048)
-        prob.model.pyc_add_cycle_param('lpc_duct.dPqP', 0.0101)
-        prob.model.pyc_add_cycle_param('burner.dPqP', 0.0540)
-        prob.model.pyc_add_cycle_param('hpt_duct.dPqP', 0.0051)
-        prob.model.pyc_add_cycle_param('lpt_duct.dPqP', 0.0107)
-        prob.model.pyc_add_cycle_param('bypass_duct.dPqP', 0.0107)
-        prob.model.pyc_add_cycle_param('mixer_duct.dPqP', 0.0107)
-        prob.model.pyc_add_cycle_param('mixed_nozz.Cfg', 0.9933)
-        prob.model.pyc_add_cycle_param('afterburner.dPqP', 0.0540)
-        prob.model.pyc_add_cycle_param('hpc.cool1:frac_W', 0.050708)
-        prob.model.pyc_add_cycle_param('hpc.cool1:frac_P', 0.5)
-        prob.model.pyc_add_cycle_param('hpc.cool1:frac_work', 0.5)
-        prob.model.pyc_add_cycle_param('bld3.cool3:frac_W', 0.067214)
-        prob.model.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
-        prob.model.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
-
-
-        prob.model.pyc_add_pnt('OD', MixedFlowTurbofan(design=False))
-
-            # map scalars
-        prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
-        prob.model.pyc_connect_des_od('fan.s_Wc', 'fan.s_Wc')
-        prob.model.pyc_connect_des_od('fan.s_eff', 'fan.s_eff')
-        prob.model.pyc_connect_des_od('fan.s_Nc', 'fan.s_Nc')
-        prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
-        prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
-        prob.model.pyc_connect_des_od('lpc.s_eff', 'lpc.s_eff')
-        prob.model.pyc_connect_des_od('lpc.s_Nc', 'lpc.s_Nc')
-        prob.model.pyc_connect_des_od('hpc.s_PR', 'hpc.s_PR')
-        prob.model.pyc_connect_des_od('hpc.s_Wc', 'hpc.s_Wc')
-        prob.model.pyc_connect_des_od('hpc.s_eff', 'hpc.s_eff')
-        prob.model.pyc_connect_des_od('hpc.s_Nc', 'hpc.s_Nc')
-        prob.model.pyc_connect_des_od('hpt.s_PR', 'hpt.s_PR')
-        prob.model.pyc_connect_des_od('hpt.s_Wp', 'hpt.s_Wp')
-        prob.model.pyc_connect_des_od('hpt.s_eff', 'hpt.s_eff')
-        prob.model.pyc_connect_des_od('hpt.s_Np', 'hpt.s_Np')
-        prob.model.pyc_connect_des_od('lpt.s_PR', 'lpt.s_PR')
-        prob.model.pyc_connect_des_od('lpt.s_Wp', 'lpt.s_Wp')
-        prob.model.pyc_connect_des_od('lpt.s_eff', 'lpt.s_eff')
-        prob.model.pyc_connect_des_od('lpt.s_Np', 'lpt.s_Np')
-
-            # flow areas
-        prob.model.pyc_connect_des_od('mixed_nozz.Throat:stat:area', 'balance.rhs:W')
-
-        prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-        prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
-        prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
-        prob.model.pyc_connect_des_od('splitter.Fl_O2:stat:area', 'splitter.area2')
-        prob.model.pyc_connect_des_od('splitter_core_duct.Fl_O:stat:area', 'splitter_core_duct.area')
-        prob.model.pyc_connect_des_od('lpc.Fl_O:stat:area', 'lpc.area')
-        prob.model.pyc_connect_des_od('lpc_duct.Fl_O:stat:area', 'lpc_duct.area')
-        prob.model.pyc_connect_des_od('hpc.Fl_O:stat:area', 'hpc.area')
-        prob.model.pyc_connect_des_od('bld3.Fl_O:stat:area', 'bld3.area')
-        prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-        prob.model.pyc_connect_des_od('hpt.Fl_O:stat:area', 'hpt.area')
-        prob.model.pyc_connect_des_od('hpt_duct.Fl_O:stat:area', 'hpt_duct.area')
-        prob.model.pyc_connect_des_od('lpt.Fl_O:stat:area', 'lpt.area')
-        prob.model.pyc_connect_des_od('lpt_duct.Fl_O:stat:area', 'lpt_duct.area')
-        prob.model.pyc_connect_des_od('bypass_duct.Fl_O:stat:area', 'bypass_duct.area')
-        prob.model.pyc_connect_des_od('mixer.Fl_O:stat:area', 'mixer.area')
-        prob.model.pyc_connect_des_od('mixer.Fl_I1_calc:stat:area', 'mixer.Fl_I1_stat_calc.area')
-        prob.model.pyc_connect_des_od('mixer_duct.Fl_O:stat:area', 'mixer_duct.area')
-        prob.model.pyc_connect_des_od('afterburner.Fl_O:stat:area', 'afterburner.area')
+        self.prob.model = MPMixedFlowTurbofan()
 
         prob.setup(check=False)
 
@@ -92,58 +22,20 @@ class MixedFlowTurbofanTestCase(unittest.TestCase):
         self.prob.set_val('DESIGN.fc.alt', 35000., units='ft') #DV
         self.prob.set_val('DESIGN.fc.MN', 0.8) #DV
         self.prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')
-        self.prob.set_val('DESIGN.balance.rhs:BPR', 1.05 ,units=None) # defined as 1 over 2
+        self.prob.set_val('DESIGN.balance.rhs:FAR_core', 3200, units='degR')
+        self.prob.set_val('OD.fc.alt', 35000, units='ft')
+        self.prob.set_val('OD.fc.MN', .8)
+        self.prob.set_val('OD.balance.rhs:FAR_core', 3200, units='degR')
+
+        #Values that should be removed when set_input_defaults is fixed
         self.prob.set_val('DESIGN.fan.PR', 3.3) #ADV
         self.prob.set_val('DESIGN.lpc.PR', 1.935)
         self.prob.set_val('DESIGN.hpc.PR', 4.9)
-
-        self.prob.set_val('DESIGN.inlet.MN', 0.751)
-
-        self.prob.set_val('DESIGN.inlet_duct.MN', 0.4463)
-
-
         self.prob.set_val('DESIGN.fan.eff', 0.8948)
-        self.prob.set_val('DESIGN.fan.MN', 0.4578)
-
-        self.prob.set_val('DESIGN.splitter.MN1', 0.3104)
-        self.prob.set_val('DESIGN.splitter.MN2', 0.4518)
-
-        self.prob.set_val('DESIGN.splitter_core_duct.MN', 0.3121)
-
         self.prob.set_val('DESIGN.lpc.eff', 0.9243)
-        self.prob.set_val('DESIGN.lpc.MN', 0.3059)
-
-        self.prob.set_val('DESIGN.lpc_duct.MN', 0.3563)
-
         self.prob.set_val('DESIGN.hpc.eff', 0.8707)
-        self.prob.set_val('DESIGN.hpc.MN', 0.2442)
-
-        self.prob.set_val('DESIGN.bld3.MN', 0.3000)
-
-        self.prob.set_val('DESIGN.burner.MN', 0.1025)
-
         self.prob.set_val('DESIGN.hpt.eff', 0.8888)
-        self.prob.set_val('DESIGN.hpt.MN', 0.3650)
-
-        self.prob.set_val('DESIGN.hpt_duct.MN', 0.3063)
-
         self.prob.set_val('DESIGN.lpt.eff', 0.8996)
-        self.prob.set_val('DESIGN.lpt.MN', 0.4127)
-
-        self.prob.set_val('DESIGN.lpt_duct.MN', 0.4463)
-
-        self.prob.set_val('DESIGN.bypass_duct.MN', 0.4463)
-
-        self.prob.set_val('DESIGN.mixer_duct.MN', 0.4463)
-
-        self.prob.set_val('DESIGN.afterburner.MN', 0.1025)
-
-
-        self.prob.set_val('DESIGN.LP_Nmech', 4666.1, units='rpm')
-        self.prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm')
-
-        self.prob.set_val('OD.fc.alt', 35000, units='ft')
-        self.prob.set_val('OD.fc.MN', .8)
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)

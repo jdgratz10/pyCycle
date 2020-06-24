@@ -94,52 +94,54 @@ def viewer(prob, pt):
     pyc.print_nozzle(prob, [f'{pt}.nozz'])
 
 
+class MPpropulsor(pyc.MPCycle):
+
+    def setup(self):
+
+        design = self.pyc_add_pnt('design', Propulsor(design=True))
+        od = self.pyc_add_pnt('off_design', Propulsor(design=False))
+
+        self.pyc_add_cycle_param('pwr_target', 100.)
+        self.pyc_use_default_des_od_conns()
+
+        self.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
+
+        self.set_input_defaults('design.fc.alt', 10000, units='m')
+        self.set_input_defaults('off_design.fc.alt', 10000, units='m') #12000
+
+
 if __name__ == "__main__":
     import time
 
     import numpy as np
 
     prob = om.Problem()
-
-    prob.model = pyc.MPCycle()
-
-    design = prob.model.pyc_add_pnt('design', Propulsor(design=True))
-    od = prob.model.pyc_add_pnt('off_design', Propulsor(design=False))
-
-    prob.model.pyc_add_cycle_param('pwr_target', 100.)
-    prob.model.pyc_use_default_des_od_conns()
-
-    prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
+    prob.model = MPpropulsor()
 
     prob.set_solver_print(level=-1)
     prob.set_solver_print(level=2, depth=2)
-    # prob.set_solver_print(level=2)
 
     prob.setup(check=False)
     prob.final_setup()
 
-    prob.set_val('design.fc.alt', 10000, units='m')
+    prob.model.design.nonlinear_solver.options['atol'] = 1e-6
+    prob.model.design.nonlinear_solver.options['rtol'] = 1e-6
+
+    prob.model.off_design.nonlinear_solver.options['atol'] = 1e-6
+    prob.model.off_design.nonlinear_solver.options['rtol'] = 1e-6
+
     prob['design.fc.MN'] = 0.8
     prob['design.inlet.MN'] = 0.6#
     prob['design.fan.PR'] = 1.2#
     prob['pwr_target'] = -3486.657 # -2600
     prob['design.fan.eff'] = 0.96#
 
-    prob.set_val('off_design.fc.alt', 12000, units='m') #10000
     prob['off_design.fc.MN'] = 0.8#
-
-
-    design.nonlinear_solver.options['atol'] = 1e-6
-    design.nonlinear_solver.options['rtol'] = 1e-6
-
-    od.nonlinear_solver.options['atol'] = 1e-6
-    od.nonlinear_solver.options['rtol'] = 1e-6
-    # od.nonlinear_solver.options['maxiter'] = 0
 
     ########################
     # initial guesses
     ########################
-    
+
     prob['design.balance.W'] = 200.
 
     prob['off_design.balance.W'] = 406.790

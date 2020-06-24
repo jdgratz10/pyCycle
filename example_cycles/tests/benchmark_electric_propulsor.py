@@ -7,7 +7,7 @@ from openmdao.utils.assert_utils import assert_near_equal
 
 import pycycle.api as pyc
 
-from example_cycles.electric_propulsor import Propulsor
+from example_cycles.electric_propulsor import MPpropulsor
 
 
 class ElectricPropulsorTestCase(unittest.TestCase): 
@@ -17,15 +17,7 @@ class ElectricPropulsorTestCase(unittest.TestCase):
 
         prob = om.Problem()
 
-        prob.model = pyc.MPCycle()
-
-        design = prob.model.pyc_add_pnt('design', Propulsor(design=True))
-        od = prob.model.pyc_add_pnt('off_design', Propulsor(design=False))
-
-        prob.model.pyc_add_cycle_param('pwr_target', 100.)
-        prob.model.pyc_use_default_des_od_conns()
-
-        prob.model.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
+        prob.model = MPpropulsor()
 
         prob.set_solver_print(level=-1)
         prob.set_solver_print(level=2, depth=2)
@@ -34,22 +26,23 @@ class ElectricPropulsorTestCase(unittest.TestCase):
         prob.final_setup()
 
         prob.set_val('design.fc.alt', 10000, units='m')
+        prob.set_val('off_design.fc.alt', 12000, units='m') #12000
+
         prob['design.fc.MN'] = 0.8
         prob['design.inlet.MN'] = 0.6
         prob['design.fan.PR'] = 1.2
         prob['pwr_target'] = -3486.657
         prob['design.fan.eff'] = 0.96
 
-        prob.set_val('off_design.fc.alt', 12000, units='m')
         prob['off_design.fc.MN'] = 0.8
 
 
-        design.nonlinear_solver.options['atol'] = 1e-6
-        design.nonlinear_solver.options['rtol'] = 1e-6
+        prob.model.design.nonlinear_solver.options['atol'] = 1e-6
+        prob.model.design.nonlinear_solver.options['rtol'] = 1e-6
 
-        od.nonlinear_solver.options['atol'] = 1e-6
-        od.nonlinear_solver.options['rtol'] = 1e-6
-        od.nonlinear_solver.options['maxiter'] = 10
+        prob.model.off_design.nonlinear_solver.options['atol'] = 1e-6
+        prob.model.off_design.nonlinear_solver.options['rtol'] = 1e-6
+        prob.model.off_design.nonlinear_solver.options['maxiter'] = 10
 
         ########################
         # initial guesses

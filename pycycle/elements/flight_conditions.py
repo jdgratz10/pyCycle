@@ -27,7 +27,7 @@ class FlightConditions(om.Group):
         balance.add_balance('Tt', val=500.0, lower=1e-4, units='degR', desc='Total temperature', eq_units='degR')
         balance.add_balance('Pt', val=14.696, lower=1e-4, units='psi', desc='Total pressure', eq_units='psi')
 
-        self.set_input_defaults('MN', val=0.5, units=None)
+        # self.set_input_defaults('MN', val=0.5, units=None)
         # self.set_input_defaults('W', val=100, units='lbm/s')
         # sub.set_order(['fs','balance'])
 

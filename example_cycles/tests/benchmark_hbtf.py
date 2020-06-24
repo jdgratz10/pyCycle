@@ -6,7 +6,7 @@ import openmdao.api as om
 import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_near_equal
 
-from example_cycles.high_bypass_turbofan import HBTF
+from example_cycles.high_bypass_turbofan import MPhbtf
 
 
 class CFM56TestCase(unittest.TestCase):
@@ -15,118 +15,28 @@ class CFM56TestCase(unittest.TestCase):
 
         self.prob = om.Problem()
 
-        self.prob.model = pyc.MPCycle()
-
-        self.prob.model.pyc_add_pnt('DESIGN', HBTF())
-        self.prob.model.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
-        self.prob.model.pyc_add_cycle_param('duct4.dPqP', 0.0048)
-        self.prob.model.pyc_add_cycle_param('duct6.dPqP', 0.0101)
-        self.prob.model.pyc_add_cycle_param('burner.dPqP', 0.0540)
-        self.prob.model.pyc_add_cycle_param('duct11.dPqP', 0.0051)
-        self.prob.model.pyc_add_cycle_param('duct13.dPqP', 0.0107)
-        self.prob.model.pyc_add_cycle_param('duct15.dPqP', 0.0149)
-        self.prob.model.pyc_add_cycle_param('core_nozz.Cv', 0.9933)
-        self.prob.model.pyc_add_cycle_param('byp_bld.bypBld:frac_W', 0.005)
-        self.prob.model.pyc_add_cycle_param('byp_nozz.Cv', 0.9939)
-        self.prob.model.pyc_add_cycle_param('hpc.cool1:frac_W', 0.050708)
-        self.prob.model.pyc_add_cycle_param('hpc.cool1:frac_P', 0.5)
-        self.prob.model.pyc_add_cycle_param('hpc.cool1:frac_work', 0.5)
-        self.prob.model.pyc_add_cycle_param('hpc.cool2:frac_W', 0.020274)
-        self.prob.model.pyc_add_cycle_param('hpc.cool2:frac_P', 0.55)
-        self.prob.model.pyc_add_cycle_param('hpc.cool2:frac_work', 0.5)
-        self.prob.model.pyc_add_cycle_param('bld3.cool3:frac_W', 0.067214)
-        self.prob.model.pyc_add_cycle_param('bld3.cool4:frac_W', 0.101256)
-        self.prob.model.pyc_add_cycle_param('hpc.cust:frac_P', 0.5)
-        self.prob.model.pyc_add_cycle_param('hpc.cust:frac_work', 0.5)
-        self.prob.model.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
-        self.prob.model.pyc_add_cycle_param('hpt.cool4:frac_P', 0.0)
-        self.prob.model.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
-        self.prob.model.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
-        self.prob.model.pyc_add_cycle_param('hp_shaft.HPX', 250.0, units='hp')
-
-        self.prob.model.pyc_add_pnt('OD', HBTF(design=False))
-
-        # Connect all DESIGN map scalars to the off design cases
-        self.prob.model.pyc_connect_des_od('fan.s_PR', 'fan.s_PR')
-        self.prob.model.pyc_connect_des_od('fan.s_Wc', 'fan.s_Wc')
-        self.prob.model.pyc_connect_des_od('fan.s_eff', 'fan.s_eff')
-        self.prob.model.pyc_connect_des_od('fan.s_Nc', 'fan.s_Nc')
-        self.prob.model.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
-        self.prob.model.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
-        self.prob.model.pyc_connect_des_od('lpc.s_eff', 'lpc.s_eff')
-        self.prob.model.pyc_connect_des_od('lpc.s_Nc', 'lpc.s_Nc')
-        self.prob.model.pyc_connect_des_od('hpc.s_PR', 'hpc.s_PR')
-        self.prob.model.pyc_connect_des_od('hpc.s_Wc', 'hpc.s_Wc')
-        self.prob.model.pyc_connect_des_od('hpc.s_eff', 'hpc.s_eff')
-        self.prob.model.pyc_connect_des_od('hpc.s_Nc', 'hpc.s_Nc')
-        self.prob.model.pyc_connect_des_od('hpt.s_PR', 'hpt.s_PR')
-        self.prob.model.pyc_connect_des_od('hpt.s_Wp', 'hpt.s_Wp')
-        self.prob.model.pyc_connect_des_od('hpt.s_eff', 'hpt.s_eff')
-        self.prob.model.pyc_connect_des_od('hpt.s_Np', 'hpt.s_Np')
-        self.prob.model.pyc_connect_des_od('lpt.s_PR', 'lpt.s_PR')
-        self.prob.model.pyc_connect_des_od('lpt.s_Wp', 'lpt.s_Wp')
-        self.prob.model.pyc_connect_des_od('lpt.s_eff', 'lpt.s_eff')
-        self.prob.model.pyc_connect_des_od('lpt.s_Np', 'lpt.s_Np')
-        
-        #Set up the RHS of the balances!
-        self.prob.model.pyc_connect_des_od('core_nozz.Throat:stat:area','balance.rhs:W')
-        self.prob.model.pyc_connect_des_od('byp_nozz.Throat:stat:area','balance.rhs:BPR')
-
-        self.prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-        self.prob.model.pyc_connect_des_od('fan.Fl_O:stat:area', 'fan.area')
-        self.prob.model.pyc_connect_des_od('splitter.Fl_O1:stat:area', 'splitter.area1')
-        self.prob.model.pyc_connect_des_od('splitter.Fl_O2:stat:area', 'splitter.area2')
-        self.prob.model.pyc_connect_des_od('duct4.Fl_O:stat:area', 'duct4.area')
-        self.prob.model.pyc_connect_des_od('lpc.Fl_O:stat:area', 'lpc.area')
-        self.prob.model.pyc_connect_des_od('duct6.Fl_O:stat:area', 'duct6.area')
-        self.prob.model.pyc_connect_des_od('hpc.Fl_O:stat:area', 'hpc.area')
-        self.prob.model.pyc_connect_des_od('bld3.Fl_O:stat:area', 'bld3.area')
-        self.prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-        self.prob.model.pyc_connect_des_od('hpt.Fl_O:stat:area', 'hpt.area')
-        self.prob.model.pyc_connect_des_od('duct11.Fl_O:stat:area', 'duct11.area')
-        self.prob.model.pyc_connect_des_od('lpt.Fl_O:stat:area', 'lpt.area')
-        self.prob.model.pyc_connect_des_od('duct13.Fl_O:stat:area', 'duct13.area')
-        self.prob.model.pyc_connect_des_od('byp_bld.Fl_O:stat:area', 'byp_bld.area')
-        self.prob.model.pyc_connect_des_od('duct15.Fl_O:stat:area', 'duct15.area')
-
+        self.prob.model = MPhbtf()
         self.prob.setup(check=False)
 
+
+        ##Values that should be gotten rid of when set_input_defaults is fixed:
+        self.prob.set_val('DESIGN.fan.PR', 1.685)
+        self.prob.set_val('DESIGN.fan.eff', 0.8948)
+        self.prob.set_val('DESIGN.lpc.PR', 1.935)
+        self.prob.set_val('DESIGN.lpc.eff', 0.9243)
+        self.prob.set_val('DESIGN.hpc.PR', 9.369),
+        self.prob.set_val('DESIGN.hpc.eff', 0.8707),
+        self.prob.set_val('DESIGN.hpt.eff', 0.8888),
+        self.prob.set_val('DESIGN.lpt.eff', 0.8996),
+
+        ##Flight conditions and initial values
         self.prob.set_val('DESIGN.fc.alt', 35000., units='ft')
         self.prob.set_val('DESIGN.fc.MN', 0.8)
         self.prob.set_val('DESIGN.balance.rhs:FAR', 2857, units='degR')
-        self.prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf')  
-        self.prob.set_val('DESIGN.inlet.MN', 0.751)
-        self.prob.set_val('DESIGN.fan.PR', 1.685)
-        self.prob.set_val('DESIGN.fan.eff', 0.8948)
-        self.prob.set_val('DESIGN.fan.MN', 0.4578)
-        self.prob.set_val('DESIGN.splitter.BPR', 5.105)
-        self.prob.set_val('DESIGN.splitter.MN1', 0.3104)
-        self.prob.set_val('DESIGN.splitter.MN2', 0.4518)
-        self.prob.set_val('DESIGN.duct4.MN', 0.3121)
-        self.prob.set_val('DESIGN.lpc.PR', 1.935)
-        self.prob.set_val('DESIGN.lpc.eff', 0.9243)
-        self.prob.set_val('DESIGN.lpc.MN', 0.3059)
-        self.prob.set_val('DESIGN.duct6.MN', 0.3563),
-        self.prob.set_val('DESIGN.hpc.PR', 9.369),
-        self.prob.set_val('DESIGN.hpc.eff', 0.8707),
-        self.prob.set_val('DESIGN.hpc.MN', 0.2442),
-        self.prob.set_val('DESIGN.bld3.MN', 0.3000)
-        self.prob.set_val('DESIGN.burner.MN', 0.1025),
-        self.prob.set_val('DESIGN.hpt.eff', 0.8888),
-        self.prob.set_val('DESIGN.hpt.MN', 0.3650),
-        self.prob.set_val('DESIGN.duct11.MN', 0.3063),
-        self.prob.set_val('DESIGN.lpt.eff', 0.8996),
-        self.prob.set_val('DESIGN.lpt.MN', 0.4127),
-        self.prob.set_val('DESIGN.duct13.MN', 0.4463),
-        self.prob.set_val('DESIGN.byp_bld.MN', 0.4489),
-        self.prob.set_val('DESIGN.duct15.MN', 0.4589),
-        self.prob.set_val('DESIGN.LP_Nmech', 4666.1, units='rpm'),
-        self.prob.set_val('DESIGN.HP_Nmech', 14705.7, units='rpm'),
-        self.prob.set_val('DESIGN.hp_shaft.HPX', 250.0, units='hp'),
-        self.prob.set_val('DESIGN.hpc.cust:frac_W', 0.0445),
+        self.prob.set_val('DESIGN.balance.rhs:W', 5500.0, units='lbf') 
         self.prob.set_val('OD.fc.MN', 0.8)
         self.prob.set_val('OD.fc.alt', 35000.0, units='ft')
-        self.prob.set_val('OD.balance.rhs:FAR', 5500.0, units='lbf')  # 8950.0
+        self.prob.set_val('OD.balance.rhs:FAR', 5500.0, units='lbf')
         self.prob.set_val('OD.fc.dTs', 0.0, units='degR')
         self.prob.set_val('OD.hpc.cust:frac_W', 0.0445)
 
