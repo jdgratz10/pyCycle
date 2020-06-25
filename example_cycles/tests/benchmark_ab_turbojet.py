@@ -6,77 +6,35 @@ import openmdao.api as om
 import pycycle.api as pyc
 from openmdao.utils.assert_utils import assert_near_equal
 
-from example_cycles.afterburning_turbojet import ABTurbojet
+from example_cycles.afterburning_turbojet import MPABTurbojet
 
 
 class DesignTestCase(unittest.TestCase):
 
     def setUp(self):
 
+        #Set up problem:
+
         self.prob = om.Problem()
 
-        self.prob.model = pyc.MPCycle()
-
-        self.prob.model.pyc_add_pnt('DESIGN', ABTurbojet())
-        self.prob.model.pyc_add_cycle_param('duct1.dPqP', 0.02)
-        self.prob.model.pyc_add_cycle_param('burner.dPqP', 0.03)
-        self.prob.model.pyc_add_cycle_param('ab.dPqP', 0.06)
-        self.prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
-        self.prob.model.pyc_add_cycle_param('comp.cool1:frac_W', 0.0789)
-        self.prob.model.pyc_add_cycle_param('comp.cool1:frac_P', 1.0)
-        self.prob.model.pyc_add_cycle_param('comp.cool1:frac_work', 1.0)
-        self.prob.model.pyc_add_cycle_param('comp.cool2:frac_W', 0.0383)
-        self.prob.model.pyc_add_cycle_param('comp.cool2:frac_P', 1.0)
-        self.prob.model.pyc_add_cycle_param('comp.cool2:frac_work', 1.0)
-        self.prob.model.pyc_add_cycle_param('turb.cool1:frac_P', 1.0)
-        self.prob.model.pyc_add_cycle_param('turb.cool2:frac_P', 0.0)
-
-        pts = ['OD1','OD2','OD1dry','OD2dry','OD3dry','OD4dry','OD5dry','OD6dry','OD7dry','OD8dry'] 
-
-        for pt in pts:
-            self.prob.model.pyc_add_pnt(pt, ABTurbojet(design=False))
-
-        self.prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
-        self.prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
-        self.prob.model.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
-        self.prob.model.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
-
-        self.prob.model.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
-        self.prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
-        self.prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
-        self.prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
-
-        self.prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-        self.prob.model.pyc_connect_des_od('duct1.Fl_O:stat:area', 'duct1.area')
-        self.prob.model.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
-        self.prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-        self.prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
-        self.prob.model.pyc_connect_des_od('ab.Fl_O:stat:area', 'ab.area')
-
+        self.prob.model = MPABTurbojet()
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)
         self.prob.setup(check=False)
         self.prob.final_setup()
 
-        self.prob.set_val('DESIGN.fc.alt', 0.0, units='ft'),
-        self.prob.set_val('DESIGN.fc.MN', 0.000001),
-        self.prob.set_val('DESIGN.balance.rhs:FAR', 2370.0, units='degR'),
-        self.prob.set_val('DESIGN.balance.rhs:W', 11800.0, units='lbf'),
-
+        #These values will go away when set_input_defaults is fixed:
         self.prob.set_val('DESIGN.comp.PR', 13.5),
         self.prob.set_val('DESIGN.comp.eff', 0.83),
         self.prob.set_val('DESIGN.turb.eff', 0.86),
 
-        self.prob.set_val('DESIGN.Nmech', 8070.0, units='rpm'),
-        self.prob.set_val('DESIGN.inlet.MN', 0.60),
-        self.prob.set_val('DESIGN.duct1.MN', 0.60),
-        self.prob.set_val('DESIGN.comp.MN', 0.20),
+        #Set initial conditions and initial guesses:
 
-        self.prob.set_val('DESIGN.burner.MN', 0.20),
-        self.prob.set_val('DESIGN.turb.MN', 0.4),
-        self.prob.set_val('DESIGN.ab.MN', 0.4),
-        self.prob.set_val('DESIGN.ab.Fl_I:FAR', 0.000),
+        self.prob.set_val('DESIGN.fc.alt', 0.0, units='ft'),
+        self.prob.set_val('DESIGN.fc.MN', 0.000001),
+        self.prob.set_val('DESIGN.balance.rhs:FAR', 2370.0, units='degR'),
+        self.prob.set_val('DESIGN.balance.rhs:W', 11800.0, units='lbf'),
 
         self.prob['DESIGN.balance.FAR'] = 0.0175506829934
         self.prob['DESIGN.balance.W'] = 168.453135137
@@ -84,11 +42,20 @@ class DesignTestCase(unittest.TestCase):
         self.prob['DESIGN.fc.balance.Pt'] = 14.6955113159
         self.prob['DESIGN.fc.balance.Tt'] = 518.665288153
 
+        pts = ['OD1','OD2','OD1dry','OD2dry','OD3dry','OD4dry','OD5dry','OD6dry','OD7dry','OD8dry'] 
+
         MNs = [0.000001, 0.8, 0.000001, 0.8, 1.00001, 1.2, 0.6, 1.6, 1.6, 1.8]
         alts = [0.0, 0.0, 0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
         T4s = [2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0]
         ab_FARs = [0.031523391, 0.022759941, 0, 0, 0, 0, 0, 0, 0, 0]
         Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+
+        W_guess = [168.0, 225.917, 168.005, 225.917, 166.074, 141.2, 61.70780608, 145.635, 71.53855266, 33.347]
+        FAR_guess = [.01755, .016289, .01755, .01629, .0168, .01689, 0.01872827, .016083, 0.01619524, 0.015170]
+        Nmech_guess = [8070., 8288.85, 8070, 8288.85, 8197.39, 8181.03, 8902.24164717, 8326.586, 8306.00268554, 8467.2404]
+        Pt_guess = [14.696, 22.403, 14.696, 22.403, 15.7034, 13.230, 4.41149502, 14.707, 7.15363767, 3.7009]
+        Tt_guess = [518.67, 585.035, 518.67, 585.04, 558.310, 553.409, 422.29146617, 595.796, 589.9425019, 646.8115]
+        PR_guess = [4.4613, 4.8185, 4.4613, 4.8185, 4.669, 4.6425, 4.42779036, 4.8803, 4.84652723, 5.11582]
 
         for i, pt in enumerate(pts):
             self.prob.set_val(pt+'.fc.alt', alts[i], units='ft'),
@@ -98,20 +65,12 @@ class DesignTestCase(unittest.TestCase):
             self.prob.set_val(pt+'.balance.rhs:W', Rlines[i]),
             self.prob.set_val(pt+'.ab.Fl_I:FAR', ab_FARs[i]),
 
-            # OD3 Guesses
-            # self.prob[pt+'.balance.W'] = 166.073
-            # self.prob[pt+'.balance.FAR'] = 0.01680
-            # self.prob[pt+'.balance.Nmech'] = 4000 #8197.38
-            # self.prob[pt+'.fc.balance.Pt'] = 15.703
-            # self.prob[pt+'.fc.balance.Tt'] = 558.31
-            # self.prob[pt+'.turb.PR'] = 4.6690 
-
-            self.prob[pt+'.balance.W'] = 168.453135137
-            self.prob[pt+'.balance.FAR'] = 0.0175506829934
-            self.prob[pt+'.balance.Nmech'] = 8070.0 #8197.38
-            self.prob[pt+'.fc.balance.Pt'] = 14.6955113159
-            self.prob[pt+'.fc.balance.Tt'] = 518.665288153
-            self.prob[pt+'.turb.PR'] = 4.46138725662
+            self.prob[pt+'.balance.W'] = W_guess[i]
+            self.prob[pt+'.balance.FAR'] = FAR_guess[i]
+            self.prob[pt+'.balance.Nmech'] = Nmech_guess[i]
+            self.prob[pt+'.fc.balance.Pt'] = Pt_guess[i]
+            self.prob[pt+'.fc.balance.Tt'] = Tt_guess[i]
+            self.prob[pt+'.turb.PR'] = PR_guess[i]
 
 
     def benchmark_case1(self):

@@ -154,72 +154,75 @@ def viewer(prob, pt, file=sys.stdout):
     pyc.print_bleed(prob, bleed_full_names, file=file)
 
 
+
+class MPABTurbojet(pyc.MPCycle):
+
+    def setup(self):
+
+        # DESIGN CASE
+        self.pyc_add_pnt('DESIGN', ABTurbojet(design=True))
+        self.pyc_add_cycle_param('duct1.dPqP', 0.02)
+        self.pyc_add_cycle_param('burner.dPqP', 0.03)
+        self.pyc_add_cycle_param('ab.dPqP', 0.06)
+        self.pyc_add_cycle_param('nozz.Cv', 0.99)
+        self.pyc_add_cycle_param('comp.cool1:frac_W', 0.0789)
+        self.pyc_add_cycle_param('comp.cool1:frac_P', 1.0)
+        self.pyc_add_cycle_param('comp.cool1:frac_work', 1.0)
+        self.pyc_add_cycle_param('comp.cool2:frac_W', 0.0383)
+        self.pyc_add_cycle_param('comp.cool2:frac_P', 1.0)
+        self.pyc_add_cycle_param('comp.cool2:frac_work', 1.0)
+        self.pyc_add_cycle_param('turb.cool1:frac_P', 1.0)
+        self.pyc_add_cycle_param('turb.cool2:frac_P', 0.0)
+
+        # OFF DESIGN CASES
+        pts = ['OD1','OD2','OD1dry','OD2dry','OD3dry','OD4dry','OD5dry','OD6dry','OD7dry','OD8dry'] 
+
+        for pt in pts:
+            self.pyc_add_pnt(pt, ABTurbojet(design=False))
+
+        self.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
+        self.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
+        self.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
+        self.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
+
+        self.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
+        self.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
+        self.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
+        self.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
+
+        self.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
+        self.pyc_connect_des_od('duct1.Fl_O:stat:area', 'duct1.area')
+        self.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
+        self.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
+        self.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
+        self.pyc_connect_des_od('ab.Fl_O:stat:area', 'ab.area')
+
+        self.set_input_defaults('DESIGN.Nmech', 8070.0, units='rpm'),
+
+        self.set_input_defaults('DESIGN.inlet.MN', 0.60),
+        self.set_input_defaults('DESIGN.duct1.MN', 0.60),
+        self.set_input_defaults('DESIGN.comp.MN', 0.20),
+        self.set_input_defaults('DESIGN.burner.MN', 0.20),
+        self.set_input_defaults('DESIGN.turb.MN', 0.4),
+        self.set_input_defaults('DESIGN.ab.MN',0.4),
+        self.set_input_defaults('DESIGN.ab.Fl_I:FAR', 0.000),
+
 if __name__ == "__main__":
 
     import time
 
     prob = om.Problem()
 
-    prob.model = pyc.MPCycle()
-
-    # DESIGN CASE
-    prob.model.pyc_add_pnt('DESIGN', ABTurbojet(design=True))
-    prob.model.pyc_add_cycle_param('duct1.dPqP', 0.02)
-    prob.model.pyc_add_cycle_param('burner.dPqP', 0.03)
-    prob.model.pyc_add_cycle_param('ab.dPqP', 0.06)
-    prob.model.pyc_add_cycle_param('nozz.Cv', 0.99)
-    prob.model.pyc_add_cycle_param('comp.cool1:frac_W', 0.0789)
-    prob.model.pyc_add_cycle_param('comp.cool1:frac_P', 1.0)
-    prob.model.pyc_add_cycle_param('comp.cool1:frac_work', 1.0)
-    prob.model.pyc_add_cycle_param('comp.cool2:frac_W', 0.0383)
-    prob.model.pyc_add_cycle_param('comp.cool2:frac_P', 1.0)
-    prob.model.pyc_add_cycle_param('comp.cool2:frac_work', 1.0)
-    prob.model.pyc_add_cycle_param('turb.cool1:frac_P', 1.0)
-    prob.model.pyc_add_cycle_param('turb.cool2:frac_P', 0.0)
-
-    # OFF DESIGN CASES
-    # pts = ['OD5',]
-    pts = ['OD1','OD2','OD1dry','OD2dry','OD3dry','OD4dry','OD5dry','OD6dry','OD7dry','OD8dry'] 
-
-    for pt in pts:
-        prob.model.pyc_add_pnt(pt, ABTurbojet(design=False))
-
-    prob.model.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
-    prob.model.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
-    prob.model.pyc_connect_des_od('comp.s_eff', 'comp.s_eff')
-    prob.model.pyc_connect_des_od('comp.s_Nc', 'comp.s_Nc')
-
-    prob.model.pyc_connect_des_od('turb.s_PR', 'turb.s_PR')
-    prob.model.pyc_connect_des_od('turb.s_Wp', 'turb.s_Wp')
-    prob.model.pyc_connect_des_od('turb.s_eff', 'turb.s_eff')
-    prob.model.pyc_connect_des_od('turb.s_Np', 'turb.s_Np')
-
-    prob.model.pyc_connect_des_od('inlet.Fl_O:stat:area', 'inlet.area')
-    prob.model.pyc_connect_des_od('duct1.Fl_O:stat:area', 'duct1.area')
-    prob.model.pyc_connect_des_od('comp.Fl_O:stat:area', 'comp.area')
-    prob.model.pyc_connect_des_od('burner.Fl_O:stat:area', 'burner.area')
-    prob.model.pyc_connect_des_od('turb.Fl_O:stat:area', 'turb.area')
-    prob.model.pyc_connect_des_od('ab.Fl_O:stat:area', 'ab.area')
+    prob.model = MPABTurbojet()
 
     prob.setup(check=False)
+
+    #Initial conditions:
 
     prob.set_val('DESIGN.fc.alt', 0.0, units='ft'),
     prob.set_val('DESIGN.fc.MN', 0.000001),
     prob.set_val('DESIGN.balance.rhs:W', 11800.0, units='lbf'),
     prob.set_val('DESIGN.balance.rhs:FAR', 2370.0, units='degR'),
-
-    prob.set_val('DESIGN.comp.PR', 13.5),
-    prob.set_val('DESIGN.comp.eff', 0.83),
-    prob.set_val('DESIGN.turb.eff', 0.86),
-    prob.set_val('DESIGN.Nmech', 8070.0, units='rpm'),
-
-    prob.set_val('DESIGN.inlet.MN', 0.60),
-    prob.set_val('DESIGN.duct1.MN', 0.60),
-    prob.set_val('DESIGN.comp.MN', 0.20),
-    prob.set_val('DESIGN.burner.MN', 0.20),
-    prob.set_val('DESIGN.turb.MN', 0.4),
-    prob.set_val('DESIGN.ab.MN',0.4),
-    prob.set_val('DESIGN.ab.Fl_I:FAR', 0.000),
 
     MNs = [0.000001, 0.8, 0.000001, 0.8, 1.00001, 1.2, 0.6, 1.6, 1.6, 1.8]
     alts = [0.0, 0.0, 0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
@@ -227,12 +230,33 @@ if __name__ == "__main__":
     ab_FARs = [0.031523391, 0.022759941, 0, 0, 0, 0, 0, 0, 0, 0]
     Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
 
-    # initial guesses
-    prob['DESIGN.balance.FAR'] = 0.0175506829934
-    prob['DESIGN.balance.W'] = 168.453135137
-    prob['DESIGN.balance.turb_PR'] = 4.46138725662
-    prob['DESIGN.fc.balance.Pt'] = 14.6955113159
-    prob['DESIGN.fc.balance.Tt'] = 518.665288153
+    # MNs = [0.000001, 0.8, 1.0, 1.2, 0.6, 1.6, 1.6, 1.8]
+    # alts = [0.0, 0.0, 15000.0, 25000.0, 35000.0, 35000.0, 50000.0, 70000.0]
+    # T4s = [2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0, 2370.0]
+    # ab_FARs = [0.031523391, 0.022759941, 0.036849745, 0.035266091, 0.020216221, 0.038532787, 0.038532787, 0.038532787]
+    # Rlines = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+
+    #Values that will go away when set_input_defaults is fixed:
+    prob.set_val('DESIGN.comp.PR', 13.5),
+    prob.set_val('DESIGN.comp.eff', 0.83),
+    prob.set_val('DESIGN.turb.eff', 0.86),
+
+    # initial guesses:
+
+    prob['DESIGN.balance.FAR'] = 0.01755078
+    prob['DESIGN.balance.W'] = 168.00454616
+    prob['DESIGN.balance.turb_PR'] = 4.46131867
+    prob['DESIGN.fc.balance.Pt'] = 14.6959
+    prob['DESIGN.fc.balance.Tt'] = 518.67
+
+    W_guess = [168.0, 225.917, 168.005, 225.917, 166.074, 141.2, 61.70780608, 145.635, 71.53855266, 33.347]
+    FAR_guess = [.01755, .016289, .01755, .01629, .0168, .01689, 0.01872827, .016083, 0.01619524, 0.015170]
+    Nmech_guess = [8070., 8288.85, 8070, 8288.85, 8197.39, 8181.03, 8902.24164717, 8326.586, 8306.00268554, 8467.2404]
+    Pt_guess = [14.696, 22.403, 14.696, 22.403, 15.7034, 13.230, 4.41149502, 14.707, 7.15363767, 3.7009]
+    Tt_guess = [518.67, 585.035, 518.67, 585.04, 558.310, 553.409, 422.29146617, 595.796, 589.9425019, 646.8115]
+    PR_guess = [4.4613, 4.8185, 4.4613, 4.8185, 4.669, 4.6425, 4.42779036, 4.8803, 4.84652723, 5.11582]
+
+    pts = ['OD1','OD2','OD1dry','OD2dry','OD3dry','OD4dry','OD5dry','OD6dry','OD7dry','OD8dry'] 
 
     for i, pt in enumerate(pts):
         prob.set_val(pt+'.fc.alt', alts[i], units='ft'),
@@ -242,13 +266,12 @@ if __name__ == "__main__":
         prob.set_val(pt+'.balance.rhs:W', Rlines[i]),
         prob.set_val(pt+'.ab.Fl_I:FAR', ab_FARs[i]),
 
-        # OD3 Guesses
-        prob[pt+'.balance.W'] = 166.073
-        prob[pt+'.balance.FAR'] = 0.01680
-        prob[pt+'.balance.Nmech'] = 4000 #8197.38
-        prob[pt+'.fc.balance.Pt'] = 15.703
-        prob[pt+'.fc.balance.Tt'] = 558.31
-        prob[pt+'.turb.PR'] = 4.6690       
+        prob[pt+'.balance.W'] = W_guess[i]
+        prob[pt+'.balance.FAR'] = FAR_guess[i]
+        prob[pt+'.balance.Nmech'] = Nmech_guess[i]
+        prob[pt+'.fc.balance.Pt'] = Pt_guess[i]
+        prob[pt+'.fc.balance.Tt'] = Tt_guess[i]
+        prob[pt+'.turb.PR'] = PR_guess[i]
 
     st = time.time()
 
@@ -261,92 +284,3 @@ if __name__ == "__main__":
 
     print()
     print("time", time.time() - st)
-
-    print('Design')
-    print(prob['DESIGN.inlet.Fl_O:stat:W'][0])
-    print(prob['DESIGN.perf.OPR'][0])
-    print(prob['DESIGN.balance.FAR'][0])
-    print(prob['DESIGN.balance.turb_PR'][0])
-    print(prob['DESIGN.perf.Fg'][0])
-    print(prob['DESIGN.perf.TSFC'][0])
-    print('.........................')
-    print('OD1')
-    print(prob['OD1.inlet.Fl_O:stat:W'][0])
-    print(prob['OD1.perf.OPR'][0])
-    print(prob['OD1.balance.FAR'][0])
-    print(prob['OD1.balance.Nmech'][0])
-    print(prob['OD1.perf.Fg'][0])
-    print(prob['OD1.perf.TSFC'][0])
-    print('.........................')
-    print('OD2')
-    print(prob['OD2.inlet.Fl_O:stat:W'][0])
-    print(prob['OD2.perf.OPR'][0])
-    print(prob['OD2.balance.FAR'][0])
-    print(prob['OD2.balance.Nmech'][0])
-    print(prob['OD2.perf.Fg'][0])
-    print(prob['OD2.perf.TSFC'][0])
-    print('.........................')
-    print('OD1dry')
-    print(prob['OD1dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD1dry.perf.OPR'][0])
-    print(prob['OD1dry.balance.FAR'][0])
-    print(prob['OD1dry.balance.Nmech'][0])
-    print(prob['OD1dry.perf.Fg'][0])
-    print(prob['OD1dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD2dry')
-    print(prob['OD2dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD2dry.perf.OPR'][0])
-    print(prob['OD2dry.balance.FAR'][0])
-    print(prob['OD2dry.balance.Nmech'][0])
-    print(prob['OD2dry.perf.Fg'][0])
-    print(prob['OD2dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD3dry')
-    print(prob['OD3dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD3dry.perf.OPR'][0])
-    print(prob['OD3dry.balance.FAR'][0])
-    print(prob['OD3dry.balance.Nmech'][0])
-    print(prob['OD3dry.perf.Fg'][0])
-    print(prob['OD3dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD4dry')
-    print(prob['OD4dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD4dry.perf.OPR'][0])
-    print(prob['OD4dry.balance.FAR'][0])
-    print(prob['OD4dry.balance.Nmech'][0])
-    print(prob['OD4dry.perf.Fg'][0])
-    print(prob['OD4dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD5dry')
-    print(prob['OD5dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD5dry.perf.OPR'][0])
-    print(prob['OD5dry.balance.FAR'][0])
-    print(prob['OD5dry.balance.Nmech'][0])
-    print(prob['OD5dry.perf.Fg'][0])
-    print(prob['OD5dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD6dry')
-    print(prob['OD6dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD6dry.perf.OPR'][0])
-    print(prob['OD6dry.balance.FAR'][0])
-    print(prob['OD6dry.balance.Nmech'][0])
-    print(prob['OD6dry.perf.Fg'][0])
-    print(prob['OD6dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD7dry')
-    print(prob['OD7dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD7dry.perf.OPR'][0])
-    print(prob['OD7dry.balance.FAR'][0])
-    print(prob['OD7dry.balance.Nmech'][0])
-    print(prob['OD7dry.perf.Fg'][0])
-    print(prob['OD7dry.perf.TSFC'][0])
-    print('.........................')
-    print('OD8dry')
-    print(prob['OD8dry.inlet.Fl_O:stat:W'][0])
-    print(prob['OD8dry.perf.OPR'][0])
-    print(prob['OD8dry.balance.FAR'][0])
-    print(prob['OD8dry.balance.Nmech'][0])
-    print(prob['OD8dry.perf.Fg'][0])
-    print(prob['OD8dry.perf.TSFC'][0])
-
