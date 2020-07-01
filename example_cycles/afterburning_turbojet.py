@@ -284,3 +284,4 @@ if __name__ == "__main__":
 
     print()
     print("time", time.time() - st)
+    print(prob['DESIGN.balance.W'])

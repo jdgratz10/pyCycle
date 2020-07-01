@@ -58,13 +58,13 @@ class Cycle(om.Group):
 
 class MPCycle(om.Group): 
 
-    def initialize(self): 
+    def __init__(self, **kwargs): 
         self._cycle_params = {}
         self._des_pnt = None
         self._od_pnts= []
         self._des_od_connections = []
         self._use_default_des_od_conns = False
-
+        super(MPCycle, self).__init__(**kwargs)
 
     def pyc_add_cycle_param(self, name, val, units=None): 
 

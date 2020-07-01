@@ -5,20 +5,19 @@ from pprint import pprint
 
 import openmdao.api as om
 
-# import pycycle.api as pyc
+import pycycle.api as pyc
 
 from N3ref import N3, viewer, MPN3
 
 prob = om.Problem()
 
-prob.model = MPN3()
+prob.model = MPN3(order_add=['bal'])
 
-# des_vars.add_output('splitter:BPR', 23.7281), #23.9878########
-# prob.set_val('splitter:BPR', 23.7281)
-# des_vars.add_output('SLS:Fn_target', 28620.9, units='lbf'), #8950.0############
-# prob.set_val('SLS:Fn_target', 28620.9, units='lbf')
-# des_vars.add_output('CRZ:Fn_target', 5466.5, units='lbf'), #8950.0#####################
-# prob.set_val('CRZ:Fn_target', 5466.5, units='lbf')
+prob.model.connect('OPR', 'TOC.balance.rhs:hpc_PR')
+
+prob.model.connect('fan:PRdes', 'TOC.fan.PR')##this is original
+prob.model.connect('lpc:PRdes', 'TOC.lpc.PR')##this is original
+
 #Main file doesn't have from here####
 
 bal = prob.model.add_subsystem('bal', om.BalanceComp())
@@ -45,11 +44,6 @@ prob.model.connect('SLS.perf.Fn','bal.rhs:SLS_Fn_target')
 
 #To here#####################################
 
-prob.model.set_order(['bal'])###main file doesn't add bal at end
-print('start')
-# print(''.des_vars)
-print('end')
-
 # setup the optimization
 prob.driver = om.ScipyOptimizeDriver()
 prob.driver.options['optimizer'] = 'SLSQP'
@@ -75,10 +69,8 @@ prob.model.recording_options['record_inputs'] = True
 prob.model.recording_options['record_outputs'] = True
 #to here####################################
 
-
-
-
 prob.setup(check=False)
+
 prob['RTO.hpt_cooling.x_factor'] = 0.9
 prob.set_val('splitter:BPR', 23.7281)
 
@@ -161,11 +153,6 @@ for pt in ['TOC']+pts:
 print()
 print('Diameter', prob['TOC.fan_dia.FanDia'][0])
 print("time", time.time() - st)
-
-
-
-
-
 
 print('TOC')
 print(prob['TOC.inlet.Fl_O:stat:W'] - 820.44097898)#

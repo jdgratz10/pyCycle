@@ -223,9 +223,9 @@ for pt in pts:
 
 prob.model.pyc_add_cycle_param('burner.dPqP', 0.0400),
 prob.model.pyc_add_cycle_param('core_nozz.Cv', 0.9999),
-prob.model.pyc_add_cycle_param('ext_ratio.core_Cv', 0.9999),
+prob.model.pyc_add_cycle_param('ext_ratio.core_Cv', 0.9999)###############The main file doesn't include this line
 prob.model.pyc_add_cycle_param('byp_nozz.Cv', 0.9975),
-prob.model.pyc_add_cycle_param('ext_ratio.byp_Cv', 0.9975),
+prob.model.pyc_add_cycle_param('ext_ratio.byp_Cv', 0.9975)###############The main file doesn't include this line
 prob.model.pyc_add_cycle_param('lp_shaft.fracLoss', 0.01),
 prob.model.pyc_add_cycle_param('hp_shaft.HPX', 350.0, units='hp'),
 prob.model.pyc_add_cycle_param('bld25.sbv:frac_W', 0.0),
@@ -308,7 +308,7 @@ bal = prob.model.add_subsystem('bal', BalanceComp())
 
 bal.add_balance('TOC_BPR', val=23.7281, units=None, eq_units=None)
 prob.model.connect('bal.TOC_BPR', 'TOC.splitter.BPR')
-prob.model.connect('CRZ.ext_ratio.ER', 'bal.lhs:TOC_BPR')
+prob.model.connect('CRZ.ext_ratio.ER', 'bal.lhs:TOC_BPR')###############The main file doesn't include this line
 prob.model.connect('CRZ:VjetRatio', 'bal.rhs:TOC_BPR')
 
 bal.add_balance('TOC_W', val=820.95, units='lbm/s', eq_units='degR')

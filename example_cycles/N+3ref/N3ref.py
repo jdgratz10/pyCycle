@@ -340,6 +340,10 @@ def viewer(prob, pt, file=sys.stdout):
 
 class MPN3(pyc.MPCycle):
 
+    def initialize(self):
+        self.options.declare('order_add', default=[],
+                              desc='Name of subsystems to add to end of order.')
+
     def setup(self):
 
         des_vars = self.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
@@ -433,7 +437,7 @@ class MPN3(pyc.MPCycle):
         # POINT 4: Cruise (CRZ)
         des_vars.add_output('CRZ:MN', 0.8),
         des_vars.add_output('CRZ:alt', 35000.0, units='ft'),
-        des_vars.add_output('CRZ:Fn_target', 5510.72833567, units='lbf'), 
+        des_vars.add_output('CRZ:Fn_target', 5510.72833567, units='lbf')
         des_vars.add_output('CRZ:dTs', 0.0, units='degR')
         des_vars.add_output('CRZ:Ath', 4747.1, units='inch**2')
         des_vars.add_output('CRZ:RlineMap', 1.9397)
@@ -451,13 +455,12 @@ class MPN3(pyc.MPCycle):
         self.connect('TOC:MN', 'TOC.fc.MN')
 
         self.connect('TOC:ram_recovery', 'TOC.inlet.ram_recovery')
-        self.connect('fan:PRdes', 'TOC.fan.PR')
+        # self.connect('fan:PRdes', ['TOC.fan.PR', 'TOC.opr_calc.FPR'])
         self.connect('fan:effPoly', 'TOC.balance.rhs:fan_eff')
         self.connect('duct2:dPqP', 'TOC.duct2.dPqP')
-        self.connect('lpc:PRdes', 'TOC.lpc.PR')
+        # self.connect('lpc:PRdes', ['TOC.lpc.PR', 'TOC.opr_calc.LPCPR'])
         self.connect('lpc:effPoly', 'TOC.balance.rhs:lpc_eff')
         self.connect('duct25:dPqP', 'TOC.duct25.dPqP')
-        self.connect('OPR', 'TOC.balance.rhs:hpc_PR')
         self.connect('hpt:effPoly', 'TOC.balance.rhs:hpt_eff')
         self.connect('duct45:dPqP', 'TOC.duct45.dPqP')
         self.connect('lpt:effPoly', 'TOC.balance.rhs:lpt_eff')
@@ -582,11 +585,6 @@ class MPN3(pyc.MPCycle):
         self.connect('RTO.balance.hpt_chrg_cool_frac', 'CRZ.bld3.bld_exit:frac_W')
         self.connect('RTO.balance.hpt_nochrg_cool_frac', 'CRZ.bld3.bld_inlet:frac_W')
 
-        # self.connect('splitter:BPR', 'TOC.splitter.BPR')
-        # self.connect('TOC:W', 'TOC.fc.W')
-        # self.connect('CRZ:Fn_target', 'CRZ.balance.rhs:FAR')
-        # self.connect('SLS:Fn_target', 'SLS.balance.rhs:FAR')
-
         self.add_subsystem('T4_ratio',
                              om.ExecComp('TOC_T4 = RTO_T4*TR',
                                          RTO_T4={'value': 3400.0, 'units':'degR'},
@@ -595,7 +593,8 @@ class MPN3(pyc.MPCycle):
         self.connect('RTO:T4max','T4_ratio.RTO_T4')
         self.connect('T4_ratio.TOC_T4', 'TOC.balance.rhs:FAR')
         self.connect('TR', 'T4_ratio.TR')
-        # self.set_order(['des_vars', 'T4_ratio', 'TOC', 'RTO', 'SLS', 'CRZ'])
+        initial_order = ['des_vars', 'T4_ratio', 'TOC', 'RTO', 'SLS', 'CRZ']
+        self.set_order(initial_order + self.options['order_add'])
 
         newton = self.nonlinear_solver = om.NewtonSolver()
         newton.options['atol'] = 1e-6
@@ -625,6 +624,10 @@ if __name__ == "__main__":
     # prob.model.connect('TOC:W', 'TOC.fc.W')
     prob.model.connect('CRZ:Fn_target', 'CRZ.balance.rhs:FAR')
     prob.model.connect('SLS:Fn_target', 'SLS.balance.rhs:FAR')
+    prob.model.connect('OPR', 'TOC.balance.rhs:hpc_PR')
+
+    prob.model.connect('fan:PRdes', 'TOC.fan.PR')##this is original
+    prob.model.connect('lpc:PRdes', 'TOC.lpc.PR')##this is original
 
     # setup the optimization
     prob.driver = om.ScipyOptimizeDriver()
