@@ -7,23 +7,25 @@ from openmdao.utils.assert_utils import assert_near_equal
 
 import pycycle.api as pyc
 
-from N3ref import N3ref_model
+from N3_SPD import N3_SPD_model
 
-class N3MDPVerifTestCase(unittest.TestCase):
+class N3MDPOptTestCase(unittest.TestCase):
 
     def benchmark_case1(self):
 
-        prob = N3ref_model()
+        prob = N3_SPD_model()
         prob.setup(check=False)
-        prob.set_val('TOC.fc.W', 820.44097898, units='lbm/s')
-        prob.set_val('fan:PRdes', 1.300),
+
         prob.set_val('TOC.splitter.BPR', 23.94514401), 
+        prob.set_val('fan:PRdes', 1.300),
         prob.set_val('lpc:PRdes', 3.000),
         prob.set_val('TOC.balance.rhs:hpc_PR', 53.6332)
         prob.set_val('T4_ratio.TR', 0.926470588)
         prob.set_val('RTO_T4', 3400.0, units='degR')
-        prob.set_val('SLS.balance.rhs:FAR', 28620.84, units='lbf') 
-        prob.set_val('CRZ.balance.rhs:FAR', 5510.72833567, units='lbf')
+        prob.set_val('SLS.balance.rhs:FAR', 28620.84, units='lbf')
+        prob.set_val('CRZ.balance.rhs:FAR', 5510.72833567, units='lbf') 
+        prob.set_val('TOC.fc.W', 820.44097898, units='lbm/s')
+
         prob['RTO.hpt_cooling.x_factor'] = 0.9
 
         # initial guesses
@@ -82,7 +84,6 @@ class N3MDPVerifTestCase(unittest.TestCase):
 
         tol = 1e-4
 
-        assert_near_equal(prob['TOC.inlet.Fl_O:stat:W'], 820.44097898, tol)#
         assert_near_equal(prob['TOC.inlet.Fl_O:tot:P'], 5.26210728, tol)#
         assert_near_equal(prob['TOC.hpc.Fl_O:tot:P'], 275.21039426, tol)#
         assert_near_equal(prob['TOC.burner.Wfuel'], 0.74668441, tol)#
@@ -134,7 +135,8 @@ class N3MDPVerifTestCase(unittest.TestCase):
         assert_near_equal(prob['CRZ.balance.fan_Nmech'], 2118.62554023, tol)#
         assert_near_equal(prob['CRZ.balance.lp_Nmech'], 6567.78766693, tol)#
         assert_near_equal(prob['CRZ.balance.hp_Nmech'], 20574.43651756, tol)#
-        assert_near_equal(prob['CRZ.hpc.Fl_O:tot:T'], 1481.9756247, tol)#
+        assert_near_equal(prob['CRZ.hpc.Fl_O:tot:T'], 1481.9756247, tol)#   
+
 
 if __name__ == "__main__":
     unittest.main()
