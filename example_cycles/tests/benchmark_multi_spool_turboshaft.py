@@ -7,16 +7,16 @@ import pycycle.api as pyc
 from openmdao.utils.units import convert_units as cu
 from openmdao.utils.assert_utils import assert_near_equal
 
-from example_cycles.Turboshaft import MPTurboshaft
+from example_cycles.Multi_spool_turboshaft import MPMultiSpool
 
 
-class TurboshaftTestCase(unittest.TestCase):
+class MultiSpoolTestCase(unittest.TestCase):
 
     def setUp(self):
 
         self.prob = Problem()
 
-        self.prob.model = MPTurboshaft()
+        self.prob.model = MPMultiSpool()
 
         self.prob.set_solver_print(level=-1)
         self.prob.set_solver_print(level=2, depth=1)

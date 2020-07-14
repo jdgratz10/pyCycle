@@ -7,15 +7,15 @@ from openmdao.utils.assert_utils import assert_near_equal
 
 import pycycle.api as pyc
 
-from example_cycles.simple_turboshaft import MPTurboshaft
+from example_cycles.single_spool_turboshaft import MPSingleSpool
 
-class SimpleTurboshaftTestCase(unittest.TestCase):
+class SingleSpoolTestCase(unittest.TestCase):
 
     def benchmark_case1(self):
 
         prob = om.Problem()
 
-        prob.model = MPTurboshaft()
+        prob.model = MPSingleSpool()
 
         prob.set_solver_print(level=-1)
         prob.set_solver_print(level=2, depth=1)

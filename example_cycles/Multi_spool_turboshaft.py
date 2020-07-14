@@ -5,7 +5,7 @@ import openmdao.api as om
 
 import pycycle.api as pyc
 
-class Turboshaft(pyc.Cycle):
+class MultiSpoolTurboshaft(pyc.Cycle):
 
     def initialize(self):
         self.options.declare('design', default=True,
@@ -199,11 +199,11 @@ def viewer(prob, pt, file=sys.stdout):
 
 
 
-class MPTurboshaft(pyc.MPCycle):
+class MPMultiSpool(pyc.MPCycle):
 
     def setup(self):
 
-        self.pyc_add_pnt('DESIGN', Turboshaft())
+        self.pyc_add_pnt('DESIGN', MultiSpoolTurboshaft())
         self.pyc_add_cycle_param('inlet.ram_recovery', 1.0)
         self.pyc_add_cycle_param('duct1.dPqP', 0.0)
         self.pyc_add_cycle_param('icduct.dPqP', 0.002)
@@ -225,7 +225,7 @@ class MPTurboshaft(pyc.MPCycle):
         pts = ['OD'] 
 
         for pt in pts:
-            ODpt = self.pyc_add_pnt(pt, Turboshaft(design=False, maxiter=10))
+            ODpt = self.pyc_add_pnt(pt, MultiSpoolTurboshaft(design=False, maxiter=10))
 
         self.pyc_connect_des_od('lpc.s_PR', 'lpc.s_PR')
         self.pyc_connect_des_od('lpc.s_Wc', 'lpc.s_Wc')
@@ -306,7 +306,7 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    prob.model = MPTurboshaft()
+    prob.model = MPMultiSpool()
     pts = ['OD'] 
     prob.setup()
 

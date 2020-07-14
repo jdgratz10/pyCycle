@@ -4,7 +4,7 @@ import openmdao.api as om
 
 import pycycle.api as pyc
 
-class Turboshaft(pyc.Cycle):
+class SingleSpoolTurboshaft(pyc.Cycle):
 
     def initialize(self):
         self.options.declare('design', default=True,
@@ -163,19 +163,19 @@ def viewer(prob, pt, file=sys.stdout):
 
 
 
-class MPTurboshaft(pyc.MPCycle):
+class MPSingleSpool(pyc.MPCycle):
 
     def setup(self):
 
         # Create design instance of model
-        self.pyc_add_pnt('DESIGN', Turboshaft())
+        self.pyc_add_pnt('DESIGN', SingleSpoolTurboshaft())
         self.pyc_add_cycle_param('burner.dPqP', .03)
         self.pyc_add_cycle_param('nozz.Cv', 0.99)
 
         od_pts = ['OD', 'OD2']
 
         for pt in od_pts:
-            self.pyc_add_pnt(pt, Turboshaft(design=False))
+            self.pyc_add_pnt(pt, SingleSpoolTurboshaft(design=False))
 
         self.pyc_connect_des_od('comp.s_PR', 'comp.s_PR')
         self.pyc_connect_des_od('comp.s_Wc', 'comp.s_Wc')
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     prob = om.Problem()
 
-    prob.model = MPTurboshaft()
+    prob.model = MPSingleSpool()
 
     od_pts = ['OD', 'OD2']
     od_MNs = [0.1, 0.000001]
