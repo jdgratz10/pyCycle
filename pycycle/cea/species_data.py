@@ -24,55 +24,68 @@ class Thermo(object):
         self.init_prod_amounts = None # concentrations (sum to 1)
         self.thermo_data_module = thermo_data_module
         self.init_reacts = init_reacts
+        self.temp_base = None # array of lowest end of lowest temperature range
         self.set_data(thermo_data_module, init_reacts)
         self._lastT = None
 
     def H0(self, Tt): # standard-state molar enthalpy for species j at temp T
         Tt = Tt[0]
-        if Tt != self._lastT:
-            self.build_coeff_table(Tt)
-            self._lastT = Tt
+        if Tt < self.valid_temp_range[0] or Tt > self.valid_temp_range[1]: # runs if temperature is outside range of current coefficients
+            if Tt != self._lastT: # runs if temperature is not the same as previous temperature
+                if self._lastT is None or (np.all(self.temp_base < Tt) & np.all(self.temp_base < self._lastT)): # runs if temperature and previous temperature are not below the lowest coefficient range
+                    self.build_coeff_table(Tt)
+        self._lastT = Tt
         a_T = self.a_T
         return (-a_T[0]/Tt**2 + a_T[1]/Tt*log(Tt) + a_T[2] + a_T[3]*Tt/2. + a_T[4]*Tt**2/3. + a_T[5]*Tt**3/4. + a_T[6]*Tt**4/5.+a_T[7]/Tt)
 
     def S0(self, Tt): # standard-state molar entropy for species j at temp T
         Tt = Tt[0]
-        if Tt != self._lastT:
-            self.build_coeff_table(Tt)
-            self._lastT = Tt
+        if Tt < self.valid_temp_range[0] or Tt > self.valid_temp_range[1]: # runs if temperature is outside range of current coefficients
+            if Tt != self._lastT: # runs if temperature is not the same as previous temperature
+                if self._lastT is None or (np.all(self.temp_base < Tt) & np.all(self.temp_base < self._lastT)): # runs if temperature and previous temperature are not below the lowest coefficient range
+                    self.build_coeff_table(Tt)
+        self._lastT = Tt
         a_T = self.a_T
         return (-a_T[0]/(2*Tt**2) - a_T[1]/Tt + a_T[2]*log(Tt) + a_T[3]*Tt + a_T[4]*Tt**2/2. + a_T[5]*Tt**3/3. + a_T[6]*Tt**4/4.+a_T[8])
 
     def Cp0(self, Tt): #molar heat capacity at constant pressure for
                     #standard state for species or reactant j, J/(kg-mole)_j(K)
         Tt = Tt[0]
-        if Tt != self._lastT:
-            self.build_coeff_table(Tt)
-            self._lastT = Tt
+        if Tt < self.valid_temp_range[0] or Tt > self.valid_temp_range[1]: # runs if temperature is outside range of current coefficients
+            if Tt != self._lastT: # runs if temperature is not the same as previous temperature
+                if self._lastT is None or (np.all(self.temp_base < Tt) & np.all(self.temp_base < self._lastT)): # runs if temperature and previous temperature are not below the lowest coefficient range
+                    self.build_coeff_table(Tt)
+        self._lastT = Tt
         a_T = self.a_T
         return a_T[0]/Tt**2 + a_T[1]/Tt + a_T[2] + a_T[3]*Tt + a_T[4]*Tt**2 + a_T[5]*Tt**3 + a_T[6]*Tt**4
 
     def H0_applyJ(self, Tt, vec):
         Tt = Tt[0]
-        if Tt != self._lastT:
-            self.build_coeff_table(Tt)
-            self._lastT = Tt
+        if Tt < self.valid_temp_range[0] or Tt > self.valid_temp_range[1]: # runs if temperature is outside range of current coefficients
+            if Tt != self._lastT: # runs if temperature is not the same as previous temperature
+                if self._lastT is None or (np.all(self.temp_base < Tt) & np.all(self.temp_base < self._lastT)): # runs if temperature and previous temperature are not below the lowest coefficient range
+                    self.build_coeff_table(Tt)
+        self._lastT = Tt
         a_T = self.a_T
         return vec*(2*a_T[0]/Tt**3 + a_T[1]*(1-log(Tt))/Tt**2 + a_T[3]/2. + 2*a_T[4]/3.*Tt + 3*a_T[5]/4.*Tt**2 + 4*a_T[6]/5.*Tt**3 - a_T[7]/Tt**2)
 
     def S0_applyJ(self, Tt, vec):
         Tt = Tt[0]
-        if Tt != self._lastT:
-            self.build_coeff_table(Tt)
-            self._lastT = Tt
+        if Tt < self.valid_temp_range[0] or Tt > self.valid_temp_range[1]: # runs if temperature is outside range of current coefficients
+            if Tt != self._lastT: # runs if temperature is not the same as previous temperature
+                if self._lastT is None or (np.all(self.temp_base < Tt) & np.all(self.temp_base < self._lastT)): # runs if temperature and previous temperature are not below the lowest coefficient range
+                    self.build_coeff_table(Tt)
+        self._lastT = Tt
         a_T = self.a_T
         return vec*(a_T[0]/(Tt**3) + a_T[1]/Tt**2 + a_T[2]/Tt + a_T[3] + a_T[4]*Tt + a_T[5]*Tt**2 + 4*a_T[6]/4.*Tt**3)
 
     def Cp0_applyJ(self, Tt, vec):
         Tt = Tt[0]
-        if Tt != self._lastT:
-            self.build_coeff_table(Tt)
-            self._lastT = Tt
+        if Tt < self.valid_temp_range[0] or Tt > self.valid_temp_range[1]: # runs if temperature is outside range of current coefficients
+            if Tt != self._lastT: # runs if temperature is not the same as previous temperature
+                if self._lastT is None or (np.all(self.temp_base < Tt) & np.all(self.temp_base < self._lastT)): # runs if temperature and previous temperature are not below the lowest coefficient range
+                    self.build_coeff_table(Tt)
+        self._lastT = Tt
         a_T = self.a_T
         return vec*(-2*a_T[0]/Tt**3 - a_T[1]/Tt**2 + a_T[3] + 2.*a_T[4]*Tt + 3.*a_T[5]*Tt**2 + 4.*a_T[6]*Tt**3)
 
@@ -152,16 +165,25 @@ class Thermo(object):
                 j = np.mod(k,self.num_element)
                 self.aij_prod_deriv[k][l] = self.aij_prod[i][j][l]
 
-        self.build_coeff_table(1000) # just pick arbitrary default temperature so there is something there right away
+        self.build_coeff_table(999) # just pick arbitrary default temperature so there is something there right away
 
     def build_coeff_table(self, Tt):
         """Build the temperature specific coeff array and find the highest-low value and
         the lowest-high value of temperatures from all the reactants to give the
         valid range for the data fits."""
+        if Tt < 200:
+            if self._lastT < 200:
+                print('\n\n\nWe have a problem!!!!!!\n\n\n')
+
+        if self.temp_base is None:
+            self.temp_base = np.zeros(self.num_prod)
 
         max_low, min_high = -1e50, 1e50
         for i,p in enumerate(self.products):
             tr = self.prod_data[p]['ranges']
+
+            if self.temp_base[i] == 0:
+                self.temp_base[i] = tr[0]
 
             j = int(np.searchsorted(tr, Tt))
             if j == 0: # dont run off the start
@@ -432,3 +454,22 @@ class ThermoSpline(object):
             self.a[i][:len(data)] = data # have to slice because some rows are 9 long and others 10g
 
         self.valid_temp_range = (max_low, min_high)
+
+if __name__ == "__main__":
+    thermo = Thermo(janaf)
+
+    T = np.ones(len(thermo.products))*800
+    H0 = thermo.H0(T)
+    S0 = thermo.S0(T)
+    Cp0 = thermo.Cp0(T)
+
+    HJ = thermo.H0_applyJ(T, 1.)
+    SJ = thermo.S0_applyJ(T, 1)
+    CpJ = thermo.Cp0_applyJ(T, 1)
+    print('\nT', T)
+    print('\nH0', H0)
+    print('\nS0', S0)
+    print('\nCp0', Cp0)
+    print('\nHJ', HJ)
+    print('\nSJ', SJ)
+    print('\nCpJ', CpJ, '\n')

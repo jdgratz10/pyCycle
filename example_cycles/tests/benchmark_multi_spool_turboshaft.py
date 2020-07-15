@@ -7,7 +7,7 @@ import pycycle.api as pyc
 from openmdao.utils.units import convert_units as cu
 from openmdao.utils.assert_utils import assert_near_equal
 
-from example_cycles.Multi_spool_turboshaft import MPMultiSpool
+from example_cycles.multi_spool_turboshaft import MPMultiSpool
 
 
 class MultiSpoolTestCase(unittest.TestCase):
