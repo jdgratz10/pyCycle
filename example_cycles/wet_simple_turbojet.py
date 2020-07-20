@@ -18,7 +18,7 @@ class WetTurbojet(pyc.Cycle):
         design = self.options['design']
 
         # Add engine elements
-        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=wet_thermo_spec,
+        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=wet_thermo_spec, use_WAR=True,
                                     elements=pyc.WET_AIR_MIX))#WET_AIR_MIX contains standard dry air compounds as well as H2O
         self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=wet_thermo_spec,
                                     elements=pyc.WET_AIR_MIX))

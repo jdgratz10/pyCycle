@@ -13,7 +13,7 @@ class WetPropulsor(pyc.Cycle):
         thermo_spec = pyc.species_data.wet_air #special species library is called that allows for using initial compositions that include both H and C
         design = self.options['design']
 
-        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec,
+        self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec, use_WAR=True,
                                                   elements=pyc.WET_AIR_MIX))#WET_AIR_MIX contains standard dry air compounds as well as H2O
 
         self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec, elements=pyc.WET_AIR_MIX))
