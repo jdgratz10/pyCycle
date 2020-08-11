@@ -22,6 +22,7 @@ class ExplicitIsentropic(ExplicitComponent):
         self.add_input('Cp', val=1.0, units='cal/(g*degK)', desc='specific heat at constant pressure')
         self.add_input('T', val=100., units='degK', desc='entropy')
 
+        self.add_output('rho', val=1.0, units="kg/m**3", desc="density")
 
         if for_statics == 'MN':
             self.add_input('MN', val=.9, desc="computed mach number")
@@ -32,6 +33,7 @@ class ExplicitIsentropic(ExplicitComponent):
 
             self.declare_partials('V', ('MN', 'R', 'T'))
             self.declare_partials('area', ('W', 'R', 'T', 'P', 'MN'))
+            self.declare_partials('rho', ('P', 'R', 'T'))
             
 
         elif for_statics == 'Ps':
@@ -45,6 +47,7 @@ class ExplicitIsentropic(ExplicitComponent):
             self.declare_partials('MN', ('Tt', 'T'))
             self.declare_partials('V', ('R', 'T', 'Tt'))
             self.declare_partials('area', ('W', 'R', 'T', 'P', 'Tt'))
+            self.declare_partials('rho', ('P', 'R', 'T'))
 
         elif for_statics == 'area':
             self.add_input('W', val=.1, desc="mass flow rate", units="kg/s")
@@ -58,7 +61,8 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 self.declare_partials('MN', ('Tt', 'T'))
                 self.declare_partials('V', 'Tt')
-                self.declare_partials('P', ('W', 'R', 'T', 'Tt', 'area'))                
+                self.declare_partials('P', ('W', 'R', 'T', 'Tt', 'area'))   
+                self.declare_partials('rho', ('R', 'T', 'W', 'Tt', 'area'))             
 
             elif mode == 'h':
                 self.add_input('Tt', val=1.1, units="degK", desc="Total enthalpy reference condition")
@@ -68,7 +72,8 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 self.declare_partials('MN', ('Tt', 'T'))
                 self.declare_partials('V', 'Tt')
-                self.declare_partials('P', ('W', 'R', 'T', 'Tt', 'area'))
+                self.declare_partials('P', ('W', 'R', 'T', 'Tt', 'area')) 
+                self.declare_partials('rho', ('R', 'T', 'W', 'Tt', 'area'))
 
             else:
                 self.add_input('P', val=101300, units='Pa', desc='pressure')
@@ -76,7 +81,8 @@ class ExplicitIsentropic(ExplicitComponent):
                 self.add_output('MN')
 
                 self.declare_partials('V', ('W', 'area', 'P'))
-                self.declare_partials('MN', ('R', 'T', 'W', 'area', 'P'))
+                self.declare_partials('MN', ('R', 'T', 'W', 'area', 'P')) 
+                self.declare_partials('rho', ('P', 'R', 'T'))
 
             self.declare_partials('V', ('T', 'R'))
 
@@ -85,7 +91,6 @@ class ExplicitIsentropic(ExplicitComponent):
             self.add_input('P', val=1.013, units='bar', desc='pressure')
 
             self.add_output('Cv', val=1.1, units="Btu/(lbm*degR)", desc="Specific heat at constant volume")
-            self.add_output('rho', val=1.0, units="kg/m**3", desc="density")
 
             self.declare_partials('Cv', 'Cp')
             self.declare_partials('rho', ('P', 'R', 'T'))
@@ -110,6 +115,10 @@ class ExplicitIsentropic(ExplicitComponent):
         R = inputs['R']
         T = inputs['T']
         Cp = inputs['Cp']
+
+        # print(self.pathname)
+        # print(T)
+        # print()
 
         ## complete the necessary calculations:
 
@@ -145,10 +154,12 @@ class ExplicitIsentropic(ExplicitComponent):
 
             V = MN*Vsonic
             area = W*R*T/(1e5*P*V) # based on definition of mass flow rate, 1e5 is for unit conversion
+            rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
 
             outputs['MN'] = MN
             outputs['V'] = V
             outputs['area'] = area
+            outputs['rho'] = rho
 
         elif for_statics == 'MN':
 
@@ -158,9 +169,11 @@ class ExplicitIsentropic(ExplicitComponent):
 
             V = MN*Vsonic
             area = W*R*T/(1e5*P*V) # based on definition of mass flow rate, 1e5 is for unit conversion
+            rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
 
             outputs['V'] = V
             outputs['area'] = area
+            outputs['rho'] = rho
 
         elif for_statics == 'area':
 
@@ -179,10 +192,12 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 V = MN*Vsonic
                 P = W*R*T/(area*V)
+                rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
 
                 outputs['MN'] = MN
                 outputs['V'] = V
                 outputs['P'] = P
+                outputs['rho'] = rho
 
             else:
                 
@@ -190,9 +205,15 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 V = R*T*W/(area*P)
                 MN = V/Vsonic
+                rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
+
+                outputs['rho'] = rho
 
                 outputs['V'] = V
                 outputs['MN'] = MN
+                rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
+
+                outputs['rho'] = rho
 
             
     def compute_partials(self, inputs, J):
@@ -271,6 +292,9 @@ class ExplicitIsentropic(ExplicitComponent):
             J['area', 'T'] = dArea_dT
             J['area', 'P'] = -W*R*T/(1e5*MN*Vsonic*P**2)
             J['area', 'Tt'] = dArea_dTt
+            J['rho', 'P'] = 1e5/(R*T)
+            J['rho', 'R'] = -1e5*P/(T*R**2)
+            J['rho', 'T'] = -1e5*P/(R*T**2)
 
         elif for_statics == 'MN':
 
@@ -289,6 +313,9 @@ class ExplicitIsentropic(ExplicitComponent):
             J['area', 'T'] = .5*W*R**.5 / (1e5*MN*P*(gamma*T)**.5)
             J['area', 'P'] = -W*R*T/(1e5*V*P**2)
             J['area', 'MN'] = -W*R*T/(1e5*P*Vsonic*MN**2)
+            J['rho', 'P'] = 1e5/(R*T)
+            J['rho', 'R'] = -1e5*P/(T*R**2)
+            J['rho', 'T'] = -1e5*P/(R*T**2)
 
         elif for_statics == 'area':
 
@@ -324,14 +351,19 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 J['MN', 'Tt'] = dMN_dTt
                 J['MN', 'T'] = dMN_dT
-                J['V', 'Tt'] = Vsonic*dMN_dTt
-                J['V', 'T'] = MN*dVsonic_dT + dMN_dT*Vsonic
-                J['V', 'R'] = MN*dVsonic_dR
+                J['V', 'Tt'] = dV_dTt = Vsonic*dMN_dTt
+                J['V', 'T'] = dV_dT = MN*dVsonic_dT + dMN_dT*Vsonic
+                J['V', 'R'] = dV_dR = MN*dVsonic_dR
                 J['P', 'W'] = R*T/(area*V)
                 J['P', 'R'] = .5*W*T**.5 / (area*MN*(gamma*R)**.5)
                 J['P', 'T'] = dP_dT
                 J['P', 'Tt'] = dP_dTt
                 J['P', 'area'] = -W*R*T/(V*area**2)
+                J['rho', 'W'] = 1e5/(area*V)
+                J['rho', 'area'] = -1e5*W/(area**2 * V)
+                J['rho', 'R'] = -1e5*W/(area*V**2) * dV_dR
+                J['rho', 'T'] = -1e5*W/(area*V**2) * dV_dT
+                J['rho', 'Tt'] = -1e5*W/(area*V**2) * dV_dTt
 
             else:
 
@@ -351,18 +383,15 @@ class ExplicitIsentropic(ExplicitComponent):
                 J['MN', 'area'] = dV_dArea/Vsonic
                 J['MN', 'P'] = dV_dP/Vsonic
 
+                J['rho', 'T'] = -1e5*P/(R*T**2)
+                J['rho', 'R'] = -1e5*P/(R**2 * T)
+                J['rho', 'P'] = 1e5/(R*T)
+
 if __name__ == "__main__":
     import openmdao.api as om 
 
     prob = om.Problem()
-    prob.model = ExplicitIsentropic(for_statics='area', mode='S')
+    prob.model = ExplicitIsentropic(for_statics=False, mode='T')
     prob.setup(force_alloc_complex=True)
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
-
-    print(prob['W'])
-    print(prob['R'])
-    print(prob['T'])
-    print(prob['P'])
-    print(prob['V'])
-    print(prob['area'])

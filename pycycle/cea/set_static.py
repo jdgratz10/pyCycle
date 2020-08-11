@@ -1,7 +1,7 @@
 import openmdao.api as om
 
 from pycycle.constants import AIR_MIX
-from pycycle.cea.set_total import SetTotal
+from pycycle.cea.set_total2 import SetTotal
 from pycycle.cea.unit_comps import EngUnitStaticProps, EngUnitProps
 from pycycle.cea import species_data
 
@@ -36,25 +36,26 @@ class SetStatic(om.Group):
         # have to promote things differently depending on which mode we are
         if mode == 'Ps':
             self.add_subsystem('statics', statics,
-                               promotes_inputs=[('P', 'Ps'), 'S', 'ht', 'W', 'b0'],
+                               promotes_inputs=[('P', 'Ps'), 'S', 'ht', 'W'],
                                promotes_outputs=['MN', 'V', 'Vsonic', 'area',
-                                                 'T', 'h', 'gamma', 'Cp', 'Cv', 'rho', 'n', 'n_moles'])
+                                                 'T', 'h', 'Cp', 'Cv', 'rho', 'gamma'])
         elif mode == 'MN':
             self.add_subsystem('statics', statics,
-                               promotes_inputs=['MN', 'S', 'ht', 'W', 'guess:*', 'b0'],
+                               promotes_inputs=['MN', 'S', 'ht', 'W'],
                                promotes_outputs=['V', 'Vsonic', 'area',
-                                                 'Ps', 'T', 'h', 'gamma', 'Cp', 'Cv', 'rho', 'n', 'n_moles'])
+                                                 ('P', 'Ps'), 'T', 'h', 'Cp', 'Cv', 'rho', 'gamma'])
+            self.set_input_defaults('MN', .5, units=None)
 
         else:
             self.add_subsystem('statics', statics,
-                               promotes_inputs=['area', 'S', 'ht', 'W', 'guess:*', 'b0'],
+                               promotes_inputs=['area', 'S', 'ht', 'W'],
                                promotes_outputs=['V', 'Vsonic', 'MN',
-                                                 'Ps', 'T', 'h', 'gamma', 'Cp', 'Cv', 'rho', 'n', 'n_moles'])
+                                                 ('P', 'Ps'), 'T', 'h', 'Cp', 'Cv', 'rho', 'gamma'])
 
-        p_inputs = ('T', 'P', 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'n', 'n_moles', 'b0')
+        p_inputs = ('T', 'P', 'h', 'S', 'Cp', 'Cv', 'rho', 'gamma')
         p_outputs = tuple(['{0}:{1}'.format(fl_name, in_name) for in_name in p_inputs])
         # need to redefine this so that P gets promoted as P. Needed the first definition for the list comprehension
-        p_inputs = ('T', ('P', 'Ps'), 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'n', 'n_moles')
+        p_inputs = ('T', ('P', 'Ps'), 'h', 'S', 'Cp', 'Cv', 'rho')
 
         self.add_subsystem('flow', EngUnitProps(thermo=thermo, fl_name=fl_name),
                            promotes_inputs=p_inputs,

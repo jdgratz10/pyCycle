@@ -4,7 +4,7 @@ import openmdao.api as om
 
 from pycycle.cea import species_data
 from pycycle.cea.set_static import SetStatic
-from pycycle.cea.set_total import SetTotal
+from pycycle.cea.set_total2 import SetTotal
 from pycycle.constants import AIR_FUEL_MIX, AIR_MIX, g_c
 from pycycle.flow_in import FlowIn
 from pycycle.passthrough import PassThrough
@@ -117,7 +117,7 @@ class Inlet(om.Group):
         real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot")
 
         self.add_subsystem('real_flow', real_flow,
-                           promotes_inputs=[('T', 'Fl_I:tot:T'), ('b0', 'Fl_I:tot:b0')],
+                           promotes_inputs=[('T', 'Fl_I:tot:T'),],
                            promotes_outputs=['Fl_O:*'])
         self.connect("calcs_inlet.Pt_out", "real_flow.P")
 
@@ -127,20 +127,19 @@ class Inlet(om.Group):
             if design:
                 #   Calculate static properties
                 self.add_subsystem('out_stat', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat"),
-                                   promotes_inputs=[('b0', 'Fl_I:tot:b0'), ('W', 'Fl_I:stat:W'), 'MN'],
+                                   promotes_inputs=[('W', 'Fl_I:stat:W'), 'MN'],
                                    promotes_outputs=['Fl_O:stat:*'])
 
                 self.connect('Fl_O:tot:S', 'out_stat.S')
                 self.connect('Fl_O:tot:h', 'out_stat.ht')
-                self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
+                # self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
+                # self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
 
             else:
                 # Calculate static properties
                 out_stat = SetStatic(mode="area", thermo_data=thermo_data, init_reacts=elements,
                                          fl_name="Fl_O:stat")
-                prom_in = [('b0', 'Fl_I:tot:b0'),
-                           ('W', 'Fl_I:stat:W'),
+                prom_in = [('W', 'Fl_I:stat:W'),
                            'area']
                 prom_out = ['Fl_O:stat:*']
                 self.add_subsystem('out_stat', out_stat, promotes_inputs=prom_in,
@@ -148,8 +147,8 @@ class Inlet(om.Group):
 
                 self.connect('Fl_O:tot:S', 'out_stat.S')
                 self.connect('Fl_O:tot:h', 'out_stat.ht')
-                self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
+                # self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
+                # self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
 
         else:
             self.add_subsystem('W_passthru', PassThrough('Fl_I:stat:W', 'Fl_O:stat:W', 0.0, units= "lbm/s"),
@@ -158,7 +157,7 @@ class Inlet(om.Group):
         # if not design: 
         #     self.set_input_defaults('area', val=1, units='in**2') 
 
-        self.set_input_defaults('Fl_I:tot:b0', gas_thermo.b0)
+        # self.set_input_defaults('Fl_I:tot:b0', gas_thermo.b0)
 
 
 if __name__ == "__main__":

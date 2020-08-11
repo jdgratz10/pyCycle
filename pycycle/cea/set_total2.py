@@ -116,56 +116,56 @@ class SetTotal(om.Group):
 
         ### Add table lookups ###
 
-        if for_statics:
-            if for_statics == 'Ps':
-                if mode == 'T' or mode == 'h':
-                    self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
-                        Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
-                        promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
+        # if for_statics:
+        #     if for_statics == 'Ps':
+        #         if mode == 'T' or mode == 'h':
+        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
+        #                 Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
+        #                 promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
 
-                else:
-                    self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
-                        Cp_data=properties.AIR_MIX_Cp),
-                        promotes_inputs=('T',), promotes_outputs=('Cp',))
+        #         else:
+        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
+        #                 Cp_data=properties.AIR_MIX_Cp),
+        #                 promotes_inputs=('T',), promotes_outputs=('Cp',))
 
-            elif for_statics == 'MN':
-                if for_statics == 'T' or for_statics == 'h':
-                    self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
-                        Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
-                        promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
+        #     elif for_statics == 'MN':
+        #         if for_statics == 'T' or for_statics == 'h':
+        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
+        #                 Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
+        #                 promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
 
-                else:
-                    self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
-                        Cp_data=properties.AIR_MIX_Cp,),
-                        promotes_inputs=('T',), promotes_outputs=('Cp',))
+        #         else:
+        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
+        #                 Cp_data=properties.AIR_MIX_Cp,),
+        #                 promotes_inputs=('T',), promotes_outputs=('Cp',))
 
-            elif for_statics == 'area':
-                self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
-                    Cp_data=properties.AIR_MIX_Cp),
-                    promotes_inputs=('T',), promotes_outputs=('Cp',))
+        #     elif for_statics == 'area':
+        #         self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
+        #             Cp_data=properties.AIR_MIX_Cp),
+        #             promotes_inputs=('T',), promotes_outputs=('Cp',))
+
+        # else:
+        if mode == 'T':
+            self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True, S=True,
+                Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy, S_data=properties.AIR_MIX_entropy),
+                promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'h', 'S'))
+            
+        elif mode == 'h':
+            self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
+                Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
+                promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
 
         else:
-            if mode == 'T':
-                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True, S=True,
-                    Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'h', 'S'))
-            
-            elif mode == 'h':
-                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
-                    Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
-
-            else:
-                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
-                    Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy),
-                    promotes_inputs=('T',), promotes_outputs=('Cp', 'h'))
+            self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
+                Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy),
+                promotes_inputs=('T',), promotes_outputs=('Cp', 'h'))
             
             
         ### Set up variables for explicit calculations ###
 
         if for_statics:  
             in_vars = ('T', 'R', 'Cp')
-            out_vars = ('Cv',)
+            out_vars = ('Cv', 'rho')
 
             if for_statics == 'Ps':
                 in_vars += ('P', 'W', 'Tt')
@@ -208,6 +208,11 @@ class SetTotal(om.Group):
                                promotes_inputs=('T', 'P', 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'R'),
                                promotes_outputs=('{}:*'.format(fl_name),))
 
+        else:
+            ### temporary gamma hack, fix this ###
+            des_vars = self.add_subsystem('des_vars', om.IndepVarComp(), promotes=['*'])
+            des_vars.add_output('gamma', gamma, units=None)
+
 
     def configure(self):
 
@@ -241,12 +246,12 @@ if __name__ == "__main__":
     import numpy as np
 
     prob = om.Problem()
-    prob.model = SetTotal(for_statics=False, mode='T', MW=28.9651784)
+    prob.model = SetTotal(for_statics='Ps', mode='T', MW=28.9651784)
 
 
     prob.model.set_input_defaults('P', 1.013, units="bar")
-    prob.model.set_input_defaults('h', 7, units='cal/g')
-    prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
+    # prob.model.set_input_defaults('h', 7, units='cal/g')
+    # prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
 
     # prob.model.set_input_defaults('MN', .6, units=None)
 
