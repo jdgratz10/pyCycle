@@ -162,6 +162,8 @@ if __name__ == "__main__":
     prob.model.off_design.nonlinear_solver.options['atol'] = 1e-6
     prob.model.off_design.nonlinear_solver.options['rtol'] = 1e-6
 
+    prob.set_solver_print(level=2, depth=1)
+
     prob.run_model()
     run_time = time.time() - st
 
