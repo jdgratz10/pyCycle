@@ -119,7 +119,7 @@ class SetTotal(om.Group):
                                    promotes_outputs=['MN', 'V', 'Vsonic', 'area']
                                    )
 
-            # self.set_input_defaults('W', units='kg/s') #may need to uncomment later
+            # self.set_input_defaults('W', units='kg/s') #may need to uncomment later (set_input_defaults bug)
         else:
             self.add_subsystem('flow', EngUnitProps(thermo=thermo, fl_name=fl_name),
                                promotes_inputs=('T', 'P', 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'n', 'n_moles', 'R', 'b0'),
@@ -161,28 +161,24 @@ if __name__ == "__main__":
 
     from pycycle.cea import species_data
     from pycycle import constants
-    import numpy as np
 
-    # thermo = species_data.Thermo(species_data.co2_co_o2, constants.CO2_CO_O2_MIX)
-    thermo = species_data.Thermo(species_data.janaf, init_reacts=constants.AIR_MIX)
+    thermo = species_data.Thermo(species_data.co2_co_o2, constants.CO2_CO_O2_MIX)
+    # thermo = species_data.Thermo(species_data.janaf)
 
     prob = om.Problem()
+    prob.model = om.Group()
 
-    prob.model = SetTotal(thermo_data=species_data.janaf,
+    prob.model.add_subsystem('totals',
+                             SetTotal(thermo_data=species_data.janaf,
                                       fl_name="flow",
-                                      init_reacts=constants.AIR_MIX,
-                                      for_statics='area',
-                                      mode='S')
+                                      init_reacts=constants.CO2_CO_O2_MIX,
+                                      mode="h"),
+                             promotes_inputs=['h', 'P', 'b0'],
+                             promotes_outputs=['flow:*'])
 
-    prob.model.set_input_defaults('b0', thermo.b0)
-    # prob.model.set_input_defaults('P', 1.013, units="bar")
-    # prob.model.set_input_defaults('T', 330, units='degK')
-    # prob.model.set_input_defaults('MN', .6, units=None)
-    prob.model.set_input_defaults('ht', 10, units='cal/g')
-    prob.model.set_input_defaults('W', 15, units='lbm/s')
-    # prob.model.set_input_defaults('h', 7, units='cal/g')
-    prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
-    prob.model.set_input_defaults('area', .5, units='m**2')
+    prob.model.totals.set_input_defaults('b0', thermo.b0)
+    prob.model.totals.set_input_defaults('P', 1.034210, units="bar")
+    prob.model.totals.set_input_defaults('h', 1., units="Btu/lbm")
     prob.model.suppress_solver_output = True
     prob.setup()
 
@@ -191,95 +187,44 @@ if __name__ == "__main__":
     # exit(0)
 
     prob.run_model()
+    print('gamma', prob['flow:gamma'])
+    print('P', prob['flow:P'])
+    print('h', prob['flow:h'])
+    print('rho', prob['flow:rho'])
+    print('S', prob['flow:S'])
 
-    # print(prob.get_val('flow:T', units='degK'))
-    # print(prob.get_val('flow:P', units='bar'))
-    # print(prob.get_val('flow:h', units='cal/g'))
-    # print(prob.get_val('S', units='cal/(g*degK)'))
-    # print(prob.get_val('flow:gamma'))
-    print(prob.get_val('Cp', units='cal/(g*degK)'))
-    print(prob.get_val('Cv', units='cal/(g*degK)'))
-    # print(prob.get_val('flow:rho', units='lbm/ft**3'))
-    print(prob.get_val('R', units='cal/(g*degK)'))
-    print(prob.get_val('V', units='ft/s'))
-    print(prob.get_val('Vsonic', units='ft/s'))
-    # print(prob.get_val('area', units='m**2'))
-    # print(prob.get_val('MN', units=None))
-    print()
-    print(prob.get_val('W', units='lbm/s'))
-    print(prob.get_val('T', units='degK'))
-    print(prob.get_val('P', units='bar'))
-    # print(prob.get_val('ht', units='cal/g'))
-    print(prob.get_val('S', units='cal/(g*degK)'))
-    print(prob.get_val('MN', units=None))
-    print(prob.get_val('area', units='m**2'))
-    # print(prob.get_val('h', units='cal/g'))
-    print(prob.get_val('ht', units='cal/g'))
+    prob['P'] = 4.0
 
 
-    # prob.model.list_inputs(units=True)
+    prob.run_model()
+    print("#"*50)
+    print('gamma', prob['flow:gamma'])
+    print('T', prob['flow:T'])
+    print('P', prob['flow:P'])
+    print('h', prob['flow:h'])
+    print('n', prob['flow:n'])
 
 
 
+    prob = om.Problem()
+    prob.model = om.Group()
 
+    prob.model.add_subsystem('totals',
+                             SetTotal(thermo_data=species_data.janaf,
+                                      fl_name="flow", for_statics='area',
+                                      init_reacts=constants.CO2_CO_O2_MIX,
+                                      mode="h"),
+                             promotes_inputs=['h', 'P', 'b0'])
 
+    prob.model.totals.set_input_defaults('b0', thermo.b0)
+    prob.model.totals.set_input_defaults('P', 1.034210, units="bar")
+    prob.model.totals.set_input_defaults('h', 100., units="Btu/lbm")
+    prob.model.suppress_solver_output = True
+    prob.setup()
 
+    # from openmdao.api import view_model
+    # view_model(prob)
+    # exit(0)
 
-
-
-    # print('gamma', prob['flow:gamma'])
-    # print('P', prob['flow:P'])
-    # print('h', prob['flow:h'])
-    # print('rho', prob['flow:rho'])
-    # print('S', prob['flow:S'])
-
-    # prob['P'] = 4.0
-
-
-    # prob.run_model()
-    # print("#"*50)
-    # print('gamma', prob['flow:gamma'])
-    # print('T', prob['flow:T'])
-    # print('P', prob['flow:P'])
-    # print('h', prob['flow:h'])
-    # print('n', prob['flow:n'])
-
-
-
-    # prob = om.Problem()
-    # prob.model = om.Group()
-
-    # prob.model.add_subsystem('totals',
-    #                          SetTotal(thermo_data=species_data.janaf,
-    #                                   fl_name="flow", for_statics='area',
-    #                                   init_reacts=constants.CO2_CO_O2_MIX,
-    #                                   mode="h"),
-    #                          promotes_inputs=['h', 'P', 'b0'])
-
-    # prob.model.totals.set_input_defaults('b0', thermo.b0)
-    # prob.model.totals.set_input_defaults('P', 1.034210, units="bar")
-    # prob.model.totals.set_input_defaults('h', 100., units="Btu/lbm")
-    # prob.model.suppress_solver_output = True
-    # prob.setup()
-
-    # # from openmdao.api import view_model
-    # # view_model(prob)
-    # # exit(0)
-
-    # prob.run_model()
-    # prob.model.list_inputs()
-
-    # thermo = species_data.Thermo(species_data.janaf, init_reacts=constants.AIR_MIX)
-
-    # p = om.Problem()
-    # p.model = Properties(thermo=thermo)
-    # p.model.set_input_defaults('n', np.array([2.34429759e-04, 0, 7.24843500e-06, 0, 0, 0, 0, 2.78737237e-02, 0, 6.54637049e-03]))
-    # p.model.set_input_defaults('n_moles', 0.03466177233276218)
-    # p.model.set_input_defaults('T', 800, units='degK')
-    # p.model.set_input_defaults('b0', np.array([3.23319236e-04, 1.10132233e-05, 5.39157698e-02, 1.44860137e-02]))
-
-    # p.setup()
-    # p.run_model()
-
-    # p.model.list_outputs(units=True)
-    # print(p['Cp'])
+    prob.run_model()
+    prob.model.list_inputs()

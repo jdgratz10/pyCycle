@@ -16,11 +16,14 @@ class FlightConditions(om.Group):
                               desc='set of elements present in the flow')
         self.options.declare('use_WAR', default=False, values=[True, False], 
                               desc='If True, includes WAR calculation')
+        self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
+                              desc='mode of computation')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']
         use_WAR = self.options['use_WAR']
+        comp_mode = self.options['computation_mode']
 
         self.add_subsystem('ambient', Ambient(), promotes=('alt', 'dTs'))  # inputs
 
@@ -29,7 +32,7 @@ class FlightConditions(om.Group):
             proms = ['Fl_O:*', 'MN', 'W', 'WAR']
         else:
             proms = ['Fl_O:*', 'MN', 'W']
-        conv.add_subsystem('fs', FlowStart(thermo_data=thermo_data, elements=elements, use_WAR=use_WAR), promotes=proms)
+        conv.add_subsystem('fs', FlowStart(thermo_data=thermo_data, elements=elements, use_WAR=use_WAR, computation_mode=comp_mode), promotes=proms)
         balance = conv.add_subsystem('balance', om.BalanceComp())
         balance.add_balance('Tt', val=500.0, lower=1e-4, units='degR', desc='Total temperature', eq_units='degR')
         balance.add_balance('Pt', val=14.696, lower=1e-4, units='psi', desc='Total pressure', eq_units='psi')

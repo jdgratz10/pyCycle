@@ -61,8 +61,35 @@ class SetOutputData(UnitCompBase):
         self.add_input('Cv', val=1., units="Btu/(lbm*degR)", desc="Specific heat at constant volume")
         self.add_input('rho', val=1., units="lbm/ft**3", desc="density")
         self.add_input('R', val=1.0, units="Btu/(lbm*degR)", desc='Total specific gas constant')
+        self.add_input('b0', val=-1, units=None, desc='Not used in isentropic mode, but necessary for flow connection')
+        self.add_input('n', val=-1, units=None, desc='Not used in isentropic mode, but necessary for flow connection')
 
         super(SetOutputData, self).setup()
+
+class Hackery(ExplicitComponent):
+
+    def setup(self):
+        
+        self.add_input('b0', val=-1, units=None, desc='Atomic abundances, but not used in this mode')
+        self.add_input('P', val=1, units='bar', desc='Static pressure')
+        self.add_input('alpha', val=1.4, units=None, desc='Ratio of specific heats')
+
+        self.add_output('n', units=None, val=-1, desc='Molar concentrations, but not used in this mode')
+        self.add_output('n_moles', units=None, val=-1, desc='Numer of moles, but not used in this mode')
+        self.add_output('Ps', units='bar', desc='Static pressure')
+        self.add_output('gamma', units=None, desc='Ratio of specific heats')
+
+        self.declare_partials('n', 'b0', val=1)
+        self.declare_partials('n_moles', 'b0', val=1)
+        self.declare_partials('Ps', 'P', val=1)
+        self.declare_partials('gamma', 'alpha', val=1)
+
+    def compute(self, inputs, outputs):
+        
+        outputs['n'] = inputs['b0']
+        outputs['n_moles'] = inputs['b0']
+        outputs['Ps'] = inputs['P']
+        outputs['gamma'] = inputs['alpha']
 
 
 if __name__ == "__main__":

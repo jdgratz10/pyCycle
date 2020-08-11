@@ -5,7 +5,6 @@ import itertools
 import openmdao.api as om
 
 from pycycle.cea import species_data
-from pycycle.cea.set_total2 import SetTotal
 from pycycle.cea.set_static import SetStatic
 from pycycle.flow_in import FlowIn
 from pycycle.passthrough import PassThrough
@@ -401,6 +400,8 @@ class Compressor(om.Group):
                               desc='Method to use for map interpolation. \
                               Options are `slinear`, `cubic`, `quintic`.')
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
+        self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
+                              desc='mode of computation')
 
         self.default_des_od_conns = [
             # (design src, off-design target)
@@ -432,10 +433,21 @@ class Compressor(om.Group):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']
         statics = self.options['statics']
+        comp_mode = self.options['computation_mode']
 
-        thermo = species_data.Thermo(thermo_data, init_reacts=elements)
-        num_prod = thermo.num_prod
-        num_element = thermo.num_element
+        if comp_mode == 'CEA':
+            from pycycle.cea.set_total import SetTotal
+
+            thermo = species_data.Thermo(thermo_data, init_reacts=elements)
+            num_prod = thermo.num_prod
+            num_element = thermo.num_element
+
+            self.set_input_defaults('Fl_I:tot:b0', thermo.b0)
+
+        elif comp_mode == 'isentropic':
+            from pycycle.cea.set_total2 import SetTotal
+            num_prod = 1
+            num_element = 1
 
         # Create inlet flow station
         flow_in = FlowIn(fl_name='Fl_I', num_prods=num_prod, num_elements=num_element)
@@ -461,7 +473,8 @@ class Compressor(om.Group):
         self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data,
                                                   mode='S',
                                                   init_reacts=elements),
-                           promotes_inputs=[('S', 'Fl_I:tot:S'),])
+                           promotes_inputs=[('S', 'Fl_I:tot:S'),
+                                            ('b0', 'Fl_I:tot:b0')])
         self.connect("press_rise.Pt_out", "ideal_flow.P")
 
         # Calculate enthalpy rise across compressor
@@ -473,6 +486,8 @@ class Compressor(om.Group):
         real_flow = SetTotal(thermo_data=thermo_data, mode='h',
                              init_reacts=elements, fl_name="Fl_O:tot")
         self.add_subsystem('real_flow', real_flow,
+                           promotes_inputs=[
+                               ('b0', 'Fl_I:tot:b0')],
                            promotes_outputs=['Fl_O:tot:*'])
         self.connect("enth_rise.ht_out", "real_flow.h")
         self.connect("press_rise.Pt_out", "real_flow.P")
@@ -508,6 +523,8 @@ class Compressor(om.Group):
             bleed_flow = SetTotal(thermo_data=thermo_data, mode='h',
                                   init_reacts=elements, fl_name=BN + ":tot")
             self.add_subsystem(BN + '_flow', bleed_flow,
+                               promotes_inputs=[
+                                   ('b0', 'Fl_I:tot:b0')],
                                promotes_outputs=['{}:tot:*'.format(BN)])
             self.connect(BN + ':ht', BN + "_flow.h")
             self.connect(BN + ':Pt', BN + "_flow.P")
@@ -520,36 +537,41 @@ class Compressor(om.Group):
                 #   Calculate static properties
                 out_stat = SetStatic(
                     mode='MN', thermo_data=thermo_data, init_reacts=elements,
-                    fl_name="Fl_O:stat")
+                    fl_name="Fl_O:stat", computation_mode=comp_mode)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=[
-                                       'MN',],
+                                       'MN', ('b0', 'Fl_I:tot:b0')],
                                    promotes_outputs=['Fl_O:stat:*'])
                 self.connect('Fl_O:tot:S', 'out_stat.S')
                 self.connect('Fl_O:tot:h', 'out_stat.ht')
                 self.connect('W_out', 'out_stat.W')
-                # self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                # self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
 
             else:  # Calculate static properties
                 out_stat = SetStatic(
                     mode='area', thermo_data=thermo_data, init_reacts=elements,
-                    fl_name="Fl_O:stat")
+                    fl_name="Fl_O:stat", computation_mode=comp_mode)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=[
-                                       'area',],
+                                       'area', ('b0', 'Fl_I:tot:b0')],
                                    promotes_outputs=['Fl_O:stat:*'])
 
                 self.connect('Fl_O:tot:S', 'out_stat.S')
                 self.connect('Fl_O:tot:h', 'out_stat.ht')
                 self.connect('W_out', 'out_stat.W')
-                # self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                # self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
 
             self.set_order(['flow_in', 'corrinputs', 'map',
                             'press_rise','ideal_flow', 'enth_rise',
                             'real_flow','eff_poly_calc' ,'blds_pwr',
                             'FAR_passthru'] + bleed_names + ['out_stat'])
+
+            if comp_mode == 'CEA':
+                if design:
+                    self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
+                    self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
+
+                else:
+                    self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
+                    self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
 
         else:
             self.add_subsystem('W_passthru', PassThrough('W_out',
@@ -567,7 +589,6 @@ class Compressor(om.Group):
         self.set_input_defaults('Fl_I:FAR', val=0., units=None)
         self.set_input_defaults('PR', val=2., units=None)
         self.set_input_defaults('eff', val=0.99, units=None)
-        # self.set_input_defaults('Fl_I:tot:b0', thermo.b0)
 
         # if not design: 
         #     self.set_input_defaults('area', val=1, units='inch**2')

@@ -7,7 +7,7 @@ from pycycle.cea.thermo_lookup import ThermoLookup
 from pycycle.cea.pressure_solve import PressureSolve
 from pycycle.cea.T_lookup import TLookup
 from pycycle.cea.T_MN_resid import TmnCalc
-from pycycle.cea.set_output_data import SetOutputData
+from pycycle.cea.set_output_data import SetOutputData, Hackery
 
 
 class SetTotal(om.Group):
@@ -116,35 +116,6 @@ class SetTotal(om.Group):
 
         ### Add table lookups ###
 
-        # if for_statics:
-        #     if for_statics == 'Ps':
-        #         if mode == 'T' or mode == 'h':
-        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
-        #                 Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
-        #                 promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
-
-        #         else:
-        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
-        #                 Cp_data=properties.AIR_MIX_Cp),
-        #                 promotes_inputs=('T',), promotes_outputs=('Cp',))
-
-        #     elif for_statics == 'MN':
-        #         if for_statics == 'T' or for_statics == 'h':
-        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
-        #                 Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
-        #                 promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
-
-        #         else:
-        #             self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
-        #                 Cp_data=properties.AIR_MIX_Cp,),
-        #                 promotes_inputs=('T',), promotes_outputs=('Cp',))
-
-        #     elif for_statics == 'area':
-        #         self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
-        #             Cp_data=properties.AIR_MIX_Cp),
-        #             promotes_inputs=('T',), promotes_outputs=('Cp',))
-
-        # else:
         if mode == 'T':
             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True, S=True,
                 Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy, S_data=properties.AIR_MIX_entropy),
@@ -201,17 +172,20 @@ class SetTotal(om.Group):
                     S_data=properties.AIR_MIX_entropy), promotes_inputs=('P', 'T'), promotes_outputs=('S',))
 
         if not for_statics:
-            ### gamma hack, fix this ###
+            ### temporary hack, fix this ###
             self.set_input_defaults('gamma', gamma, units=None)
+            self.set_input_defaults('b0', -1, units=None)
+            self.set_input_defaults('n', -1, units=None)
 
             self.add_subsystem('flow', SetOutputData(fl_name=fl_name),
-                               promotes_inputs=('T', 'P', 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'R'),
+                               promotes_inputs=('T', 'P', 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'R', 'b0', 'n'),
                                promotes_outputs=('{}:*'.format(fl_name),))
 
         else:
             ### temporary gamma hack, fix this ###
-            des_vars = self.add_subsystem('des_vars', om.IndepVarComp(), promotes=['*'])
-            des_vars.add_output('gamma', gamma, units=None)
+            self.set_input_defaults('temp_hack.alpha', gamma, units=None)
+            self.add_subsystem('temp_hack', Hackery(),
+                                promotes_inputs=('b0', 'P'), promotes_outputs=('n', 'n_moles', 'Ps', 'gamma'))
 
 
     def configure(self):

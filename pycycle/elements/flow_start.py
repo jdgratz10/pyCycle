@@ -1,7 +1,6 @@
 from openmdao.api import Group, ExplicitComponent
 
 from pycycle.cea import species_data
-from pycycle.cea.set_total2 import SetTotal
 from pycycle.cea.set_static import SetStatic
 from pycycle.constants import AIR_MIX, WET_AIR_MIX
 import numpy as np
@@ -118,11 +117,20 @@ class FlowStart(Group):
                               desc='If True, calculate static properties.')
         self.options.declare('use_WAR', default=False, values=[True, False], 
                               desc='If True, includes WAR calculation')
+        self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
+                              desc='mode of computation')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']
         use_WAR = self.options['use_WAR']
+        comp_mode = self.options['computation_mode']
+
+        if comp_mode == 'CEA':
+            from pycycle.cea.set_total import SetTotal
+
+        elif comp_mode == 'isentropic':
+            from pycycle.cea.set_total2 import SetTotal
 
         if use_WAR == True:
             if 'H2O' not in elements:
@@ -133,39 +141,42 @@ class FlowStart(Group):
 
                 raise ValueError('In order to provide elements containing H2O, a nonzero water to air ratio (WAR) must be specified. Please set the option use_WAR to True.')
 
-        thermo = species_data.Thermo(thermo_data, init_reacts=elements)
-        self.air_prods = thermo.products
-        self.num_prod = len(self.air_prods)
+        if comp_mode == 'CEA':
+            thermo = species_data.Thermo(thermo_data, init_reacts=elements)
+            self.air_prods = thermo.products
+            self.num_prod = len(self.air_prods)
 
         # inputs
         if use_WAR == True:
             set_WAR = SetWAR(thermo_data=thermo_data, elements=elements)
             self.add_subsystem('WAR', set_WAR, promotes_inputs=('WAR',), promotes_outputs=('b0',))
-        
+            
         set_TP = SetTotal(mode="T", fl_name="Fl_O:tot",
-                          thermo_data=thermo_data,
-                          init_reacts=elements)
+                            thermo_data=thermo_data,
+                            init_reacts=elements)
 
-        params = ('T','P')
+        params = ('T','P', 'b0')
 
         self.add_subsystem('totals', set_TP, promotes_inputs=params,
-                           promotes_outputs=('Fl_O:tot:*',))
+                            promotes_outputs=('Fl_O:tot:*',))
 
 
         # if self.options['statics']:
         set_stat_MN = SetStatic(mode="MN", thermo_data=thermo_data,
-                                init_reacts=elements, fl_name="Fl_O:stat")
+                                init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode)
         set_stat_MN.set_input_defaults('W', val=1.0, units='kg/s')
 
-        self.add_subsystem('exit_static', set_stat_MN, promotes_inputs=('MN', 'W'),
-                           promotes_outputs=('Fl_O:stat:*', ))
+        self.add_subsystem('exit_static', set_stat_MN, promotes_inputs=('MN', 'W', 'b0'),
+                            promotes_outputs=('Fl_O:stat:*', ))
 
         self.connect('totals.h','exit_static.ht')
         self.connect('totals.S','exit_static.S')
-        # self.connect('Fl_O:tot:P','exit_static.guess:Pt')
-        # self.connect('totals.gamma', 'exit_static.guess:gamt')
 
-        # self.set_input_defaults('b0', thermo.b0)
+        if comp_mode == 'CEA':
+            self.connect('Fl_O:tot:P','exit_static.guess:Pt')
+            self.connect('totals.gamma', 'exit_static.guess:gamt')
+
+            self.set_input_defaults('b0', thermo.b0)
 
 
 if __name__ == "__main__": 

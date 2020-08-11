@@ -217,21 +217,20 @@ if __name__ == "__main__":
     from openmdao.api import Problem, Group, IndepVarComp
 
     from pycycle.cea import species_data
-    from pycycle.constants import AIR_MIX
 
-    thermo = species_data.Thermo(species_data.janaf, init_reacts=AIR_MIX)
+    thermo = species_data.Thermo(species_data.co2_co_o2)
 
     p = Problem()
     model = p.model = Group()
 
     indeps = model.add_subsystem('indeps', IndepVarComp(), promotes=['*'])
-    indeps.add_output('T', 800, units='degK')
-    indeps.add_output('P', 1., units='bar')
-    indeps.add_output('n', val=np.array([2.34429759e-04, 0, 7.24843500e-06, 0, 0, 0, 0, 2.78737237e-02, 0, 6.54637049e-03]))
-    indeps.add_output('n_moles', val=0.03466177233276218)
+    indeps.add_output('T', 2761.56784655, units='degK')
+    indeps.add_output('P', 1.034210, units='bar')
+    indeps.add_output('n', val=np.array([2.272e-02, 1.000e-10, 1.136e-02]))
+    indeps.add_output('n_moles', val=0.0340831628675)
 
-    indeps.add_output('result_T', val=np.array([-3.02990116, 1.95459777, -0.05024694, .05, 20]))
-    indeps.add_output('result_P', val=np.array([0.53047724, 0.48627081, -0.00437025, .05, .05]))
+    indeps.add_output('result_T', val=np.array([-3.02990116, 1.95459777, -0.05024694]))
+    indeps.add_output('result_P', val=np.array([0.53047724, 0.48627081, -0.00437025]))
 
     model.add_subsystem('calcs', PropsCalcs(thermo=thermo), promotes=['*'])
 
@@ -249,3 +248,10 @@ if __name__ == "__main__":
     print()
     print('############################################')
 
+    p.model.run_linearize()
+
+    jac = p.model.get_subsystem('calcs').jacobian._subjacs
+    for pair in jac:
+        print(pair)
+        print(jac[pair])
+        print
