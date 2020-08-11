@@ -404,9 +404,10 @@ if __name__ == "__main__":
 
 
     from pycycle.cea import species_data
+    from pycycle.constants import AIR_MIX
 
     # thermo = species_data.Thermo(species_data.co2_co_o2)
-    thermo = species_data.Thermo(species_data.janaf)
+    thermo = species_data.Thermo(species_data.janaf, init_reacts=AIR_MIX)
 
     prob = om.Problem()
     prob.model = om.Group()
@@ -414,8 +415,9 @@ if __name__ == "__main__":
     prob.model.linear_solver = om.LinearRunOnce()
 
     des_vars = prob.model.add_subsystem('des_vars', om.IndepVarComp(), promotes=["*"])
-    des_vars.add_output('P', 1.034210, units='psi')
-    des_vars.add_output('h', -24.26682261, units='cal/g')
+    des_vars.add_output('P', 29.0075476, units='psi')
+    des_vars.add_output('h', 124.14795869, units='cal/g')
+    # des_vars.add_output('S', 1.83738985, units='cal/(g*degK)')
 
     chemeq = prob.model.add_subsystem('chemeq', ChemEq(thermo=thermo, mode="h"), promotes=["*"])
 
@@ -430,10 +432,12 @@ if __name__ == "__main__":
     print('b0', prob['b0'])
     print('n_moles', prob['n_moles'])
     print('pi', prob['pi'])
+    print('P', prob['P'])
+    print('h', prob['h'])
 
     # print(prob['T'], prob.model._residuals['T'])
     # print(prob['n'], prob.model._residuals['n'])
     # print(prob['pi'], prob.model._residuals['pi'])
 
 
-    prob.check_partials(method='cs', compact_print=True)
+    # prob.check_partials(method='cs', compact_print=True)
