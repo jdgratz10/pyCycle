@@ -71,25 +71,21 @@ class Hackery(ExplicitComponent):
     def setup(self):
         
         self.add_input('b0', val=-1, units=None, desc='Atomic abundances, but not used in this mode')
-        self.add_input('P', val=1, units='bar', desc='Static pressure')
-        self.add_input('alpha', val=1.4, units=None, desc='Ratio of specific heats')
+        self.add_input('P', val=1.013, units='bar', desc='Static pressure')
 
         self.add_output('n', units=None, val=-1, desc='Molar concentrations, but not used in this mode')
         self.add_output('n_moles', units=None, val=-1, desc='Numer of moles, but not used in this mode')
         self.add_output('Ps', units='bar', desc='Static pressure')
-        self.add_output('gamma', units=None, desc='Ratio of specific heats')
 
         self.declare_partials('n', 'b0', val=1)
         self.declare_partials('n_moles', 'b0', val=1)
         self.declare_partials('Ps', 'P', val=1)
-        self.declare_partials('gamma', 'alpha', val=1)
 
     def compute(self, inputs, outputs):
         
         outputs['n'] = inputs['b0']
         outputs['n_moles'] = inputs['b0']
         outputs['Ps'] = inputs['P']
-        outputs['gamma'] = inputs['alpha']
 
 
 if __name__ == "__main__":

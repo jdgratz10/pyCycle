@@ -117,14 +117,24 @@ class SetTotal(om.Group):
         ### Add table lookups ###
 
         if mode == 'T':
-            self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True, S=True,
-                Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy, S_data=properties.AIR_MIX_entropy),
-                promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'h', 'S'))
+            if for_statics == 'MN':
+                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
+                    Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy),
+                    promotes_inputs=('T',), promotes_outputs=('Cp', 'h'))
+            else:
+                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True, S=True,
+                    Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy, S_data=properties.AIR_MIX_entropy),
+                    promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'h', 'S'))
             
         elif mode == 'h':
-            self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
-                Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
-                promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
+            if for_statics == 'MN':
+                self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
+                    Cp_data=properties.AIR_MIX_Cp),
+                    promotes_inputs=('T',), promotes_outputs=('Cp',))
+            else:
+                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
+                    Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
+                    promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
 
         else:
             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
@@ -183,9 +193,9 @@ class SetTotal(om.Group):
 
         else:
             ### temporary gamma hack, fix this ###
-            self.set_input_defaults('temp_hack.alpha', gamma, units=None)
+            self.add_subsystem('indep', om.IndepVarComp('gamma', val=gamma, units=None), promotes_outputs=['gamma'])
             self.add_subsystem('temp_hack', Hackery(),
-                                promotes_inputs=('b0', 'P'), promotes_outputs=('n', 'n_moles', 'Ps', 'gamma'))
+                                promotes_inputs=('b0', 'P'), promotes_outputs=('n', 'n_moles', 'Ps'))
 
 
     def configure(self):
@@ -220,21 +230,32 @@ if __name__ == "__main__":
     import numpy as np
 
     prob = om.Problem()
-    prob.model = SetTotal(for_statics='Ps', mode='T', MW=28.9651784)
+    prob.model = SetTotal(for_statics='MN', mode='T', MW=28.9651784)
 
 
     prob.model.set_input_defaults('P', 1.013, units="bar")
     # prob.model.set_input_defaults('h', 7, units='cal/g')
     # prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
 
-    # prob.model.set_input_defaults('MN', .6, units=None)
+    prob.model.set_input_defaults('MN', .6, units=None)
 
     prob.model.set_input_defaults('T', 330, units='degK')
-    # prob.model.set_input_defaults('ht', 10, units='cal/g')
+    prob.model.set_input_defaults('ht', 10, units='cal/g')
     # prob.model.set_input_defaults('W', 15, units='lbm/s')
     # prob.model.set_input_defaults('area', .5, units='m**2')
 
+    prob.set_solver_print(level=2, depth=2)
+
     prob.setup(force_alloc_complex=True)
+    # prob.set_val('Pt', 1.013, units='bar')
+
+    print(prob.get_val('P', units='bar'))
+
+    # print(prob.get_val('Pt', units='bar'))
+    print((prob.get_val('S', units='cal/(g*degK)')))
+    # print(prob.get_val('_auto_ivc.v4', units='degK'))
+    print(prob.get_val('Tt', units='degK'))
+    prob.get_val('MN')
     # prob.set_val('flow:h', -0.59153318, units='cal/g')
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
@@ -245,10 +266,12 @@ if __name__ == "__main__":
     # prob.model.list_inputs(units=True)
     # prob.model.list_outputs(units=True)
 
-    # print(prob.get_val('flow:T', units='degK'))
-    # print(prob.get_val('flow:P', units='bar'))
+    print(prob.get_val('T', units='degK'))
+    print(prob.get_val('Tt', units='degK'))
+    print(prob.get_val('P', units='bar'))
+    print(prob.get_val('MN'))
     # print(prob.get_val('flow:h', units='cal/g'))
-    # print(prob.get_val('S', units='cal/(g*degK)'))
+    print(prob.get_val('S', units='cal/(g*degK)'))
     # print(prob.get_val('flow:gamma'))
     # print(prob.get_val('Cp', units='cal/(g*degK)'))
     # print(prob.get_val('Cv', units='cal/(g*degK)'))
@@ -269,5 +292,5 @@ if __name__ == "__main__":
     # print(prob.get_val('h', units='cal/g'))
     # print(prob.get_val('ht', units='cal/g'))
 
-    prob.model.list_inputs(prom_name=True, hierarchical=False)
-    prob.model.list_outputs(prom_name=True, hierarchical=False)
+    # prob.model.list_inputs(prom_name=True, hierarchical=False)
+    # prob.model.list_outputs(prom_name=True, hierarchical=False)
