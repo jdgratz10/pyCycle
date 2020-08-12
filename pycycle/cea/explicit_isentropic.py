@@ -192,7 +192,7 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 V = MN*Vsonic
                 P = W*R*T/(area*V)
-                rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
+                rho = P/(R*T) ##necessary 1e5 for unit conversion
 
                 outputs['MN'] = MN
                 outputs['V'] = V
@@ -205,13 +205,13 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 V = R*T*W/(area*P)
                 MN = V/Vsonic
-                rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
+                rho = P/(R*T) ##necessary 1e5 for unit conversion
 
                 outputs['rho'] = rho
 
                 outputs['V'] = V
                 outputs['MN'] = MN
-                rho = 1e5*P/(R*T) ##necessary 1e5 for unit conversion
+                rho = P/(R*T) ##necessary 1e5 for unit conversion
 
                 outputs['rho'] = rho
 
@@ -359,11 +359,11 @@ class ExplicitIsentropic(ExplicitComponent):
                 J['P', 'T'] = dP_dT
                 J['P', 'Tt'] = dP_dTt
                 J['P', 'area'] = -W*R*T/(V*area**2)
-                J['rho', 'W'] = 1e5/(area*V)
-                J['rho', 'area'] = -1e5*W/(area**2 * V)
-                J['rho', 'R'] = -1e5*W/(area*V**2) * dV_dR
-                J['rho', 'T'] = -1e5*W/(area*V**2) * dV_dT
-                J['rho', 'Tt'] = -1e5*W/(area*V**2) * dV_dTt
+                J['rho', 'W'] = 1/(area*V)
+                J['rho', 'area'] = -W/(area**2 * V)
+                J['rho', 'R'] = -W/(area*V**2) * dV_dR
+                J['rho', 'T'] = -W/(area*V**2) * dV_dT
+                J['rho', 'Tt'] = -W/(area*V**2) * dV_dTt
 
             else:
 
@@ -383,15 +383,15 @@ class ExplicitIsentropic(ExplicitComponent):
                 J['MN', 'area'] = dV_dArea/Vsonic
                 J['MN', 'P'] = dV_dP/Vsonic
 
-                J['rho', 'T'] = -1e5*P/(R*T**2)
-                J['rho', 'R'] = -1e5*P/(R**2 * T)
-                J['rho', 'P'] = 1e5/(R*T)
+                J['rho', 'T'] = -P/(R*T**2)
+                J['rho', 'R'] = -P/(R**2 * T)
+                J['rho', 'P'] = 1/(R*T)
 
 if __name__ == "__main__":
     import openmdao.api as om 
 
     prob = om.Problem()
-    prob.model = ExplicitIsentropic(for_statics=False, mode='T')
+    prob.model = ExplicitIsentropic(for_statics='area', mode='S')
     prob.setup(force_alloc_complex=True)
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)

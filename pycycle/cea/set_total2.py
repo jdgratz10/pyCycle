@@ -121,6 +121,10 @@ class SetTotal(om.Group):
                 self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
                     Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy),
                     promotes_inputs=('T',), promotes_outputs=('Cp', 'h'))
+            elif for_statics == 'area':
+                self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
+                    Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy),
+                    promotes_inputs=('T',), promotes_outputs=('Cp', 'h'))
             else:
                 self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True, S=True,
                     Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy, S_data=properties.AIR_MIX_entropy),
@@ -131,11 +135,14 @@ class SetTotal(om.Group):
                 self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
                     Cp_data=properties.AIR_MIX_Cp),
                     promotes_inputs=('T',), promotes_outputs=('Cp',))
+            elif for_statics == 'area':
+                self.add_subsystem('lookup_data', ThermoLookup(Cp=True,
+                    Cp_data=properties.AIR_MIX_Cp),
+                    promotes_inputs=('T',), promotes_outputs=('Cp',))
             else:
                 self.add_subsystem('lookup_data', ThermoLookup(Cp=True, S=True,
                     Cp_data=properties.AIR_MIX_Cp, S_data=properties.AIR_MIX_entropy),
                     promotes_inputs=('P', 'T'), promotes_outputs=('Cp', 'S'))
-
         else:
             self.add_subsystem('lookup_data', ThermoLookup(Cp=True, h=True,
                 Cp_data=properties.AIR_MIX_Cp, h_data=properties.AIR_MIX_enthalpy),
@@ -230,7 +237,7 @@ if __name__ == "__main__":
     import numpy as np
 
     prob = om.Problem()
-    prob.model = SetTotal(for_statics='MN', mode='T', MW=28.9651784)
+    prob.model = SetTotal(for_statics='area', mode='T', MW=28.9651784)
 
 
     prob.model.set_input_defaults('P', 1.013, units="bar")
