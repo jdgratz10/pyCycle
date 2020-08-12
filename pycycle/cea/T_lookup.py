@@ -6,27 +6,66 @@ import pycycle.cea.properties as properties
 from pycycle.cea.thermo_lookup import ThermoLookup
 from pycycle.cea import properties
 
+class TempFromEnthalpy(om.ExplicitComponent):
+
+    def initialize(self):
+        self.options.declare('h_base', default=0.0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+
+    def setup(self):
+        self.add_input('Cp', units='cal/(g*degK)', desc='specific heat (assumed constant)')
+        self.add_input('h', units='cal/g', desc='enthalpy at input temperature assuming constant specific heat')
+
+        self.add_output('T', units='degK', desc='temperature at which to find enthalpy')
+        
+        self.declare_partials('T', ('Cp', 'h'))
+
+    def compute(self, inputs, outputs):
+
+        Cp = inputs['Cp']
+        h = inputs['h']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+
+        outputs['T'] = 1/Cp * (h - h_base) + T_base
+
+    def compute_partials(self, inputs, J):
+
+        Cp = inputs['Cp']
+        h = inputs['h']
+        h_base = self.options['h_base']
+
+        J['T', 'Cp'] = -1/Cp**2 * (h - h_base)
+        J['T', 'h'] = 1/Cp
+
 
 class TLookup(om.Group):
 
     def initialize(self):
         self.options.declare('mode', values=('h', 'S'), desc='switch to tell whether to look up Cp')
-        self.options.declare('data', default=None, desc='thermodynamic property data')
+        self.options.declare('S_data', default=None, desc='thermodynamic property data')
+        self.options.declare('h_base', default=0.0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
 
     def setup(self):
 
         comp_mode = self.options['mode']
-        data = self.options['data']
-
-        if data is None:
-            raise ValueError('You have not provided data to PressureSolve and it is required')
+        S_data = self.options['S_data']
 
         if comp_mode == 'h':
 
-            self.add_subsystem('h_table', properties.PropertyMap(map_data=data, get_temp=True), promotes_inputs=('h',), promotes_outputs=('T',))
+            h_base=self.options['h_base']
+            T_base = self.options['T_base']
+
+            self.add_subsystem('h_table', TempFromEnthalpy(h_base=h_base, T_base=T_base),
+                promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
         else:
-            self.add_subsystem('S_table', properties.PropertyMap(map_data=data), promotes_inputs=('P', 'T'), promotes_outputs=(('S', 'S_calculated'),))
+
+            if S_data is None:
+                raise ValueError('You have not provided data to PressureSolve and it is required')
+
+            self.add_subsystem('S_table', properties.PropertyMap(map_data=S_data), promotes_inputs=('P', 'T'), promotes_outputs=(('S', 'S_calculated'),))
 
             self.add_subsystem('entropy_matching', om.BalanceComp('T', units='degK', eq_units='cal/(g*degK)'), promotes_outputs=('T', ), promotes_inputs=(('lhs:T', 'S'),))
             self.connect('S_calculated', 'entropy_matching.rhs:T')
@@ -104,3 +143,10 @@ if __name__ == "__main__":
 
     # prob.model.list_inputs(units=True, prom_name=True)
     # prob.model.list_outputs(units=True, prom_name=True)
+
+    p = om.Problem()
+    p.model = om.Group()
+    p.model.add_subsystem('temp', TempFromEnthalpy(), promotes=['*'])
+    p.setup(force_alloc_complex=True)
+    p.run_model()
+    p.check_partials(method='cs', compact_print=True)

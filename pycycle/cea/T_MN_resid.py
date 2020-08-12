@@ -3,7 +3,7 @@ import numpy as np
 import openmdao.api as om
 
 from pycycle.constants import P_REF, R_UNIVERSAL_ENG, MIN_VALID_CONCENTRATION
-from pycycle.cea import properties
+from pycycle.cea.thermo_lookup import EnthalpyFromTemp
 
 class MNResid(om.ImplicitComponent):
 
@@ -68,16 +68,16 @@ class MNResid(om.ImplicitComponent):
 class TmnCalc(om.Group):
 
     def initialize(self):
-        self.options.declare('h_data', default=None, desc='thermodynamic property data')
+        self.options.declare('h_base', default=-78.65840276, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=0, desc='base temperature (units are degK)')
 
     def setup(self):
 
-        h_data = self.options['h_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
 
-        if h_data is None:
-            raise ValueError('You have not provided data to PressureSolve and it is required')
-
-        self.add_subsystem('h_table', properties.PropertyMap(map_data=h_data), promotes_inputs=('T',), promotes_outputs=('h',))
+        self.add_subsystem('h_table', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
+                promotes_inputs=('Cp', 'T'), promotes_outputs=('h',))
         self.add_subsystem('mn_resid', MNResid(), promotes_inputs=('h', 'ht', 'gamma', 'R', 'Tt'), promotes_outputs=('MN', 'T'))
 
     def configure(self):
