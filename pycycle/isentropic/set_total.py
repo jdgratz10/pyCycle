@@ -37,9 +37,12 @@ class SetTotal(om.Group):
         T_base = self.options['T_base']
         Cp = self.options['Cp']
 
-        ### Make Cp and output ###
+        ### Make Cp an output ###
 
         self.add_subsystem('ind_var', om.IndepVarComp('Cp', val=Cp, units='cal/(g*degK)'), promotes_outputs=['Cp'])
+
+        if for_statics:
+            self.add_subsystem('indep', om.IndepVarComp('gamma', val=gamma, units=None), promotes_outputs=['gamma'])
 
         ### Get specific gas constant value ###
 
@@ -79,9 +82,6 @@ class SetTotal(om.Group):
         elif for_statics == 'MN':
             self.add_subsystem('Tt_val', TLookup(mode='h'), 
                 promotes_inputs=(('h', 'ht'), 'Cp'), promotes_outputs=(('T', 'Tt'),))
-
-            ### Temporary gamma hack, fix this ###
-            self.set_input_defaults('gamma', gamma, units=None)
 
             if mode == 'h':
                 self.add_subsystem('T_val', TLookup(mode=mode), 
@@ -201,8 +201,6 @@ class SetTotal(om.Group):
                                promotes_outputs=('{}:*'.format(fl_name),))
 
         else:
-            ### temporary gamma hack, fix this ###
-            self.add_subsystem('indep', om.IndepVarComp('gamma', val=gamma, units=None), promotes_outputs=['gamma'])
             self.add_subsystem('temp_hack', Hackery(),
                                 promotes_inputs=('b0', 'P'), promotes_outputs=('n', 'n_moles', 'Ps'))
 
