@@ -1,13 +1,13 @@
 import openmdao.api as om
 
 # from pycycle.cea.species_data import Thermo
-from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
-import pycycle.isentropic.properties as properties
-from pycycle.isentropic.thermo_lookup import ThermoLookup 
-from pycycle.isentropic.pressure_solve import PressureSolve
-from pycycle.isentropic.T_lookup import TLookup
-from pycycle.isentropic.T_MN_resid import TmnCalc
-from pycycle.isentropic.set_output_data import SetOutputData, Hackery
+from pycycle.cea.explicit_isentropic import ExplicitIsentropic
+import pycycle.cea.properties as properties
+from pycycle.cea.thermo_lookup import ThermoLookup 
+from pycycle.cea.pressure_solve import PressureSolve
+from pycycle.cea.T_lookup import TLookup
+from pycycle.cea.T_MN_resid import TmnCalc
+from pycycle.cea.set_output_data import SetOutputData, Hackery
 
 
 class SetTotal(om.Group):
@@ -41,13 +41,9 @@ class SetTotal(om.Group):
         MW = self.options['MW']
         Cp = self.options['Cp']
 
-        ### Make Cp an output ###
+        ### Make Cp and output ###
 
         self.add_subsystem('ind_var', om.IndepVarComp('Cp', val=Cp, units='cal/(g*degK)'), promotes_outputs=['Cp'])
-
-        ### Make gamma an output ###
-        if for_statics:
-            self.add_subsystem('indep', om.IndepVarComp('gamma', val=gamma, units=None), promotes_outputs=['gamma'])
 
         ### Get specific gas constant value ###
 
@@ -118,12 +114,10 @@ class SetTotal(om.Group):
             if mode == 'T' or mode == 'h':
                 
                 inputs = ('T', 'Tt', 'gamma', 'MN')
-                # inputs = ('T', 'Tt', 'gamma', 'MN', 'Cp', 'R')
-                # outputs = ('P', 'Pt')
                 outputs = ('P', 'Pt', 'S')
 
             else:
-                inputs = ('S', 'T')
+                inputs = (('S_desired', 'S'), 'T')
                 outputs = ('P',)
 
             self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy, T_base=T_base, S_base=S_base, P_base=P_base), 
@@ -132,7 +126,7 @@ class SetTotal(om.Group):
         elif for_statics == 'area':
             if mode == 'S':
                 self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy, T_base=T_base, S_base=S_base, P_base=P_base),
-                    promotes_inputs=('T', 'Cp', 'R', 'S'), promotes_outputs=('P',))
+                    promotes_inputs=('T', ('S_desired', 'S')), promotes_outputs=('P',))
 
         ### Add table lookups ###
 
@@ -211,7 +205,8 @@ class SetTotal(om.Group):
                                promotes_outputs=('{}:*'.format(fl_name),))
 
         else:
-            ### temporary hack, fix this ###
+            ### temporary gamma hack, fix this ###
+            self.add_subsystem('indep', om.IndepVarComp('gamma', val=gamma, units=None), promotes_outputs=['gamma'])
             self.add_subsystem('temp_hack', Hackery(),
                                 promotes_inputs=('b0', 'P'), promotes_outputs=('n', 'n_moles', 'Ps'))
 
@@ -248,7 +243,7 @@ if __name__ == "__main__":
     import numpy as np
 
     prob = om.Problem()
-    prob.model = SetTotal(for_statics='MN', mode='S', MW=28.9651784)
+    prob.model = SetTotal(for_statics='area', mode='T', MW=28.9651784)
 
 
     prob.model.set_input_defaults('P', 1.013, units="bar")
@@ -267,13 +262,13 @@ if __name__ == "__main__":
     prob.setup(force_alloc_complex=True)
     # prob.set_val('Pt', 1.013, units='bar')
 
-    # print(prob.get_val('P', units='bar'))
+    print(prob.get_val('P', units='bar'))
 
-    # # print(prob.get_val('Pt', units='bar'))
-    # print((prob.get_val('S', units='cal/(g*degK)')))
-    # # print(prob.get_val('_auto_ivc.v4', units='degK'))
-    # print(prob.get_val('Tt', units='degK'))
-    # prob.get_val('MN')
+    # print(prob.get_val('Pt', units='bar'))
+    print((prob.get_val('S', units='cal/(g*degK)')))
+    # print(prob.get_val('_auto_ivc.v4', units='degK'))
+    print(prob.get_val('Tt', units='degK'))
+    prob.get_val('MN')
     # prob.set_val('flow:h', -0.59153318, units='cal/g')
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
@@ -284,12 +279,12 @@ if __name__ == "__main__":
     # prob.model.list_inputs(units=True)
     # prob.model.list_outputs(units=True)
 
-    # print(prob.get_val('T', units='degK'))
-    # print(prob.get_val('Tt', units='degK'))
-    # print(prob.get_val('P', units='bar'))
-    # print(prob.get_val('MN'))
-    # # print(prob.get_val('flow:h', units='cal/g'))
-    # print(prob.get_val('S', units='cal/(g*degK)'))
+    print(prob.get_val('T', units='degK'))
+    print(prob.get_val('Tt', units='degK'))
+    print(prob.get_val('P', units='bar'))
+    print(prob.get_val('MN'))
+    # print(prob.get_val('flow:h', units='cal/g'))
+    print(prob.get_val('S', units='cal/(g*degK)'))
     # print(prob.get_val('flow:gamma'))
     # print(prob.get_val('Cp', units='cal/(g*degK)'))
     # print(prob.get_val('Cv', units='cal/(g*degK)'))

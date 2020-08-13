@@ -2,10 +2,10 @@ import openmdao.api as om
 import numpy as np
 
 # from pycycle.cea.species_data import Thermo
-from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
-import pycycle.isentropic.properties as properties
-from pycycle.isentropic.thermo_lookup import ThermoLookup
-from pycycle.isentropic import properties
+from pycycle.cea.explicit_isentropic import ExplicitIsentropic
+import pycycle.cea.properties as properties
+from pycycle.cea.thermo_lookup import ThermoLookup
+from pycycle.cea import properties
 
 class TempFromEnthalpy(om.ExplicitComponent):
 

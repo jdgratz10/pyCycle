@@ -2,8 +2,8 @@ import openmdao.api as om
 import numpy as np
 
 # from pycycle.cea.species_data import Thermo
-from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
-import pycycle.isentropic.properties as properties
+from pycycle.cea.explicit_isentropic import ExplicitIsentropic
+import pycycle.cea.properties as properties
 
 class EnthalpyFromTemp(om.ExplicitComponent):
 
@@ -69,13 +69,12 @@ class EntropyFromTemp(om.ExplicitComponent):
         R = inputs['R']
         P = inputs['P']
 
-        # print(self.pathname)
-        # print('T', T)
-        # print('T_base', T_base)
-        # print('P', P)
-        # print('P_base', P_base)
-
         outputs['S'] = S_base + Cp*np.log(T/T_base) - R*np.log(P/P_base)
+
+        print(self.pathname)
+        print(T)
+        print(P)
+        print(outputs['S'])
 
     def compute_partials(self, inputs, J):
 

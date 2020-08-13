@@ -130,7 +130,7 @@ class FlowStart(Group):
             from pycycle.cea.set_total import SetTotal
 
         elif comp_mode == 'isentropic':
-            from pycycle.isentropic.set_total import SetTotal
+            from pycycle.cea.set_total2 import SetTotal
 
         if use_WAR == True:
             if 'H2O' not in elements:

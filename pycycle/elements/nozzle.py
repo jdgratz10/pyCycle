@@ -333,7 +333,7 @@ class Nozzle(om.Group):
             self.set_input_defaults('Fl_I:tot:b0', gas_thermo.b0)
 
         elif comp_mode == 'isentropic':
-            from pycycle.isentropic.set_total import SetTotal
+            from pycycle.cea.set_total2 import SetTotal
 
             num_prod = 1
             num_element = 1
