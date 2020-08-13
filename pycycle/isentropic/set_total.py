@@ -1,13 +1,13 @@
 import openmdao.api as om
 
 # from pycycle.cea.species_data import Thermo
-from pycycle.cea.explicit_isentropic import ExplicitIsentropic
-import pycycle.cea.properties as properties
-from pycycle.cea.thermo_lookup import ThermoLookup 
-from pycycle.cea.pressure_solve import PressureSolve
-from pycycle.cea.T_lookup import TLookup
-from pycycle.cea.T_MN_resid import TmnCalc
-from pycycle.cea.set_output_data import SetOutputData, Hackery
+from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
+import pycycle.isentropic.properties as properties
+from pycycle.isentropic.thermo_lookup import ThermoLookup 
+from pycycle.isentropic.pressure_solve import PressureSolve
+from pycycle.isentropic.T_lookup import TLookup
+from pycycle.isentropic.T_MN_resid import TmnCalc
+from pycycle.isentropic.set_output_data import SetOutputData, Hackery
 
 
 class SetTotal(om.Group):

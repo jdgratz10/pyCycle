@@ -1,6 +1,6 @@
 import openmdao.api as om
 
-from pycycle.cea.entropy_map_data import AIR_MIX_entropy
+from pycycle.isentropic.entropy_map_data import AIR_MIX_entropy
 
 class PropertyMap(om.Group):
     """runs design and off-design mode Turbine map calculations"""

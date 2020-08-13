@@ -445,7 +445,7 @@ class Compressor(om.Group):
             self.set_input_defaults('Fl_I:tot:b0', thermo.b0)
 
         elif comp_mode == 'isentropic':
-            from pycycle.cea.set_total2 import SetTotal
+            from pycycle.isentropic.set_total import SetTotal
             num_prod = 1
             num_element = 1
 

@@ -1,9 +1,9 @@
 import numpy as np
 import sys
 from pycycle.constants import R_UNIVERSAL_SI, AIR_MIX, R_UNIVERSAL_ENG
-from species_data import Thermo
-from pycycle.cea.thermo_data import janaf
-from set_total import Properties
+from pycycle.cea.species_data import Thermo
+from pycycle.isentropic.thermo_data import janaf
+from pycycle.cea.set_total import Properties
 import openmdao.api as om
 
 np.set_printoptions(threshold=sys.maxsize)

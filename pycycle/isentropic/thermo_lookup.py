@@ -1,8 +1,8 @@
 import openmdao.api as om
 
 # from pycycle.cea.species_data import Thermo
-from pycycle.cea.explicit_isentropic import ExplicitIsentropic
-import pycycle.cea.properties as properties
+from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
+import pycycle.isentropic.properties as properties
 
 class EnthalpyFromTemp(om.ExplicitComponent):
 
