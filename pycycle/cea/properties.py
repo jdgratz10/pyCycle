@@ -46,20 +46,20 @@ class PropertyMap(om.Group):
 if __name__ == "__main__":
 
     p = om.Problem()
-    # des_vars = p.model.add_subsystem(
-    #     'des_vars', om.IndepVarComp(), promotes=['*'])
-    # des_vars.add_output('P', 1.2, units='bar')
-    # des_vars.add_output('T', 300, units='degK')
+    des_vars = p.model.add_subsystem(
+        'des_vars', om.IndepVarComp(), promotes=['*'])
+    des_vars.add_output('P', 1.013, units='bar')
+    des_vars.add_output('T', 302.4629819, units='degK')
     # des_vars.add_output('h', 0, units='cal/g')
     p.model.add_subsystem('map', PropertyMap(
-        map_data=AIR_MIX_Cp), promotes=['*'])
+        map_data=AIR_MIX_entropy), promotes=['*'])
 
     p.setup(check=True)
     p.run_model()
     p.check_partials(compact_print=True)
 
-    # print(p['P'])
+    print(p['P'])
     print(p['T'])
-    # print(p['S'])
-    print(p['Cp'])
+    print(p['S'])
+    # print(p['Cp'])
     # print(p['h'])

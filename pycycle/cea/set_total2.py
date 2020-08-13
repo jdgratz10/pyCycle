@@ -13,28 +13,32 @@ from pycycle.cea.set_output_data import SetOutputData, Hackery
 class SetTotal(om.Group):
 
     def initialize(self):
-        self.options.declare('thermo_data', desc='thermodynamic data set', recordable=False) #not used, just here as a hack to make calls happy
+        self.options.declare('thermo_data') #not used, just here as a hack to make calls happy
         self.options.declare('init_reacts') #not used, just here as a hack to make calls happy
         self.options.declare('gamma', default=1.4, desc='ratio of specific heats')
         self.options.declare('for_statics', default=False, values=(False, 'Ps', 'MN', 'area'), desc='type of static calculation to perform')
         self.options.declare('mode', default='T', values=('T', 'h', 'S'), desc='mode to calculate in')
         self.options.declare('fl_name', default="flow", desc='flowstation name of the output flow variables')
         self.options.declare('MW', default=28.2, desc='molecular weight of gas in units of g/mol')
-        self.options.declare('h_base', default=-78.65840276, desc='enthalpy at base temperature (units are cal/g)')
-        self.options.declare('T_base', default=0, desc='base temperature (units are degK)')
+        self.options.declare('h_base', default=0., desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
         self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('P_base', default=1.013, desc='base pressure (units are bar)')
+        self.options.declare('S_base', default=1.64322352, desc='base entropy (units are cal/(g*degK)')
 
 
     def setup(self):
 
         # thermo_data = self.options['thermo_data']
-        fl_name = self.options['fl_name']
-        mode = self.options['mode']
         for_statics = self.options['for_statics']
-        gamma = self.options['gamma']
-        MW = self.options['MW']
+        fl_name = self.options['fl_name']
+        P_base = self.options['P_base']
+        S_base = self.options['S_base']
         h_base = self.options['h_base']
         T_base = self.options['T_base']
+        gamma = self.options['gamma']
+        mode = self.options['mode']
+        MW = self.options['MW']
         Cp = self.options['Cp']
 
         ### Make Cp and output ###
@@ -61,8 +65,8 @@ class SetTotal(om.Group):
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_val', TLookup(mode=mode, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('S', 'P'), promotes_outputs=('T',))
+                self.add_subsystem('T_val', TLookup(mode=mode, P_base=P_base, S_base=S_base, T_base=T_base),
+                    promotes_inputs=('S', 'P', 'R', 'Cp'), promotes_outputs=('T',))
 
         elif for_statics == 'Ps':
             self.add_subsystem('Tt_val', TLookup(mode='h'), 
@@ -73,8 +77,8 @@ class SetTotal(om.Group):
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_val', TLookup(mode=mode, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('S', 'P'), promotes_outputs=('T',))
+                self.add_subsystem('T_val', TLookup(mode=mode, T_base=T_base, P_base=P_base, S_base=S_base),
+                    promotes_inputs=('S', 'P', 'R', 'Cp'), promotes_outputs=('T',))
 
         elif for_statics == 'MN':
             self.add_subsystem('Tt_val', TLookup(mode='h'), 
@@ -116,12 +120,12 @@ class SetTotal(om.Group):
                 inputs = (('S_desired', 'S'), 'T')
                 outputs = ('P',)
 
-            self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy), 
+            self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy, T_base=T_base, S_base=S_base, P_base=P_base), 
                 promotes_inputs=inputs, promotes_outputs=outputs)
 
         elif for_statics == 'area':
             if mode == 'S':
-                self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy),
+                self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy, T_base=T_base, S_base=S_base, P_base=P_base),
                     promotes_inputs=('T', ('S_desired', 'S')), promotes_outputs=('P',))
 
         ### Add table lookups ###
@@ -137,14 +141,14 @@ class SetTotal(om.Group):
                     promotes_inputs=('T', 'Cp'), promotes_outputs=('h',))
             else:
                 self.add_subsystem('lookup_data', ThermoLookup(h=True, S=True,
-                    h_base=h_base, T_base=T_base, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('P', 'T', 'Cp'), promotes_outputs=('h', 'S'))
+                    h_base=h_base, T_base=T_base, P_base=P_base, S_base=S_base),
+                    promotes_inputs=('P', 'T', 'Cp', 'R'), promotes_outputs=('h', 'S'))
             
         elif mode == 'h':
             if for_statics == 'Ps' or for_statics is False:
                 self.add_subsystem('lookup_data', ThermoLookup(S=True,
-                    S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('P', 'T'), promotes_outputs=('S',))
+                    T_base=T_base, P_base=P_base, S_base=S_base),
+                    promotes_inputs=('P', 'T', 'R', 'Cp'), promotes_outputs=('S',))
         else:
             self.add_subsystem('lookup_data', ThermoLookup(h=True,
                 h_base=h_base, T_base=T_base),
@@ -188,7 +192,7 @@ class SetTotal(om.Group):
             if mode == 'T' or mode == 'h':
 
                 self.add_subsystem('entropy_lookup', ThermoLookup(S=True,
-                    S_data=properties.AIR_MIX_entropy), promotes_inputs=('P', 'T'), promotes_outputs=('S',))
+                    T_base=T_base, P_base=P_base, S_base=S_base), promotes_inputs=('P', 'T', 'R', 'Cp'), promotes_outputs=('S',))
 
         if not for_statics:
             ### temporary hack, fix this ###
@@ -239,7 +243,7 @@ if __name__ == "__main__":
     import numpy as np
 
     prob = om.Problem()
-    prob.model = SetTotal(for_statics='area', mode='S', MW=28.9651784)
+    prob.model = SetTotal(for_statics='area', mode='T', MW=28.9651784)
 
 
     prob.model.set_input_defaults('P', 1.013, units="bar")
