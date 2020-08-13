@@ -31,7 +31,7 @@ class SetStatic(om.Group):
             from pycycle.cea.set_total import SetTotal
 
         elif comp_mode == 'isentropic':
-            from pycycle.cea.set_total2 import SetTotal
+            from pycycle.isentropic.set_total import SetTotal
             
 
         statics = SetTotal(mode='S',

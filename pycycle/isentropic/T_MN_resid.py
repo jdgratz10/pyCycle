@@ -3,12 +3,9 @@ import numpy as np
 import openmdao.api as om
 
 from pycycle.constants import P_REF, R_UNIVERSAL_ENG, MIN_VALID_CONCENTRATION
-from pycycle.cea.thermo_lookup import EnthalpyFromTemp
+from pycycle.isentropic.thermo_lookup import EnthalpyFromTemp
 
 class MNResid(om.ImplicitComponent):
-
-    # def initialize(self):
-    #     print('smiley face')
 
     def setup(self):
 

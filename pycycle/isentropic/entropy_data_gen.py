@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 from pycycle.constants import R_UNIVERSAL_SI, AIR_MIX, R_UNIVERSAL_ENG
-from species_data import Thermo
+from pycycle.cea.species_data import Thermo
 from pycycle.cea.thermo_data import janaf
 
 np.set_printoptions(threshold=sys.maxsize)
