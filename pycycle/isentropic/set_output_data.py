@@ -40,15 +40,11 @@ class UnitCompBase(ExplicitComponent):
             self.declare_partials(of=out_name, wrt=in_name,
                                   val=np.ones(size), rows=row_col, cols=row_col)
 
-            # TODO-JSG: FD related bug?
-            # self.approx_partials(of='*', wrt='*', step=1e-5)
-
     def compute(self, inputs, outputs):
         outputs._data[:] = inputs._data
 
 
 class SetOutputData(UnitCompBase):
-    """only job is to provide unknowns in english units"""
 
     def setup(self):
 
@@ -66,7 +62,7 @@ class SetOutputData(UnitCompBase):
 
         super(SetOutputData, self).setup()
 
-class Hackery(ExplicitComponent):
+class IOMatching(ExplicitComponent):
 
     def setup(self):
         

@@ -5,10 +5,7 @@ import openmdao.api as om
 from pycycle.constants import P_REF, R_UNIVERSAL_ENG, MIN_VALID_CONCENTRATION
 from pycycle.isentropic.thermo_lookup import EnthalpyFromTemp
 
-class MNResid(om.ImplicitComponent):
-
-    # def initialize(self):
-    #     print('smiley face')
+class TMN(om.ImplicitComponent):
 
     def setup(self):
 
@@ -65,7 +62,7 @@ class MNResid(om.ImplicitComponent):
         J['T', 'MN'] = Tt*(1 + (gamma - 1)*MN**2 / 2)**(-2) * MN*(gamma - 1) 
 
 
-class TmnCalc(om.Group):
+class TmnResid(om.Group):
 
     def initialize(self):
         self.options.declare('h_base', default=-78.65840276, desc='enthalpy at base temperature (units are cal/g)')
@@ -78,7 +75,7 @@ class TmnCalc(om.Group):
 
         self.add_subsystem('h_table', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
                 promotes_inputs=('Cp', 'T'), promotes_outputs=('h',))
-        self.add_subsystem('mn_resid', MNResid(), promotes_inputs=('h', 'ht', 'gamma', 'R', 'Tt'), promotes_outputs=('MN', 'T'))
+        self.add_subsystem('T_MN', TMN(), promotes_inputs=('h', 'ht', 'gamma', 'R', 'Tt'), promotes_outputs=('T',))
 
     def configure(self):
 
@@ -91,14 +88,8 @@ class TmnCalc(om.Group):
         newton.options['max_sub_solves'] = 50
         newton.options['reraise_child_analysiserror'] = False
 
-
-        # newton.options['debug_print'] = True
-
-
-
         self.options['assembled_jac_type'] = 'dense'
-            # newton.linear_solver = om.DirectSolver(assemble_jac=True)
-        newton.linear_solver = om.ScipyKrylov()
+        newton.linear_solver = om.DirectSolver(assemble_jac=True)
 
         ln_bt = newton.linesearch = om.ArmijoGoldsteinLS()
         ln_bt.options['bound_enforcement'] = 'scalar'

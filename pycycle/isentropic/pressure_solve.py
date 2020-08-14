@@ -3,8 +3,39 @@ import openmdao.api as om
 # from pycycle.cea.species_data import Thermo
 from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
 import pycycle.isentropic.properties as properties
-from pycycle.isentropic.thermo_lookup import ThermoLookup
 from pycycle.isentropic import properties
+
+import numpy as np
+
+class IsentropicPressure(om.ExplicitComponent):
+
+    def setup(self):
+
+        self.add_input('Pt', val=2, units='bar', desc='total pressure')
+        self.add_input('gamma', val=3, units=None, desc='ratio of specific heats')
+        self.add_input('MN', val=4, units=None, desc='mach number')
+
+        self.add_output('P', val=7, units='bar', desc='static pressure')
+
+        self.declare_partials('P', ('Pt', 'gamma', 'MN'))
+
+    def compute(self, inputs, outputs):
+
+        Pt = inputs['Pt']
+        gamma = inputs['gamma']
+        MN = inputs['MN']
+
+        outputs['P'] = Pt*(1 + (gamma - 1)/2 * MN**2)**(-gamma/(gamma - 1))
+
+    def compute_partials(self, inputs, J):
+
+        Pt = inputs['Pt']
+        gamma = inputs['gamma']
+        MN = inputs['MN']
+
+        J['P', 'Pt'] = (1 + (gamma - 1)/2 * MN**2)**(-gamma/(gamma - 1))
+        J['P', 'gamma'] = Pt*((gamma - 1)/2 * MN**2 + 1)**(-gamma/(gamma - 1)) * ((gamma/(gamma - 1)**2 - 1/(gamma - 1))*np.log((gamma - 1)/2 * MN**2 + 1) - gamma*MN**2 / (2*(gamma - 1)*((gamma - 1)/2*MN**2 + 1)))
+        J['P', 'MN'] = Pt*(-gamma/(gamma - 1))*(1 + (gamma - 1)/2*MN**2)**((-2*gamma + 1)/(gamma - 1)) * (gamma - 1)*MN
 
 
 class PressureSolve(om.Group):
@@ -19,8 +50,7 @@ class PressureSolve(om.Group):
         S_data = self.options['S_data']
 
         if mode == 'T' or mode == 'h':
-            self.add_subsystem('isentropic_pressure', om.ExecComp('P=Pt*(1 + (gamma - 1)/2 * MN**2)**(-gamma/(gamma - 1))',
-                P={'units':'bar', 'lower':'.1'}, Pt={'units':'bar'}, MN={'units':None}, gamma={'units':None}),
+            self.add_subsystem('isentropic_pressure', IsentropicPressure(),
                 promotes_inputs=('Pt', 'gamma', 'MN'), promotes_outputs=('P',))
 
             self.add_subsystem('S_table', properties.PropertyMap(map_data=S_data), promotes_inputs=('P', 'T'), promotes_outputs=('S',))
@@ -98,5 +128,9 @@ if __name__ == "__main__":
     print(prob['gamma'])
     print(prob['MN'])
 
-    # prob.model.list_inputs(units=True)
-    # prob.model.list_outputs(units=True)
+    p = om.Problem()
+    p.model = om.Group()
+    p.model.add_subsystem('press', IsentropicPressure())
+    p.setup(force_alloc_complex=True)
+    p.run_model()
+    p.check_partials(method='cs', compact_print=True)

@@ -2,26 +2,25 @@ import openmdao.api as om
 
 # from pycycle.cea.species_data import Thermo
 from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
-import pycycle.isentropic.properties as properties
-from pycycle.isentropic.thermo_lookup import ThermoLookup 
+from pycycle.isentropic.properties import PropertyMap, AIR_MIX_entropy
 from pycycle.isentropic.pressure_solve import PressureSolve
-from pycycle.isentropic.T_lookup import TLookup
-from pycycle.isentropic.T_MN_resid import TmnCalc
-from pycycle.isentropic.set_output_data import SetOutputData, Hackery
+from pycycle.isentropic.thermo_lookup import TempFromSP, TempFromGamma, TempFromEnthalpy, EnthalpyFromTemp
+from pycycle.isentropic.T_MN_resid import TmnResid
+from pycycle.isentropic.set_output_data import SetOutputData, IOMatching
 
 
 class SetTotal(om.Group):
 
     def initialize(self):
-        self.options.declare('thermo_data', desc='thermodynamic data set', recordable=False) #not used, just here as a hack to make calls happy
-        self.options.declare('init_reacts') #not used, just here as a hack to make calls happy
+        self.options.declare('thermo_data', desc='thermodynamic data set', recordable=False) #not used, just here to make calls happy
+        self.options.declare('init_reacts') #not used, just here to make calls happy
         self.options.declare('gamma', default=1.4, desc='ratio of specific heats')
         self.options.declare('for_statics', default=False, values=(False, 'Ps', 'MN', 'area'), desc='type of static calculation to perform')
         self.options.declare('mode', default='T', values=('T', 'h', 'S'), desc='mode to calculate in')
         self.options.declare('fl_name', default="flow", desc='flowstation name of the output flow variables')
         self.options.declare('MW', default=28.2, desc='molecular weight of gas in units of g/mol')
-        self.options.declare('h_base', default=-78.65840276, desc='enthalpy at base temperature (units are cal/g)')
-        self.options.declare('T_base', default=0, desc='base temperature (units are degK)')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
         self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
 
 
@@ -39,68 +38,62 @@ class SetTotal(om.Group):
 
         ### Make Cp an output ###
 
-        self.add_subsystem('ind_var', om.IndepVarComp('Cp', val=Cp, units='cal/(g*degK)'), promotes_outputs=['Cp'])
+        self.add_subsystem('option_vars', om.IndepVarComp(), promotes_outputs=['*'])
+        self.option_vars.add_output('Cp', val=Cp, units='cal/(g*degK)')
 
-        if for_statics:
-            self.add_subsystem('indep', om.IndepVarComp('gamma', val=gamma, units=None), promotes_outputs=['gamma'])
+        self.option_vars.add_output('gamma', val=gamma, units=None)
 
         ### Get specific gas constant value ###
 
         self.set_input_defaults('MW.MW', MW, units='g/mol')
 
-        if for_statics:
-            self.add_subsystem('MW', om.ExecComp('R = R_bar/MW', MW={'units':'g/mol'}, R={'units':'J/(kg*degK)'}, R_bar={'units':'J/(mol*degK)', 'value':8314.4598}), 
-                        promotes_outputs=('R',))
-
-        else:
-            self.add_subsystem('MW', om.ExecComp('R = R_bar/MW', MW={'units':'g/mol'}, R={'units':'J/(kg*degK)'}, R_bar={'units':'J/(mol*degK)', 'value':8314.4598}), 
+        self.add_subsystem('MW', om.ExecComp('R = R_bar/MW', MW={'units':'g/mol'}, R={'units':'J/(kg*degK)'}, R_bar={'units':'J/(mol*degK)', 'value':8314.4598}), 
                         promotes_outputs=('R',))
 
         ### Get temperature values when not in mode T ###
 
         if for_statics is False:
             if mode == 'h':
-                self.add_subsystem('T_val', TLookup(mode=mode), 
+                self.add_subsystem('T_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_val', TLookup(mode=mode, S_data=properties.AIR_MIX_entropy),
+                self.add_subsystem('T_val', TempFromSP(S_data=AIR_MIX_entropy),
                     promotes_inputs=('S', 'P'), promotes_outputs=('T',))
 
         elif for_statics == 'Ps':
-            self.add_subsystem('Tt_val', TLookup(mode='h'), 
+            self.add_subsystem('Tt_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                 promotes_inputs=(('h', 'ht'), 'Cp'), promotes_outputs=(('T', 'Tt'),))
 
             if mode == 'h':
-                self.add_subsystem('T_val', TLookup(mode=mode), 
+                self.add_subsystem('T_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_val', TLookup(mode=mode, S_data=properties.AIR_MIX_entropy),
+                self.add_subsystem('T_val', TempFromSP(S_data=AIR_MIX_entropy),
                     promotes_inputs=('S', 'P'), promotes_outputs=('T',))
 
         elif for_statics == 'MN':
-            self.add_subsystem('Tt_val', TLookup(mode='h'), 
+            self.add_subsystem('Tt_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                 promotes_inputs=(('h', 'ht'), 'Cp'), promotes_outputs=(('T', 'Tt'),))
 
             if mode == 'h':
-                self.add_subsystem('T_val', TLookup(mode=mode), 
+                self.add_subsystem('T_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                ### temporary hack, fix this ###
-                self.add_subsystem('T_val', om.ExecComp('T = Tt*(1 + (gamma - 1)/2 * MN**2)**(-1)', T={'units':'degK'}, Tt={'units':'degK'}, gamma={'units':None}, MN={'units':None}), 
+                self.add_subsystem('T_val', TempFromGamma(),
                     promotes_inputs=('Tt', 'gamma', 'MN'), promotes_outputs=('T',))
 
         else:
-            self.add_subsystem('Tt_val', TLookup(mode='h'), 
+            self.add_subsystem('Tt_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                 promotes_inputs=(('h', 'ht'), 'Cp'), promotes_outputs=(('T', 'Tt'),))
             if mode == 'h':
-                self.add_subsystem('T_val', TLookup(mode=mode), 
+                self.add_subsystem('T_val', TempFromEnthalpy(h_base=h_base, T_base=T_base), 
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_MN_val', TmnCalc(h_base=h_base, T_base=T_base), 
+                self.add_subsystem('T_MN_val', TmnResid(h_base=h_base, T_base=T_base), 
                     promotes_inputs=('ht', 'gamma', 'R', 'Tt', 'Cp'), promotes_outputs=('T',))
 
 
@@ -116,45 +109,44 @@ class SetTotal(om.Group):
                 inputs = (('S_desired', 'S'), 'T')
                 outputs = ('P',)
 
-            self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy), 
+            self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=AIR_MIX_entropy), 
                 promotes_inputs=inputs, promotes_outputs=outputs)
 
         elif for_statics == 'area':
             if mode == 'S':
-                self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('T', ('S_desired', 'S')), promotes_outputs=('P',))
 
-        ### Add table lookups ###
+                inputs = ('T', ('S_desired', 'S'))
+                outputs = ('P',)
+
+                self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=AIR_MIX_entropy),
+                    promotes_inputs=inputs, promotes_outputs=outputs)
+
+        ### Add property lookups ###
 
         if mode == 'T':
-            if for_statics == 'MN':
-                self.add_subsystem('lookup_data', ThermoLookup(h=True,
-                    h_base=h_base, T_base=T_base),
+            if for_statics == 'MN' or for_statics == 'area':
+                self.add_subsystem('enthalpy_calc', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
                     promotes_inputs=('T', 'Cp'), promotes_outputs=('h',))
-            elif for_statics == 'area':
-                self.add_subsystem('lookup_data', ThermoLookup(h=True,
-                    h_base=h_base, T_base=T_base),
+            
+            elif for_statics == 'Ps' or for_statics is False:
+                self.add_subsystem('enthalpy_calc', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
                     promotes_inputs=('T', 'Cp'), promotes_outputs=('h',))
-            else:
-                self.add_subsystem('lookup_data', ThermoLookup(h=True, S=True,
-                    h_base=h_base, T_base=T_base, S_data=properties.AIR_MIX_entropy),
-                    promotes_inputs=('P', 'T', 'Cp'), promotes_outputs=('h', 'S'))
+                self.add_subsystem('entropy_lookup', PropertyMap(map_data=AIR_MIX_entropy),
+                    promotes_inputs=('P', 'T'), promotes_outputs=('S',))
             
         elif mode == 'h':
             if for_statics == 'Ps' or for_statics is False:
-                self.add_subsystem('lookup_data', ThermoLookup(S=True,
-                    S_data=properties.AIR_MIX_entropy),
+                self.add_subsystem('entropy_lookup', PropertyMap(map_data=AIR_MIX_entropy),
                     promotes_inputs=('P', 'T'), promotes_outputs=('S',))
         else:
-            self.add_subsystem('lookup_data', ThermoLookup(h=True,
-                h_base=h_base, T_base=T_base),
+            self.add_subsystem('enthalpy_calc', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
                 promotes_inputs=('T', 'Cp'), promotes_outputs=('h',))
             
             
-        ### Set up variables for explicit calculations ###
+        ### Add explicit calculations ###
 
         if for_statics:  
-            in_vars = ('T', 'R', 'Cp')
+            in_vars = ('T', 'R', 'Cp', 'gamma')
             out_vars = ('Cv', 'rho')
 
             if for_statics == 'Ps':
@@ -175,24 +167,24 @@ class SetTotal(om.Group):
                     out_vars += ('Vsonic', 'V', 'MN')
                 
         else:
-            in_vars = ('P', 'T', 'R', 'Cp')
+            in_vars = ('P', 'T', 'R', 'Cp', 'gamma')
             out_vars = ('Cv', 'rho')
 
-        ### Add explicit calculations ###
-
-        self.add_subsystem('explicit', ExplicitIsentropic(gamma=gamma, for_statics=for_statics, mode=mode, fl_name=fl_name),
+        self.add_subsystem('explicit', ExplicitIsentropic(for_statics=for_statics, mode=mode, fl_name=fl_name),
                            promotes_inputs=in_vars,
                            promotes_outputs=out_vars)
+
+        ### Find entropy value when pressure is output from explicit calcs ###
 
         if for_statics == 'area':
             if mode == 'T' or mode == 'h':
 
-                self.add_subsystem('entropy_lookup', ThermoLookup(S=True,
-                    S_data=properties.AIR_MIX_entropy), promotes_inputs=('P', 'T'), promotes_outputs=('S',))
+                self.add_subsystem('entropy_lookup', PropertyMap(map_data=AIR_MIX_entropy), 
+                    promotes_inputs=('P', 'T'), promotes_outputs=('S',))
 
-        if not for_statics:
-            ### temporary hack, fix this ###
-            self.set_input_defaults('gamma', gamma, units=None)
+        ### Set up dummy variables and components to make I/O switching happy ###
+
+        if for_statics is False:
             self.set_input_defaults('b0', -1, units=None)
             self.set_input_defaults('n', -1, units=None)
 
@@ -200,32 +192,9 @@ class SetTotal(om.Group):
                                promotes_inputs=('T', 'P', 'h', 'S', 'gamma', 'Cp', 'Cv', 'rho', 'R', 'b0', 'n'),
                                promotes_outputs=('{}:*'.format(fl_name),))
 
-        else:
-            self.add_subsystem('temp_hack', Hackery(),
+        else: 
+            self.add_subsystem('IO_matching', IOMatching(),
                                 promotes_inputs=('b0', 'P'), promotes_outputs=('n', 'n_moles', 'Ps'))
-
-
-    def configure(self):
-
-        for_statics = self.options['for_statics']
-        if for_statics and for_statics != 'Ps':
-
-            # statics need an newton solver to converge the outer loop with Ps
-            newton = self.nonlinear_solver = om.NewtonSolver()
-            newton.options['atol'] = 1e-10
-            newton.options['rtol'] = 1e-10
-            newton.options['maxiter'] = 50
-            newton.options['iprint'] = 2
-            newton.options['solve_subsystems'] = True
-            newton.options['max_sub_solves'] = 50
-            newton.options['reraise_child_analysiserror'] = False
-
-            self.options['assembled_jac_type'] = 'dense'
-            newton.linear_solver = om.DirectSolver(assemble_jac=True)
-
-            ln_bt = newton.linesearch = om.BoundsEnforceLS()
-            ln_bt.options['bound_enforcement'] = 'scalar'
-            ln_bt.options['iprint'] = -1
 
 
 if __name__ == "__main__":
@@ -256,13 +225,13 @@ if __name__ == "__main__":
     prob.setup(force_alloc_complex=True)
     # prob.set_val('Pt', 1.013, units='bar')
 
-    print(prob.get_val('P', units='bar'))
+    # print(prob.get_val('P', units='bar'))
 
-    # print(prob.get_val('Pt', units='bar'))
-    print((prob.get_val('S', units='cal/(g*degK)')))
-    # print(prob.get_val('_auto_ivc.v4', units='degK'))
-    print(prob.get_val('Tt', units='degK'))
-    prob.get_val('MN')
+    # # print(prob.get_val('Pt', units='bar'))
+    # print((prob.get_val('S', units='cal/(g*degK)')))
+    # # print(prob.get_val('_auto_ivc.v4', units='degK'))
+    # print(prob.get_val('Tt', units='degK'))
+    # prob.get_val('MN')
     # prob.set_val('flow:h', -0.59153318, units='cal/g')
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
@@ -270,16 +239,16 @@ if __name__ == "__main__":
     # print(prob['P'])
     # print(prob['S'])
 
-    # prob.model.list_inputs(units=True)
-    # prob.model.list_outputs(units=True)
+    # # prob.model.list_inputs(units=True)
+    # # prob.model.list_outputs(units=True)
 
-    print(prob.get_val('T', units='degK'))
-    print(prob.get_val('Tt', units='degK'))
-    print(prob.get_val('P', units='bar'))
-    print(prob.get_val('MN'))
-    # print(prob.get_val('flow:h', units='cal/g'))
-    print(prob.get_val('S', units='cal/(g*degK)'))
-    # print(prob.get_val('flow:gamma'))
+    # print(prob.get_val('T', units='degK'))
+    # print(prob.get_val('Tt', units='degK'))
+    # print(prob.get_val('P', units='bar'))
+    # print(prob.get_val('MN'))
+    # # print(prob.get_val('flow:h', units='cal/g'))
+    # print(prob.get_val('S', units='cal/(g*degK)'))
+    # # print(prob.get_val('flow:gamma'))
     # print(prob.get_val('Cp', units='cal/(g*degK)'))
     # print(prob.get_val('Cv', units='cal/(g*degK)'))
     # print(prob.get_val('flow:rho', units='lbm/ft**3'))

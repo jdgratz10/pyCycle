@@ -9,14 +9,12 @@ class PropertyMap(om.Group):
         self.options.declare('map_data', default=AIR_MIX_entropy)
         self.options.declare('interp_method', default='slinear')
         self.options.declare('extrap', default=True)
-        self.options.declare('get_temp', default=False, values=(True, False), desc='Finds temperature from enthalpy when set to true. Cannot be used for entropy.')
 
     def setup(self):
 
         map_data = self.options['map_data']
         method = self.options['interp_method']
         extrap = self.options['extrap']
-        get_temp = self.options['get_temp']
 
         params = map_data.param_data
         outputs = map_data.output_data
@@ -24,21 +22,12 @@ class PropertyMap(om.Group):
         # Define map which will be used
         readmap = om.MetaModelStructuredComp(method=method, extrapolate=extrap)
 
-        if not get_temp:
-            for p in params:
-                readmap.add_input(p['name'], val=p['default'], units=p['units'],
-                            training_data=p['values'])
-            for o in outputs:
-                readmap.add_output(o['name'], val=o['default'], units=o['units'],
-                            training_data=o['values'])
-
-        else:
-            for p in params:
-                readmap.add_output(p['name'], val=p['default'], units=p['units'],
-                            training_data=p['values'])
-            for o in outputs:
-                readmap.add_input(o['name'], val=o['default'], units=o['units'],
-                            training_data=o['values'])
+        for p in params:
+            readmap.add_input(p['name'], val=p['default'], units=p['units'],
+                        training_data=p['values'])
+        for o in outputs:
+            readmap.add_output(o['name'], val=o['default'], units=o['units'],
+                        training_data=o['values'])
 
         self.add_subsystem('readMap', readmap, promotes_inputs=['*'],
                                 promotes_outputs=['*'])
