@@ -22,18 +22,20 @@ class SetTotal(om.Group):
         self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
         self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
         self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
 
 
     def setup(self):
 
         # thermo_data = self.options['thermo_data']
-        fl_name = self.options['fl_name']
-        mode = self.options['mode']
         for_statics = self.options['for_statics']
-        gamma = self.options['gamma']
-        MW = self.options['MW']
+        fl_name = self.options['fl_name']
+        S_data = self.options['S_data']
         h_base = self.options['h_base']
         T_base = self.options['T_base']
+        gamma = self.options['gamma']
+        mode = self.options['mode']
+        MW = self.options['MW']
         Cp = self.options['Cp']
 
         ### Make Cp an output ###
@@ -58,7 +60,7 @@ class SetTotal(om.Group):
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_val', TempFromSP(S_data=AIR_MIX_entropy),
+                self.add_subsystem('T_val', TempFromSP(S_data=S_data),
                     promotes_inputs=('S', 'P'), promotes_outputs=('T',))
 
         elif for_statics == 'Ps':
@@ -70,7 +72,7 @@ class SetTotal(om.Group):
                     promotes_inputs=('h', 'Cp'), promotes_outputs=('T',))
 
             elif mode == 'S':
-                self.add_subsystem('T_val', TempFromSP(S_data=AIR_MIX_entropy),
+                self.add_subsystem('T_val', TempFromSP(S_data=S_data),
                     promotes_inputs=('S', 'P'), promotes_outputs=('T',))
 
         elif for_statics == 'MN':
@@ -109,7 +111,7 @@ class SetTotal(om.Group):
                 inputs = (('S_desired', 'S'), 'T')
                 outputs = ('P',)
 
-            self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=AIR_MIX_entropy), 
+            self.add_subsystem('MN_pressure', PressureSolve(mode=mode, S_data=S_data), 
                 promotes_inputs=inputs, promotes_outputs=outputs)
 
         elif for_statics == 'area':
@@ -118,7 +120,7 @@ class SetTotal(om.Group):
                 inputs = ('T', ('S_desired', 'S'))
                 outputs = ('P',)
 
-                self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=AIR_MIX_entropy),
+                self.add_subsystem('area_pressure', PressureSolve(mode=mode, S_data=S_data),
                     promotes_inputs=inputs, promotes_outputs=outputs)
 
         ### Add property lookups ###
@@ -131,12 +133,12 @@ class SetTotal(om.Group):
             elif for_statics == 'Ps' or for_statics is False:
                 self.add_subsystem('enthalpy_calc', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
                     promotes_inputs=('T', 'Cp'), promotes_outputs=('h',))
-                self.add_subsystem('entropy_lookup', PropertyMap(map_data=AIR_MIX_entropy),
+                self.add_subsystem('entropy_lookup', PropertyMap(map_data=S_data),
                     promotes_inputs=('P', 'T'), promotes_outputs=('S',))
             
         elif mode == 'h':
             if for_statics == 'Ps' or for_statics is False:
-                self.add_subsystem('entropy_lookup', PropertyMap(map_data=AIR_MIX_entropy),
+                self.add_subsystem('entropy_lookup', PropertyMap(map_data=S_data),
                     promotes_inputs=('P', 'T'), promotes_outputs=('S',))
         else:
             self.add_subsystem('enthalpy_calc', EnthalpyFromTemp(h_base=h_base, T_base=T_base),
@@ -179,7 +181,7 @@ class SetTotal(om.Group):
         if for_statics == 'area':
             if mode == 'T' or mode == 'h':
 
-                self.add_subsystem('entropy_lookup', PropertyMap(map_data=AIR_MIX_entropy), 
+                self.add_subsystem('entropy_lookup', PropertyMap(map_data=S_data), 
                     promotes_inputs=('P', 'T'), promotes_outputs=('S',))
 
         ### Set up dummy variables and components to make I/O switching happy ###
@@ -209,13 +211,13 @@ if __name__ == "__main__":
     prob.model = SetTotal(for_statics='area', mode='S', MW=28.9651784)
 
 
-    prob.model.set_input_defaults('P', 1.013, units="bar")
+    # prob.model.set_input_defaults('P', 1.013, units="bar")
     # prob.model.set_input_defaults('h', 7, units='cal/g')
     # prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
 
     # prob.model.set_input_defaults('MN', .6, units=None)
 
-    prob.model.set_input_defaults('T', 330, units='degK')
+    # prob.model.set_input_defaults('T', 330, units='degK')
     prob.model.set_input_defaults('ht', 10, units='cal/g')
     # prob.model.set_input_defaults('W', 15, units='lbm/s')
     # prob.model.set_input_defaults('area', .5, units='m**2')
@@ -242,17 +244,17 @@ if __name__ == "__main__":
     # # prob.model.list_inputs(units=True)
     # # prob.model.list_outputs(units=True)
 
-    # print(prob.get_val('T', units='degK'))
+    print(prob.get_val('T', units='degK'))
     # print(prob.get_val('Tt', units='degK'))
     # print(prob.get_val('P', units='bar'))
     # print(prob.get_val('MN'))
     # # print(prob.get_val('flow:h', units='cal/g'))
     # print(prob.get_val('S', units='cal/(g*degK)'))
     # # print(prob.get_val('flow:gamma'))
-    # print(prob.get_val('Cp', units='cal/(g*degK)'))
+    print(prob.get_val('Cp', units='cal/(g*degK)'))
     # print(prob.get_val('Cv', units='cal/(g*degK)'))
     # print(prob.get_val('flow:rho', units='lbm/ft**3'))
-    # print(prob.get_val('R', units='cal/(g*degK)'))
+    print(prob.get_val('R', units='cal/(g*degK)'))
     # print(prob.get_val('V', units='ft/s'))
     # print(prob.get_val('Vsonic', units='ft/s'))
     # print(prob.get_val('area', units='m**2'))
@@ -267,6 +269,11 @@ if __name__ == "__main__":
     # print(prob.get_val('area', units='m**2'))
     # print(prob.get_val('h', units='cal/g'))
     # print(prob.get_val('ht', units='cal/g'))
+    print(prob['ht'])
+    print(prob['gamma'])
+    print(prob['R'])
+    print(prob['Tt'])
+    print(prob['Cp'])
 
     # prob.model.list_inputs(prom_name=True, hierarchical=False)
     # prob.model.list_outputs(prom_name=True, hierarchical=False)
