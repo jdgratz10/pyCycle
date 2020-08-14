@@ -31,7 +31,8 @@ class TestSetTotal(unittest.TestCase):
 
 		prob = om.Problem()
 			
-		prob.model = TempFromSP(S_data=properties.AIR_MIX_entropy)
+		prob.model = om.Group()
+		prob.model.add_subsystem('temp', TempFromSP(S_data=properties.AIR_MIX_entropy), promotes=['*'])
 
 		prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
 		prob.model.set_input_defaults('P', 1.013, units='bar')
