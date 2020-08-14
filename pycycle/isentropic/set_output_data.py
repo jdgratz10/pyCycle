@@ -86,18 +86,28 @@ class IOMatching(ExplicitComponent):
 
 if __name__ == "__main__":
 
-    from openmdao.api import Problem, Group, IndepVarComp
+    from openmdao.api import Problem, Group
 
     p = Problem()
-    model = p.model = Group()
-    indep = model.add_subsystem('indep', IndepVarComp(), promotes=['*'])
-    indep.add_output('T', val=100., units='degR')
-    indep.add_output('P', val=1., units='psi')
+    p.model = Group()
 
-    model.add_subsystem('units', SetOutputData(fl_name='flow'), promotes=['*'])
+    p.model.add_subsystem('units', SetOutputData(fl_name='flow'), promotes=['*'])
 
     p.setup()
 
     p.run_model()
 
     p.check_partials(compact_print=True)
+
+
+
+    prob = Problem()
+    prob.model = Group()
+
+    prob.model.add_subsystem('units', IOMatching(), promotes=['*'])
+
+    prob.setup()
+
+    prob.run_model()
+
+    prob.check_partials(compact_print=True)

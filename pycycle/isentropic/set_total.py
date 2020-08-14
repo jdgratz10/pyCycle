@@ -201,12 +201,6 @@ class SetTotal(om.Group):
 
 if __name__ == "__main__":
 
-    import scipy
-
-    from pycycle.cea import species_data
-    from pycycle import constants
-    import numpy as np
-
     prob = om.Problem()
     prob.model = SetTotal(for_statics='area', mode='S', MW=28.9651784)
 
@@ -214,47 +208,27 @@ if __name__ == "__main__":
     # prob.model.set_input_defaults('P', 1.013, units="bar")
     # prob.model.set_input_defaults('h', 7, units='cal/g')
     # prob.model.set_input_defaults('S', 1.65, units='cal/(g*degK)')
-
     # prob.model.set_input_defaults('MN', .6, units=None)
-
     # prob.model.set_input_defaults('T', 330, units='degK')
     prob.model.set_input_defaults('ht', 10, units='cal/g')
-    # prob.model.set_input_defaults('W', 15, units='lbm/s')
-    # prob.model.set_input_defaults('area', .5, units='m**2')
 
     prob.set_solver_print(level=2, depth=2)
 
     prob.setup(force_alloc_complex=True)
-    # prob.set_val('Pt', 1.013, units='bar')
-
-    # print(prob.get_val('P', units='bar'))
-
-    # # print(prob.get_val('Pt', units='bar'))
-    # print((prob.get_val('S', units='cal/(g*degK)')))
-    # # print(prob.get_val('_auto_ivc.v4', units='degK'))
-    # print(prob.get_val('Tt', units='degK'))
-    # prob.get_val('MN')
-    # prob.set_val('flow:h', -0.59153318, units='cal/g')
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
-    # print(prob['T'])
-    # print(prob['P'])
-    # print(prob['S'])
 
-    # # prob.model.list_inputs(units=True)
-    # # prob.model.list_outputs(units=True)
-
-    print(prob.get_val('T', units='degK'))
+    # print(prob.get_val('T', units='degK'))
     # print(prob.get_val('Tt', units='degK'))
     # print(prob.get_val('P', units='bar'))
     # print(prob.get_val('MN'))
     # # print(prob.get_val('flow:h', units='cal/g'))
     # print(prob.get_val('S', units='cal/(g*degK)'))
     # # print(prob.get_val('flow:gamma'))
-    print(prob.get_val('Cp', units='cal/(g*degK)'))
+    # print(prob.get_val('Cp', units='cal/(g*degK)'))
     # print(prob.get_val('Cv', units='cal/(g*degK)'))
     # print(prob.get_val('flow:rho', units='lbm/ft**3'))
-    print(prob.get_val('R', units='cal/(g*degK)'))
+    # print(prob.get_val('R', units='cal/(g*degK)'))
     # print(prob.get_val('V', units='ft/s'))
     # print(prob.get_val('Vsonic', units='ft/s'))
     # print(prob.get_val('area', units='m**2'))
@@ -269,11 +243,3 @@ if __name__ == "__main__":
     # print(prob.get_val('area', units='m**2'))
     # print(prob.get_val('h', units='cal/g'))
     # print(prob.get_val('ht', units='cal/g'))
-    print(prob['ht'])
-    print(prob['gamma'])
-    print(prob['R'])
-    print(prob['Tt'])
-    print(prob['Cp'])
-
-    # prob.model.list_inputs(prom_name=True, hierarchical=False)
-    # prob.model.list_outputs(prom_name=True, hierarchical=False)

@@ -1,6 +1,5 @@
 import openmdao.api as om
 
-# from pycycle.cea.species_data import Thermo
 from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
 import pycycle.isentropic.properties as properties
 from pycycle.isentropic import properties
@@ -143,61 +142,36 @@ class EnthalpyFromTemp(om.ExplicitComponent):
 
 if __name__ == "__main__":
 
-    import scipy
-
-    from pycycle.cea import species_data
-    from pycycle import constants
-    import numpy as np
-
     S_data = properties.AIR_MIX_entropy
-    # h_data = properties.AIR_MIX_enthalpy
 
-    # prob = om.Problem()
+    prob1 = om.Problem()
+    prob1.model = TempFromEnthalpy()
 
+    prob1.setup(force_alloc_complex=True)
 
-    # prob.model = TLookup(mode='h', data=h_data)
-    # prob.model.set_input_defaults('h', -0.59153318, units='cal/g')
+    prob1.run_model()
+    prob1.check_partials(method='cs', compact_print=True)
 
-    # # prob.model = TLookup(mode='S', data=S_data)
-    # # prob.model.set_input_defaults('P', 1.2, units='bar')
-    # # prob.model.set_input_defaults('S', 2.5, units='cal/(g*degK)')
+    prob2 = om.Problem()
+    prob2.model = TempFromGamma()
 
+    prob2.setup(force_alloc_complex=True)
+    
+    prob2.run_model()
+    prob2.check_partials(method='cs', compact_print=True)
 
-    # prob.set_solver_print(level=2)
+    prob3 = om.Problem()
+    prob3.model = TempFromSP(S_data=S_data)
 
+    prob3.setup(force_alloc_complex=True)
+    
+    prob3.run_model()
+    prob3.check_partials(method='cs', compact_print=True)
 
+    prob4 = om.Problem()
+    prob4.model = EnthalpyFromTemp()
 
-
-    # prob.setup(force_alloc_complex=True)
-    # prob.set_val('T', 500, units='degK')
-
-
-
-
-
-
-
-    # prob.run_model()
-    # prob.check_partials(method='cs', compact_print=True)
-    # print(prob['h'])
-    # print(prob['T'])
-    # # print(prob['P'])
-    # # print(prob['S_calculated'])
-    # # print(prob['S'])
-
-    # # prob.model.list_inputs(units=True, prom_name=True)
-    # # prob.model.list_outputs(units=True, prom_name=True)
-
-    # p = om.Problem()
-    # p.model = om.Group()
-    # p.model.add_subsystem('temp', TempFromEnthalpy(), promotes=['*'])
-    # p.setup(force_alloc_complex=True)
-    # p.run_model()
-    # p.check_partials(method='cs', compact_print=True)
-
-    prob = om.Problem()
-    prob.model = om.Group()
-    prob.model.add_subsystem('temp', TempFromGamma())
-    prob.setup(force_alloc_complex=True)
-    prob.run_model()
-    prob.check_partials(method='cs', compact_print=True)
+    prob4.setup(force_alloc_complex=True)
+    
+    prob4.run_model()
+    prob4.check_partials(method='cs', compact_print=True)

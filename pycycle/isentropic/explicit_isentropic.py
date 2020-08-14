@@ -405,7 +405,8 @@ if __name__ == "__main__":
     import openmdao.api as om 
 
     prob = om.Problem()
-    prob.model = ExplicitIsentropic(for_statics='area', mode='S')
+    prob.model = om.Group()
+    prob.model.add_subsystem('explicit_isentropic', ExplicitIsentropic(for_statics='area', mode='S'), promotes=['*'])
     prob.setup(force_alloc_complex=True)
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)

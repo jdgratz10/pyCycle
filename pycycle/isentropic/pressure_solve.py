@@ -88,49 +88,16 @@ class PressureSolve(om.Group):
 
 if __name__ == "__main__":
 
-    import scipy
-
-    from pycycle.cea import species_data
-    from pycycle import constants
-    import numpy as np
-
     S_data = properties.AIR_MIX_entropy
 
     prob = om.Problem()
     prob.model = PressureSolve(mode='T', S_data=S_data)
-    prob.model.linear_solver = om.DirectSolver()
-    prob.model.nonlinear_solver = om.NewtonSolver(solve_subsystems=False, maxiter=100)
     prob.model.set_input_defaults('gamma', 1.4, units=None)
     prob.model.set_input_defaults('MN', 1.1, units=None)
     prob.model.set_input_defaults('Pt', 1.2, units='bar')
     prob.model.set_input_defaults('T', 300, units='degK')
     prob.model.set_input_defaults('Tt', 352, units='degK')
 
-
-    # prob.model = PressureSolve(mode='S', S_data=S_data)
-    # prob.model.set_input_defaults('T', 300, units='degK')
-    # prob.model.set_input_defaults('S_desired', 1.71137505, units='cal/(g*degK)')
-
-    prob.set_solver_print(level=2)
-
-
-
-
     prob.setup(force_alloc_complex=True)
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
-    print(prob['T'])
-    print(prob['P'])
-    print(prob['Tt'])
-    print(prob['Pt'])
-    print(prob['S'])
-    print(prob['St'])
-    print(prob['gamma'])
-    print(prob['MN'])
-
-    p = om.Problem()
-    p.model = om.Group()
-    p.model.add_subsystem('press', IsentropicPressure())
-    p.setup(force_alloc_complex=True)
-    p.run_model()
-    p.check_partials(method='cs', compact_print=True)

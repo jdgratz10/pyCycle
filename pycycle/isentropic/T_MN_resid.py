@@ -97,19 +97,12 @@ class TmnResid(om.Group):
 
 
 if __name__ == "__main__":
-    import time
-    from pycycle.cea import properties
 
     prob = om.Problem()
-    prob.model = TmnCalc(h_data=properties.AIR_MIX_enthalpy)
+    prob.model = TmnResid()
 
     prob.setup(force_alloc_complex=True)
-    prob.set_solver_print(level=2)
-    prob.model.nonlinear_solver.options['debug_print'] = True
 
 
     prob.run_model()
     prob.check_partials(method='cs', compact_print=True)
-
-    # prob.model.list_inputs()
-    # prob.model.list_outputs()
