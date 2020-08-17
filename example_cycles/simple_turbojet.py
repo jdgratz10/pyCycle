@@ -4,6 +4,9 @@ import openmdao.api as om
 
 import pycycle.api as pyc
 
+from pycycle.elements.combustor_isentropic import IsentropicCombustor
+from pycycle.elements.turbine_isentropic import IsentropicTurbine
+
 
 class Turbojet(pyc.Cycle):
 
@@ -15,24 +18,25 @@ class Turbojet(pyc.Cycle):
 
         thermo_spec = pyc.species_data.janaf
         design = self.options['design']
+        comp_mode = 'isentropic'
 
         # Add engine elements
         self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec,
-                                    elements=pyc.AIR_MIX))
+                                    elements=pyc.AIR_MIX, computation_mode=comp_mode))
         self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec,
-                                    elements=pyc.AIR_MIX))
+                                    elements=pyc.AIR_MIX, computation_mode=comp_mode))
         self.pyc_add_element('comp', pyc.Compressor(map_data=pyc.AXI5, design=design,
-                                    thermo_data=thermo_spec, elements=pyc.AIR_MIX,),
+                                    thermo_data=thermo_spec, elements=pyc.AIR_MIX, computation_mode=comp_mode),
                                     promotes_inputs=['Nmech'])
-        self.pyc_add_element('burner', pyc.Combustor(design=design,thermo_data=thermo_spec,
+        self.pyc_add_element('burner', IsentropicCombustor(design=design,thermo_data=thermo_spec,
                                     inflow_elements=pyc.AIR_MIX,
                                     air_fuel_elements=pyc.AIR_FUEL_MIX,
                                     fuel_type='JP-7'))
-        self.pyc_add_element('turb', pyc.Turbine(map_data=pyc.LPT2269, design=design,
-                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX,),
+        self.pyc_add_element('turb', IsentropicTurbine(map_data=pyc.LPT2269, design=design,
+                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX),
                                     promotes_inputs=['Nmech'])
         self.pyc_add_element('nozz', pyc.Nozzle(nozzType='CD', lossCoef='Cv',
-                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX))
+                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, computation_mode=comp_mode))
         self.pyc_add_element('shaft', pyc.Shaft(num_ports=2),promotes_inputs=['Nmech'])
         self.pyc_add_element('perf', pyc.Performance(num_nozzles=1, num_burners=1))
 
@@ -161,6 +165,7 @@ class MPTurbojet(pyc.MPCycle):
 
         self.pyc_add_cycle_param('burner.dPqP', 0.03)
         self.pyc_add_cycle_param('nozz.Cv', 0.99)
+        self.pyc_add_cycle_param('burner.fuel_MW', 28.390194936, units='g/mol')
 
         
         # define the off-design conditions we want to run
