@@ -17,6 +17,8 @@ class SetStatic(om.Group):
                               desc='initial amounts of each species in the flow')
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
 
     def setup(self):
 
@@ -30,15 +32,22 @@ class SetStatic(om.Group):
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
 
+            statics = SetTotal(mode='S',
+                               fl_name=fl_name,
+                               thermo_data=thermo_data,
+                               init_reacts=init_reacts,
+                               for_statics=mode)
+
         elif comp_mode == 'isentropic':
             from pycycle.isentropic.set_total import SetTotal
             
 
-        statics = SetTotal(mode='S',
-                           fl_name=fl_name,
-                           thermo_data=thermo_data,
-                           init_reacts=init_reacts,
-                           for_statics=mode)
+            statics = SetTotal(mode='S',
+                               fl_name=fl_name,
+                               thermo_data=thermo_data,
+                               init_reacts=init_reacts,
+                               for_statics=mode,
+                               gamma=self.options['gamma'])
 
         # have to promote things differently depending on which mode we are
         if comp_mode == 'CEA':

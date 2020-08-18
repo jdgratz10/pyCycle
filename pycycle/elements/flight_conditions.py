@@ -18,12 +18,15 @@ class FlightConditions(om.Group):
                               desc='If True, includes WAR calculation')
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']
         use_WAR = self.options['use_WAR']
         comp_mode = self.options['computation_mode']
+        gamma = self.options['gamma']
 
         self.add_subsystem('ambient', Ambient(), promotes=('alt', 'dTs'))  # inputs
 
@@ -32,7 +35,7 @@ class FlightConditions(om.Group):
             proms = ['Fl_O:*', 'MN', 'W', 'WAR']
         else:
             proms = ['Fl_O:*', 'MN', 'W']
-        conv.add_subsystem('fs', FlowStart(thermo_data=thermo_data, elements=elements, use_WAR=use_WAR, computation_mode=comp_mode), promotes=proms)
+        conv.add_subsystem('fs', FlowStart(thermo_data=thermo_data, elements=elements, use_WAR=use_WAR, computation_mode=comp_mode, gamma=gamma), promotes=proms)
         balance = conv.add_subsystem('balance', om.BalanceComp())
         balance.add_balance('Tt', val=500.0, lower=1e-4, units='degR', desc='Total temperature', eq_units='degR')
         balance.add_balance('Pt', val=14.696, lower=1e-4, units='psi', desc='Total pressure', eq_units='psi')

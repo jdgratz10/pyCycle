@@ -120,11 +120,15 @@ class FlowStart(Group):
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
 
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
+
     def setup(self):
         thermo_data = self.options['thermo_data']
         elements = self.options['elements']
         use_WAR = self.options['use_WAR']
         comp_mode = self.options['computation_mode']
+        gamma = self.options['gamma']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -151,9 +155,15 @@ class FlowStart(Group):
             set_WAR = SetWAR(thermo_data=thermo_data, elements=elements)
             self.add_subsystem('WAR', set_WAR, promotes_inputs=('WAR',), promotes_outputs=('b0',))
             
-        set_TP = SetTotal(mode="T", fl_name="Fl_O:tot",
+        if comp_mode == 'CEA':
+            set_TP = SetTotal(mode="T", fl_name="Fl_O:tot",
+                                thermo_data=thermo_data,
+                                init_reacts=elements)
+
+        elif comp_mode == 'isentropic':
+            set_TP = SetTotal(mode="T", fl_name="Fl_O:tot",
                             thermo_data=thermo_data,
-                            init_reacts=elements)
+                            init_reacts=elements, gamma=gamma)
 
         params = ('T','P', 'b0')
 
@@ -163,7 +173,7 @@ class FlowStart(Group):
 
         # if self.options['statics']:
         set_stat_MN = SetStatic(mode="MN", thermo_data=thermo_data,
-                                init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode)
+                                init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma)
         set_stat_MN.set_input_defaults('W', val=1.0, units='kg/s')
 
         self.add_subsystem('exit_static', set_stat_MN, promotes_inputs=('MN', 'W', 'b0'),

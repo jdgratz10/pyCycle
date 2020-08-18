@@ -402,6 +402,8 @@ class Compressor(om.Group):
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
 
         self.default_des_od_conns = [
             # (design src, off-design target)

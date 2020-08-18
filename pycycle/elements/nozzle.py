@@ -314,6 +314,8 @@ class Nozzle(om.Group):
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
@@ -321,6 +323,7 @@ class Nozzle(om.Group):
         nozzType = self.options['nozzType']
         lossCoef = self.options['lossCoef']
         comp_mode = self.options['computation_mode']
+        gamma = self.options['gamma']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -359,8 +362,14 @@ class Nozzle(om.Group):
                            promotes_outputs=['Ps_calc'])
 
         # Calculate throat total flow properties
-        throat_total = SetTotal(thermo_data=thermo_data, mode="h", init_reacts=elements,
-                                fl_name="Fl_O:tot")
+        if comp_mode == 'CEA':
+            throat_total = SetTotal(thermo_data=thermo_data, mode="h", init_reacts=elements,
+                                    fl_name="Fl_O:tot")
+
+        elif comp_mode == 'isentropic':
+            throat_total = SetTotal(thermo_data=thermo_data, mode="h", init_reacts=elements,
+                                fl_name="Fl_O:tot", gamma=gamma)
+
         prom_in = [('h', 'Fl_I:tot:h'),
                    ('b0', 'Fl_I:tot:b0')]
         self.add_subsystem('throat_total', throat_total, promotes_inputs=prom_in,
@@ -371,7 +380,7 @@ class Nozzle(om.Group):
         prom_in = [('ht', 'Fl_I:tot:h'),
                    ('W', 'Fl_I:stat:W'),
                    ('b0', 'Fl_I:tot:b0')]
-        self.add_subsystem('staticMN', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode),
+        self.add_subsystem('staticMN', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma),
                            promotes_inputs=prom_in)
         self.connect('throat_total.S', 'staticMN.S')
         self.connect('mach_choked.MN', 'staticMN.MN')
@@ -386,7 +395,7 @@ class Nozzle(om.Group):
                    ('W', 'Fl_I:stat:W'),
                    ('Ps', 'Ps_calc'),
                    ('b0', 'Fl_I:tot:b0')]
-        self.add_subsystem('staticPs', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode),
+        self.add_subsystem('staticPs', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma),
                            promotes_inputs=prom_in)
         self.connect('throat_total.S', 'staticPs.S')
         # self.connect('press_calcs.Ps_calc', 'staticPs.Ps')
@@ -398,7 +407,7 @@ class Nozzle(om.Group):
                    ('W', 'Fl_I:stat:W'),
                    ('Ps', 'Ps_calc'),
                    ('b0', 'Fl_I:tot:b0')]
-        self.add_subsystem('ideal_flow', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode),
+        self.add_subsystem('ideal_flow', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma),
                            promotes_inputs=prom_in)
         # self.connect('press_calcs.Ps_calc', 'ideal_flow.Ps')
         # self.connect('Fl_I.flow:flow_products','ideal_flow.init_prod_amounts')

@@ -86,6 +86,8 @@ class Inlet(om.Group):
                               desc='Switch between on-design and off-design calculation.')
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
 
         self.default_des_od_conns = [
             # (design src, off-design target)
@@ -99,6 +101,7 @@ class Inlet(om.Group):
         statics = self.options['statics']
         design = self.options['design']
         comp_mode = self.options['computation_mode']
+        gamma = self.options['gamma']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -126,7 +129,11 @@ class Inlet(om.Group):
                            promotes_outputs=['F_ram'])
 
         # Calculate real flow station properties
-        real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot")
+        if comp_mode == 'CEA':
+            real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot")
+
+        elif comp_mode == 'isentropic':
+            real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma)
 
         self.add_subsystem('real_flow', real_flow,
                            promotes_inputs=[('T', 'Fl_I:tot:T'), ('b0', 'Fl_I:tot:b0')],
@@ -138,7 +145,7 @@ class Inlet(om.Group):
         if statics:
             if design:
                 #   Calculate static properties
-                self.add_subsystem('out_stat', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode),
+                self.add_subsystem('out_stat', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma),
                                    promotes_inputs=[('b0', 'Fl_I:tot:b0'), ('W', 'Fl_I:stat:W'), 'MN'],
                                    promotes_outputs=['Fl_O:stat:*'])
 
@@ -148,7 +155,7 @@ class Inlet(om.Group):
             else:
                 # Calculate static properties
                 out_stat = SetStatic(mode="area", thermo_data=thermo_data, init_reacts=elements,
-                                         fl_name="Fl_O:stat", computation_mode=comp_mode)
+                                         fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma)
                 prom_in = [('b0', 'Fl_I:tot:b0'),
                            ('W', 'Fl_I:stat:W'),
                            'area']

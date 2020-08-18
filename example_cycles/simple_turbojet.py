@@ -26,14 +26,14 @@ class Turbojet(pyc.Cycle):
         self.pyc_add_element('inlet', pyc.Inlet(design=design, thermo_data=thermo_spec,
                                     elements=pyc.AIR_MIX, computation_mode=comp_mode))
         self.pyc_add_element('comp', pyc.Compressor(map_data=pyc.AXI5, design=design,
-                                    thermo_data=thermo_spec, elements=pyc.AIR_MIX, computation_mode=comp_mode),
+                                    thermo_data=thermo_spec, elements=pyc.AIR_MIX, computation_mode=comp_mode, gamma=1.36872902),
                                     promotes_inputs=['Nmech'])
         self.pyc_add_element('burner', IsentropicCombustor(design=design,thermo_data=thermo_spec,
                                     inflow_elements=pyc.AIR_MIX,
                                     air_fuel_elements=pyc.AIR_FUEL_MIX,
-                                    fuel_type='JP-7'))
+                                    fuel_type='JP-7', gamma=1.30235009))
         self.pyc_add_element('turb', IsentropicTurbine(map_data=pyc.LPT2269, design=design,
-                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX),
+                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, gamma=1.32500477),
                                     promotes_inputs=['Nmech'])
         self.pyc_add_element('nozz', pyc.Nozzle(nozzType='CD', lossCoef='Cv',
                                     thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, computation_mode=comp_mode))
@@ -165,7 +165,7 @@ class MPTurbojet(pyc.MPCycle):
 
         self.pyc_add_cycle_param('burner.dPqP', 0.03)
         self.pyc_add_cycle_param('nozz.Cv', 0.99)
-        self.pyc_add_cycle_param('burner.fuel_MW', 28.390194936, units='g/mol')
+        self.pyc_add_cycle_param('burner.fuel_MW', 28.390194936, units='g/mol') #for JP-7
 
         
         # define the off-design conditions we want to run
@@ -245,3 +245,80 @@ if __name__ == "__main__":
 
     print()
     print("time", time.time() - st)
+
+    print('W:', prob['DESIGN.inlet.Fl_O:stat:W'][0] - 147.55302767907438)
+    print('OPR:', prob['DESIGN.perf.OPR'][0] - 13.5)
+    print('Main FAR:', prob['DESIGN.balance.FAR'][0] - 0.017550780065132325)
+    print('HPT PR:', prob['DESIGN.balance.turb_PR'][0] - 3.876811007533011)
+    print('Fg:', prob['DESIGN.perf.Fg'][0] - 11800.004972857632)
+    print('TSFC:', prob['DESIGN.perf.TSFC'][0] - 0.7900690482114057)
+    print('Tt3:', prob['DESIGN.comp.Fl_O:tot:T'][0] - 1190.1777648504044)
+    print('W:', prob['OD0.inlet.Fl_O:stat:W'][0] - 142.69375084217026)
+    print('OPR:', prob['OD0.perf.OPR'][0] - 12.840848747331666)
+    print('Main FAR:', prob['OD0.balance.FAR'][0] - 0.016651018104669776)
+    print('HP Nmech:', prob['OD0.balance.Nmech'][0] - 7936.36544281587)
+    print('Fg:', prob['OD0.perf.Fg'][0] - 11000.004885187022)
+    print('TSFC:', prob['OD0.perf.TSFC'][0] - 0.7775987704675483)
+    print('Tt3:', prob['OD0.comp.Fl_O:tot:T'][0] - 1169.5125213466022)
+    print()
+    print('DESIGN.fc.Fl_O:tot:T', prob['DESIGN.fc.Fl_O:tot:T'] - 518.67)
+    print('DESIGN.fc.Fl_O:tot:P', prob['DESIGN.fc.Fl_O:tot:P'] - 14.69589998)
+    print('DESIGN.fc.Fl_O:stat:T', prob['DESIGN.fc.Fl_O:stat:T'] - 518.67)
+    print('DESIGN.fc.Fl_O:stat:P', prob['DESIGN.fc.Fl_O:stat:P'] - 14.69589998)
+    print()
+    print('DESIGN.inlet.Fl_O:tot:T', prob['DESIGN.inlet.Fl_O:tot:T'] - 518.67)
+    print('DESIGN.inlet.Fl_O:tot:P', prob['DESIGN.inlet.Fl_O:tot:P'] - 14.69589998)
+    print('DESIGN.inlet.Fl_O:stat:T', prob['DESIGN.inlet.Fl_O:stat:T'] - 483.7955408)
+    print('DESIGN.inlet.Fl_O:stat:P', prob['DESIGN.inlet.Fl_O:stat:P'] - 11.52060553)
+    print()
+    print('DESIGN.comp.Fl_O:tot:T', prob['DESIGN.comp.Fl_O:tot:T'] - 1190.17776485)
+    print('DESIGN.comp.Fl_O:tot:P', prob['DESIGN.comp.Fl_O:tot:P'] - 198.39464979)
+    print('DESIGN.comp.Fl_O:stat:T', prob['DESIGN.comp.Fl_O:stat:T'] - 1190.0900001)
+    print('DESIGN.comp.Fl_O:stat:P', prob['DESIGN.comp.Fl_O:stat:P'] - 198.34034952)
+    print()
+    print('DESIGN.burner.Fl_O:tot:T', prob['DESIGN.burner.Fl_O:tot:T'] - 2370.)
+    print('DESIGN.burner.Fl_O:tot:P', prob['DESIGN.burner.Fl_O:tot:P'] - 192.4428103)
+    print('DESIGN.burner.Fl_O:stat:T', prob['DESIGN.burner.Fl_O:stat:T'] - 2369.85669074)
+    print('DESIGN.burner.Fl_O:stat:P', prob['DESIGN.burner.Fl_O:stat:P'] - 192.39269275)
+    print()
+    print('DESIGN.turb.Fl_O:tot:T', prob['DESIGN.turb.Fl_O:tot:T'] - 1808.17420214)
+    print('DESIGN.turb.Fl_O:tot:P', prob['DESIGN.turb.Fl_O:tot:P'] - 49.63946138)
+    print('DESIGN.turb.Fl_O:stat:T', prob['DESIGN.turb.Fl_O:stat:T'] - 1762.45738007)
+    print('DESIGN.turb.Fl_O:stat:P', prob['DESIGN.turb.Fl_O:stat:P'] - 44.70736449)
+    print()
+    print('OD0.fc.Fl_O:tot:T', prob['OD0.fc.Fl_O:tot:T'] - 518.67)
+    print('OD0.fc.Fl_O:tot:P', prob['OD0.fc.Fl_O:tot:P'] - 14.69589998)
+    print('OD0.fc.Fl_O:stat:T', prob['OD0.fc.Fl_O:stat:T'] - 518.67)
+    print('OD0.fc.Fl_O:stat:P', prob['OD0.fc.Fl_O:stat:P'] - 14.69589998)
+    print()
+    print('OD0.inlet.Fl_O:tot:T', prob['OD0.inlet.Fl_O:tot:T'] - 518.67)
+    print('OD0.inlet.Fl_O:tot:P', prob['OD0.inlet.Fl_O:tot:P'] - 14.69589998)
+    print('OD0.inlet.Fl_O:stat:T', prob['OD0.inlet.Fl_O:stat:T'] - 487.1672388)
+    print('OD0.inlet.Fl_O:stat:P', prob['OD0.inlet.Fl_O:stat:P'] - 11.80377127)
+    print()
+    print('OD0.comp.Fl_O:tot:T', prob['OD0.comp.Fl_O:tot:T'] - 1169.51252135)
+    print('OD0.comp.Fl_O:tot:P', prob['OD0.comp.Fl_O:tot:P'] - 188.70782891)
+    print('OD0.comp.Fl_O:stat:T', prob['OD0.comp.Fl_O:stat:T'] - 1169.42470341)
+    print('OD0.comp.Fl_O:stat:P', prob['OD0.comp.Fl_O:stat:P'] - 188.65536647)
+    print()
+    print('OD0.burner.Fl_O:tot:T', prob['OD0.burner.Fl_O:tot:T'] - 2297.4995448)
+    print('OD0.burner.Fl_O:tot:P', prob['OD0.burner.Fl_O:tot:P'] - 183.04659404)
+    print('OD0.burner.Fl_O:stat:T', prob['OD0.burner.Fl_O:stat:T'] - 2297.35955207)
+    print('OD0.burner.Fl_O:stat:P', prob['OD0.burner.Fl_O:stat:P'] - 182.99891039)
+    print()
+    print('OD0.turb.Fl_O:tot:T', prob['OD0.turb.Fl_O:tot:T'] - 1749.02543919)
+    print('OD0.turb.Fl_O:tot:P', prob['OD0.turb.Fl_O:tot:P'] - 47.12910412)
+    print('OD0.turb.Fl_O:stat:T', prob['OD0.turb.Fl_O:stat:T'] - 1704.39453313)
+    print('OD0.turb.Fl_O:stat:P', prob['OD0.turb.Fl_O:stat:P'] - 42.438566)
+
+    print(prob['DESIGN.fc.Fl_O:stat:gamma'] - 1.40019525)
+    print(prob['DESIGN.inlet.Fl_O:stat:gamma'] - 1.40058022)
+    print(prob['DESIGN.comp.Fl_O:stat:gamma'] - 1.36872902)
+    print(prob['DESIGN.burner.Fl_O:stat:gamma'] - 1.30235009)
+    print(prob['DESIGN.turb.Fl_O:stat:gamma'] - 1.32500477)
+
+    print(prob.get_val('DESIGN.fc.Fl_O:stat:P', units='bar') - 1.01324664)
+    print(prob.get_val('DESIGN.inlet.Fl_O:stat:P', units='bar') - 0.79431779)
+    print(prob.get_val('DESIGN.comp.Fl_O:stat:P', units='bar') - 13.67508573)
+    print(prob.get_val('DESIGN.burner.Fl_O:stat:P', units='bar') - 13.26500923)
+    print(prob.get_val('DESIGN.turb.Fl_O:stat:P', units='bar') - 3.08246428)

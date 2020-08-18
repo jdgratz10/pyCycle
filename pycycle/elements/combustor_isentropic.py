@@ -149,10 +149,13 @@ class IsentropicCombustor(om.Group):
                              desc='If True, calculate static properties.')
         self.options.declare('fuel_type', default="JP-7",
                              desc='Type of fuel.')
+        self.options.declare('gamma', default=1.4, 
+                              desc='ratio of specific heats, only used in isentropic mode')
 
     def setup(self):
         design = self.options['design']
         statics = self.options['statics']
+        gamma = self.options['gamma']
 
         # Create combustor flow station
         in_flow = FlowIn(fl_name='Fl_I', num_prods=1, num_elements=1)
@@ -168,7 +171,7 @@ class IsentropicCombustor(om.Group):
         self.add_subsystem('p_loss', PressureLoss(), promotes_inputs=prom_in)
 
         # Calculate vitiated flow station properties
-        vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot")
+        vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot", gamma=gamma)
         self.add_subsystem('vitiated_flow', vit_flow, promotes_outputs=['Fl_O:*'])
         self.connect("mix_fuel.mass_avg_h", "vitiated_flow.h")
         self.connect('mix_fuel.MW_out', 'vitiated_flow.MW.MW')
@@ -177,7 +180,7 @@ class IsentropicCombustor(om.Group):
         if statics:
             if design:
                 # Calculate static properties.
-                out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf)
+                out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
                 prom_in = ['MN']
                 prom_out = ['Fl_O:stat:*']
                 self.add_subsystem('out_stat', out_stat, promotes_inputs=prom_in,
@@ -189,7 +192,7 @@ class IsentropicCombustor(om.Group):
 
             else:
                 # Calculate static properties.
-                out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf)
+                out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
                 prom_in = ['area']
                 prom_out = ['Fl_O:stat:*']
                 self.add_subsystem('out_stat', out_stat, promotes_inputs=prom_in,
