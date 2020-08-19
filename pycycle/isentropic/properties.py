@@ -34,13 +34,20 @@ class PropertyMap(om.Group):
 
 if __name__ == "__main__":
 
+    from pycycle.isentropic.enthalpy_map_data import AIR_MIX_enthalpy
+    from pycycle.isentropic.AIR_FUEL_MIX_enthalpy import AIR_FUEL_MIX_enthalpy
+
     p = om.Problem()
     p.model.add_subsystem('map', PropertyMap(
-        map_data=AIR_MIX_entropy), promotes=['*'])
+        map_data=AIR_FUEL_MIX_enthalpy), promotes=['*'])
 
-    p.model.set_input_defaults('T', 330, units='degK')
-    p.model.set_input_defaults('P', 1.013, units='bar')
+    p.model.set_input_defaults('T', 660, units='degK')
+    # p.model.set_input_defaults('h', 0, units='cal/g')
+    # p.model.set_input_defaults('P', 1.013, units='bar')
 
     p.setup(check=True)
     p.run_model()
-    p.check_partials(compact_print=True)
+    # p.check_partials(compact_print=True)
+
+    print(p.get_val('T', units='degK')) #AIR_FUEL_MIX T_base = 1050 K
+    print(p.get_val('h', units='cal/g')) #AIR_FUEL_MIX h_base = 1341.3817795 cal/g

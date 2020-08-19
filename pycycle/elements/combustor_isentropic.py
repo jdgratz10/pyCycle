@@ -12,6 +12,7 @@ from pycycle.elements.duct import PressureLoss
 from pycycle.flow_in import FlowIn
 from pycycle.passthrough import PassThrough
 from pycycle.constants import R_UNIVERSAL_ENG
+from pycycle.isentropic.entropy_map_data import AIR_MIX_entropy
 
 
 class MixFuel(om.ExplicitComponent):
@@ -151,11 +152,19 @@ class IsentropicCombustor(om.Group):
                              desc='Type of fuel.')
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
 
     def setup(self):
         design = self.options['design']
         statics = self.options['statics']
         gamma = self.options['gamma']
+        S_data=self.options['S_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+        Cp = self.options['Cp']
 
         # Create combustor flow station
         in_flow = FlowIn(fl_name='Fl_I', num_prods=1, num_elements=1)
@@ -171,7 +180,8 @@ class IsentropicCombustor(om.Group):
         self.add_subsystem('p_loss', PressureLoss(), promotes_inputs=prom_in)
 
         # Calculate vitiated flow station properties
-        vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot", gamma=gamma)
+        # vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot", gamma=gamma)
+        vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
         self.add_subsystem('vitiated_flow', vit_flow, promotes_outputs=['Fl_O:*'])
         self.connect("mix_fuel.mass_avg_h", "vitiated_flow.h")
         self.connect('mix_fuel.MW_out', 'vitiated_flow.MW.MW')
@@ -180,7 +190,8 @@ class IsentropicCombustor(om.Group):
         if statics:
             if design:
                 # Calculate static properties.
-                out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
+                # out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
+                out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
                 prom_in = ['MN']
                 prom_out = ['Fl_O:stat:*']
                 self.add_subsystem('out_stat', out_stat, promotes_inputs=prom_in,
@@ -192,7 +203,8 @@ class IsentropicCombustor(om.Group):
 
             else:
                 # Calculate static properties.
-                out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
+                # out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
+                out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
                 prom_in = ['area']
                 prom_out = ['Fl_O:stat:*']
                 self.add_subsystem('out_stat', out_stat, promotes_inputs=prom_in,
@@ -213,17 +225,72 @@ class IsentropicCombustor(om.Group):
 
 if __name__ == "__main__":
 
+    from pycycle.connect_flow import connect_flow
+    from pycycle.elements.flow_start import FlowStart
+    from pycycle.cea import species_data
+    from pycycle.constants import AIR_MIX, AIR_FUEL_MIX
+    from pycycle.isentropic.AIR_FUEL_MIX_entropy import AIR_FUEL_MIX_entropy
+
+    S_data = AIR_FUEL_MIX_entropy
+    T_base = 1297.91021 #degK
+    h_base = 86.73820575 #cal/g
+    Cp = 0.29460272 #cal/(g*degK)
+
     p = om.Problem()
     p.model = om.Group()
-    p.model.add_subsystem('comp', MixFuel(), promotes=['*'])
+    p.model.add_subsystem('flow_start', FlowStart(
+        thermo_data=species_data.janaf, elements=AIR_MIX, computation_mode='isentropic', gamma=1.37))
+    p.model.add_subsystem('combustor', IsentropicCombustor(design=True, thermo_data=species_data.janaf,
+        inflow_elements=AIR_MIX, air_fuel_elements=AIR_FUEL_MIX, fuel_type='JP-7', gamma=1.3, T_base=T_base, h_base=h_base, Cp=Cp))
 
-    p.model.add_subsystem('d1', om.IndepVarComp('Fl_I:stat:W', val=1.0, units='lbm/s', desc='weight flow'),
-                          promotes=['*'])
-    p.model.add_subsystem('d2', om.IndepVarComp('Fl_I:FAR', val=0.2, desc='Fuel to air ratio'), promotes=['*'])
-    p.model.add_subsystem('d3', om.IndepVarComp('Fl_I:tot:h', val=1.0, units='Btu/lbm', desc='total enthalpy'),
-                          promotes=['*'])
+    connect_flow(p.model, 'flow_start.Fl_O', 'combustor.Fl_I')
 
-    p.setup(check=False, force_alloc_complex=True)
+    p.model.set_input_defaults('flow_start.P', 198.34034952, units='lbf/inch**2')
+    p.model.set_input_defaults('flow_start.T', 1190.0900001, units='degR')
+    p.model.set_input_defaults('flow_start.W', 100.0, units='lbm/s')
+    p.model.set_input_defaults('combustor.Fl_I:FAR', .017, units=None)
+    p.model.set_input_defaults('combustor.MN', .02, units=None)
+    p.model.set_input_defaults('combustor.dPqP', .03, units=None)
+
+    p.set_solver_print(level=-1)
+
+    p.setup(force_alloc_complex=True)
     p.run_model()
+    # p.check_partials(method='cs', compact_print=True)
 
-    p.check_partials(compact_print=True, method='cs')
+    print('flow_start.Fl_O:tot:T', p.get_val('flow_start.Fl_O:tot:T', units='degR'), 1190.0900001)
+    print('flow_start.Fl_O:tot:P', p.get_val('flow_start.Fl_O:tot:P', units='bar'), 13.67508573)
+    print('flow_start.Fl_O:tot:h', p.get_val('flow_start.Fl_O:tot:h', units='cal/g'), 88.23638223)
+    print('flow_start.Fl_O:tot:S', p.get_val('flow_start.Fl_O:tot:S', units='cal/(g*degK)'), 1.65712206)
+    print('flow_start.Fl_O:tot:gamma', p.get_val('flow_start.Fl_O:tot:gamma', units=None), 1.36872902)
+    print('flow_start.Fl_O:tot:Cp', p.get_val('flow_start.Fl_O:tot:Cp', units='cal/(g*degK)'), 0.25466771)
+    print('flow_start.Fl_O:tot:Cv', p.get_val('flow_start.Fl_O:tot:Cv', units='cal/(g*degK)'), 0.18606141)
+    print('flow_start.Fl_O:tot:rho', p.get_val('flow_start.Fl_O:tot:rho', units='lbm/inch**3'), 0.00026032)
+    print()
+    print('flow_start.Fl_O:stat:T', p.get_val('flow_start.Fl_O:stat:T', units='degR'), 1137.36400187)
+    print('flow_start.Fl_O:stat:P', p.get_val('flow_start.Fl_O:stat:P', units='bar'), 11.56433131)
+    print('flow_start.Fl_O:stat:h', p.get_val('flow_start.Fl_O:stat:h', units='cal/g'), 80.80131257)
+    print('flow_start.Fl_O:stat:S', p.get_val('flow_start.Fl_O:stat:S', units='cal/(g*degK)'), 1.65712206)
+    print('flow_start.Fl_O:stat:gamma', p.get_val('flow_start.Fl_O:stat:gamma', units=None), 1.37208827)
+    print('flow_start.Fl_O:stat:Cp', p.get_val('flow_start.Fl_O:stat:Cp', units='cal/(g*degK)'), 0.25298835)
+    print('flow_start.Fl_O:stat:Cv', p.get_val('flow_start.Fl_O:stat:Cv', units='cal/(g*degK)'), 0.18438195)
+    print('flow_start.Fl_O:stat:rho', p.get_val('flow_start.Fl_O:stat:rho', units='lbm/inch**3'), 0.00023034)
+    print()
+    print('combustor.Fl_O:tot:T', p.get_val('combustor.Fl_O:tot:T', units='degR'), 2336.38034075)
+    print('combustor.Fl_O:tot:P', p.get_val('combustor.Fl_O:tot:P', units='bar'), 13.26483316)
+    print('combustor.Fl_O:tot:h', p.get_val('combustor.Fl_O:tot:h', units='cal/g'), 86.76143779)
+    print('combustor.Fl_O:tot:S', p.get_val('combustor.Fl_O:tot:S', units='cal/(g*degK)'), 1.86403665)
+    print('combustor.Fl_O:tot:gamma', p.get_val('combustor.Fl_O:tot:gamma', units=None), 1.30377937)
+    print('combustor.Fl_O:tot:Cp', p.get_val('combustor.Fl_O:tot:Cp', units='cal/(g*degK)'), 0.29460609)
+    print('combustor.Fl_O:tot:Cv', p.get_val('combustor.Fl_O:tot:Cv', units='cal/(g*degK)'), 0.22596247)
+    print('combustor.Fl_O:tot:rho', p.get_val('combustor.Fl_O:tot:rho', units='lbm/inch**3'), 0.00012855)
+    print()
+    print('combustor.Fl_O:stat:T', p.get_val('combustor.Fl_O:stat:T', units='degR'), 2336.23838313)
+    print('combustor.Fl_O:stat:P', p.get_val('combustor.Fl_O:stat:P', units='bar'), 13.26137482)
+    print('combustor.Fl_O:stat:h', p.get_val('combustor.Fl_O:stat:h', units='cal/g'), 86.73820575)
+    print('combustor.Fl_O:stat:S', p.get_val('combustor.Fl_O:stat:S', units='cal/(g*degK)'), 1.86403665)
+    print('combustor.Fl_O:stat:gamma', p.get_val('combustor.Fl_O:stat:gamma', units=None), 1.3037839)
+    print('combustor.Fl_O:stat:Cp', p.get_val('combustor.Fl_O:stat:Cp', units='cal/(g*degK)'), 0.29460272)
+    print('combustor.Fl_O:stat:Cv', p.get_val('combustor.Fl_O:stat:Cv', units='cal/(g*degK)'), 0.2259591)
+    print('combustor.Fl_O:stat:rho', p.get_val('combustor.Fl_O:stat:rho', units='lbm/inch**3'), 0.00012852)
+

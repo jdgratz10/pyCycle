@@ -3,6 +3,7 @@ import openmdao.api as om
 from pycycle.constants import AIR_MIX
 from pycycle.cea.unit_comps import EngUnitStaticProps, EngUnitProps
 from pycycle.cea import species_data
+from pycycle.isentropic.entropy_map_data import AIR_MIX_entropy
 
 class SetStatic(om.Group):
 
@@ -19,6 +20,10 @@ class SetStatic(om.Group):
                               desc='mode of computation')
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
 
     def setup(self):
 
@@ -47,7 +52,11 @@ class SetStatic(om.Group):
                                thermo_data=thermo_data,
                                init_reacts=init_reacts,
                                for_statics=mode,
-                               gamma=self.options['gamma'])
+                               gamma=self.options['gamma'],
+                               S_data=self.options['S_data'],
+                               h_base=self.options['h_base'],
+                               T_base=self.options['T_base'],
+                               Cp=self.options['Cp'])
 
         # have to promote things differently depending on which mode we are
         if comp_mode == 'CEA':

@@ -6,6 +6,8 @@ import pycycle.api as pyc
 
 from pycycle.elements.combustor_isentropic import IsentropicCombustor
 from pycycle.elements.turbine_isentropic import IsentropicTurbine
+from pycycle.isentropic.AIR_FUEL_MIX_entropy_full import AIR_FUEL_MIX_entropy
+from pycycle.isentropic.entropy_map_data import AIR_MIX_entropy
 
 
 class Turbojet(pyc.Cycle):
@@ -19,6 +21,10 @@ class Turbojet(pyc.Cycle):
         thermo_spec = pyc.species_data.janaf
         design = self.options['design']
         comp_mode = 'isentropic'
+        S_data = AIR_FUEL_MIX_entropy
+        T_base = 1297.91021 #degK
+        h_base = 86.73820575 #cal/g
+        Cp = 0.29460272 #cal/(g*degK)
 
         # Add engine elements
         self.pyc_add_element('fc', pyc.FlightConditions(thermo_data=thermo_spec,
@@ -31,12 +37,12 @@ class Turbojet(pyc.Cycle):
         self.pyc_add_element('burner', IsentropicCombustor(design=design,thermo_data=thermo_spec,
                                     inflow_elements=pyc.AIR_MIX,
                                     air_fuel_elements=pyc.AIR_FUEL_MIX,
-                                    fuel_type='JP-7', gamma=1.30235009))
+                                    fuel_type='JP-7', gamma=1.30235009, S_data=S_data, Cp=Cp, h_base=h_base, T_base=T_base))
         self.pyc_add_element('turb', IsentropicTurbine(map_data=pyc.LPT2269, design=design,
-                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, gamma=1.32500477),
+                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, gamma=1.32500477, S_data=S_data, Cp=Cp, h_base=h_base, T_base=T_base),
                                     promotes_inputs=['Nmech'])
         self.pyc_add_element('nozz', pyc.Nozzle(nozzType='CD', lossCoef='Cv',
-                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, computation_mode=comp_mode))
+                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, computation_mode=comp_mode, S_data=S_data, Cp=Cp, h_base=h_base, T_base=T_base))
         self.pyc_add_element('shaft', pyc.Shaft(num_ports=2),promotes_inputs=['Nmech'])
         self.pyc_add_element('perf', pyc.Performance(num_nozzles=1, num_burners=1))
 
@@ -317,8 +323,19 @@ if __name__ == "__main__":
     print(prob['DESIGN.burner.Fl_O:stat:gamma'] - 1.30235009)
     print(prob['DESIGN.turb.Fl_O:stat:gamma'] - 1.32500477)
 
-    print(prob.get_val('DESIGN.fc.Fl_O:stat:P', units='bar') - 1.01324664)
-    print(prob.get_val('DESIGN.inlet.Fl_O:stat:P', units='bar') - 0.79431779)
-    print(prob.get_val('DESIGN.comp.Fl_O:stat:P', units='bar') - 13.67508573)
-    print(prob.get_val('DESIGN.burner.Fl_O:stat:P', units='bar') - 13.26500923)
-    print(prob.get_val('DESIGN.turb.Fl_O:stat:P', units='bar') - 3.08246428)
+    print('DESIGN.fc.Fl_O:stat:P', prob.get_val('DESIGN.fc.Fl_O:stat:P', units='bar'), 1.01324664)
+    print('DESIGN.inlet.Fl_O:stat:P', prob.get_val('DESIGN.inlet.Fl_O:stat:P', units='bar'), 0.79431779)
+    print('DESIGN.comp.Fl_O:stat:P', prob.get_val('DESIGN.comp.Fl_O:stat:P', units='bar'), 13.67508573)
+    print('DESIGN.burner.Fl_O:stat:P', prob.get_val('DESIGN.burner.Fl_O:stat:P', units='bar'), 13.26500923)
+    print('DESIGN.turb.Fl_O:stat:P', prob.get_val('DESIGN.turb.Fl_O:stat:P', units='bar'), 3.08246428)
+
+    print('DESIGN.fc.Fl_O:tot:h', prob.get_val('DESIGN.fc.Fl_O:tot:h', units='cal/g'), (-3.43655906))
+    print('DESIGN.fc.Fl_O:stat:h', prob.get_val('DESIGN.fc.Fl_O:stat:h', units='cal/g'), (-3.43655906))
+    print('DESIGN.inlet.Fl_O:tot:h', prob.get_val('DESIGN.inlet.Fl_O:tot:h', units='cal/g'), (-3.43655906))
+    print('DESIGN.inlet.Fl_O:stat:h', prob.get_val('DESIGN.inlet.Fl_O:stat:h', units='cal/g'), (-8.08530673))
+    print('DESIGN.comp.Fl_O:tot:h', prob.get_val('DESIGN.comp.Fl_O:tot:h', units='cal/g'), 88.24879942)
+    print('DESIGN.comp.Fl_O:stat:h', prob.get_val('DESIGN.comp.Fl_O:stat:h', units='cal/g'), 88.23638231)
+    print('DESIGN.burner.Fl_O:tot:h', prob.get_val('DESIGN.burner.Fl_O:tot:h', units='cal/g'), 86.72667856)
+    print('DESIGN.burner.Fl_O:stat:h', prob.get_val('DESIGN.burner.Fl_O:stat:h', units='cal/g'), 86.70313771)
+    print('DESIGN.turb.Fl_O:tot:h', prob.get_val('DESIGN.turb.Fl_O:tot:h', units='cal/g'), (-3.37728508))
+    print('DESIGN.turb.Fl_O:stat:h', prob.get_val('DESIGN.turb.Fl_O:stat:h', units='cal/g'), (-10.50204152))

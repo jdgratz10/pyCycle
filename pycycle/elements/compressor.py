@@ -598,19 +598,34 @@ class Compressor(om.Group):
 
 if __name__ == "__main__":
 
-    thermo = species_data.Thermo(species_data.janaf)
+    from pycycle.connect_flow import connect_flow
+    from pycycle.elements.flow_start import FlowStart
+
+    thermo = species_data.Thermo(species_data.janaf, init_reacts=AIR_MIX)
 
     p = om.Problem()
-    p.model = Compressor(design=True)
+    p.model = om.Group()
+    p.model.add_subsystem('compressor', Compressor(design=True))
+    p.model.add_subsystem('flow_start', FlowStart(
+        thermo_data=species_data.janaf, elements=AIR_MIX))
 
-    p.model.set_input_defaults('Fl_I:tot:h', 1.0, units='Btu/lbm')
-    p.model.set_input_defaults('Fl_I:tot:T', val=518., units='degR')
-    p.model.set_input_defaults('Fl_I:tot:P', val=1., units='lbf/inch**2')
-    p.model.set_input_defaults('Fl_I:tot:S', val=1.0, units='Btu/(lbm*degR)')
-    p.model.set_input_defaults('Fl_I:tot:R', val=1.0, units='Btu/(lbm*degR)')
-    p.model.set_input_defaults('Fl_I:stat:W', val= 0.0, units='lbm/s')
-    p.model.set_input_defaults('Fl_I:tot:b0', thermo.b0)
+    connect_flow(p.model, 'flow_start.Fl_O', 'compressor.Fl_I')
+
+    p.model.set_input_defaults('flow_start.P', 14.69, units='lbf/inch**2')
+    p.model.set_input_defaults('flow_start.T', 300, units='degR')
+    p.model.set_input_defaults('flow_start.W', 100.0, units='lbm/s')
+    p.model.set_input_defaults('compressor.MN', .2, units=None)
+    p.set_solver_print(level=-1)
 
     p.setup(force_alloc_complex=True)
     p.run_model()
     p.check_partials(method='cs', compact_print=True)
+
+    print(p.get_val('compressor.Fl_O:tot:T', units='degR'))
+    print(p.get_val('compressor.Fl_O:tot:P', units='bar'))
+    print(p.get_val('compressor.Fl_O:tot:h', units='cal/g'))
+    print(p.get_val('compressor.Fl_O:tot:S', units='cal/(g*degK)'))
+    print(p.get_val('compressor.Fl_O:tot:gamma', units=None))
+    print(p.get_val('compressor.Fl_O:tot:Cp', units='cal/(g*degK)'))
+    print(p.get_val('compressor.Fl_O:tot:Cv', units='cal/(g*degK)'))
+    print(p.get_val('compressor.Fl_O:tot:rho', units='lbm/inch**3'))

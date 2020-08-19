@@ -15,6 +15,7 @@ from pycycle.passthrough import PassThrough
 
 from pycycle.elements.turbine_map import TurbineMap
 from pycycle.maps.lpt2269 import LPT2269
+from pycycle.isentropic.entropy_map_data import AIR_MIX_entropy
 
 
 class CorrectedInputsCalc(om.ExplicitComponent):
@@ -480,6 +481,10 @@ class IsentropicTurbine(om.Group):
         self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
 
         self.default_des_od_conns = [
             # (design src, off-design target)
@@ -504,6 +509,10 @@ class IsentropicTurbine(om.Group):
         interp_method = self.options['map_interp_method']
         map_extrap = self.options['map_extrap']
         gamma = self.options['gamma']
+        S_data = self.options['S_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+        Cp = self.options['Cp']
 
         # Create inlet flow station
         in_flow = FlowIn(fl_name='Fl_I', num_prods=1, num_elements=1)
@@ -530,7 +539,8 @@ class IsentropicTurbine(om.Group):
                            'PR', ('Pt_in', 'Fl_I:tot:P')])
 
         # Calculate ideal flow station properties
-        self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements, gamma=gamma),
+        self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
+        # self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements, gamma=gamma),
                            promotes_inputs=[('S', 'Fl_I:tot:S'), ('b0', 'Fl_I:tot:b0')])
         self.connect("press_drop.Pt_out", "ideal_flow.P")
 
@@ -558,13 +568,15 @@ class IsentropicTurbine(om.Group):
 
             # Determine bleed inflow properties
             bleed_names2.append(BN + '_inflow')
-            self.add_subsystem(BN + '_inflow', SetTotal(thermo_data=thermo_data, mode='h', init_reacts=bleed_elements, gamma=gamma),
+            self.add_subsystem(BN + '_inflow', SetTotal(thermo_data=thermo_data, mode='h', init_reacts=bleed_elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
+            # self.add_subsystem(BN + '_inflow', SetTotal(thermo_data=thermo_data, mode='h', init_reacts=bleed_elements, gamma=gamma),
                                promotes_inputs=[('h', BN + ':tot:h'),])
             self.connect('blds.' + BN + ':Pt', BN + "_inflow.P")
 
             # Ideally expand bleeds to exit pressure
             bleed_names2.append(BN + '_ideal')
-            self.add_subsystem(BN + '_ideal', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=bleed_elements, gamma=gamma),
+            self.add_subsystem(BN + '_ideal', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=bleed_elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
+            # self.add_subsystem(BN + '_ideal', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=bleed_elements, gamma=gamma),
                                promotes_inputs=[('b0', BN + ":tot:b0")])
             self.connect(BN + "_inflow.flow:S", BN + "_ideal.S")
             self.connect("press_drop.Pt_out", BN + "_ideal.P")
@@ -580,8 +592,8 @@ class IsentropicTurbine(om.Group):
         self.connect('ideal_flow.h', 'pwr_turb.ht_out_ideal')
 
         # Calculate real flow station properties before bleed air is added
-        real_flow_b4bld = SetTotal(thermo_data=thermo_data, mode='h',
-                     init_reacts=elements, fl_name="Fl_O_b4bld:tot", gamma=gamma)
+        real_flow_b4bld = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O_b4bld:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
+        # real_flow_b4bld = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O_b4bld:tot", gamma=gamma)
         self.add_subsystem('real_flow_b4bld', real_flow_b4bld,
                            promotes_inputs=[('b0', 'Fl_I:tot:b0')])
         self.connect('ht_out_b4bld', 'real_flow_b4bld.h')
@@ -594,8 +606,8 @@ class IsentropicTurbine(om.Group):
         self.connect('real_flow_b4bld.Fl_O_b4bld:tot:S','eff_poly_calc.S_out')
 
         # Calculate real flow station properties
-        real_flow = SetTotal(thermo_data=thermo_data, mode='h',
-                             init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma)
+        real_flow = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
+        # real_flow = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma)
         self.add_subsystem('real_flow', real_flow,
                            promotes_outputs=['Fl_O:tot:*'])
         self.connect("pwr_turb.ht_out", "real_flow.h")
@@ -608,8 +620,8 @@ class IsentropicTurbine(om.Group):
         if statics:
             if designFlag:
                 #   SetStaticMN
-                out_stat = SetStatic(
-                    mode='MN', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma)
+                out_stat = SetStatic(mode='MN', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
+                # out_stat = SetStatic(mode='MN', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=['MN'],
                                    promotes_outputs=['Fl_O:stat:*'])
@@ -619,8 +631,8 @@ class IsentropicTurbine(om.Group):
 
             else:
                 #   SetStaticArea
-                out_stat = SetStatic(
-                    mode='area', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma)
+                out_stat = SetStatic(mode='area', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
+                # out_stat = SetStatic(mode='area', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=['area'],
                                    promotes_outputs=['Fl_O:stat:*'])
@@ -666,12 +678,12 @@ if __name__ == "__main__":
     dv.add_output('frac_P', 0.5),
 
     prob.model.add_subsystem('flow_start', FlowStart(
-        thermo_data=species_data.janaf, elements=AIR_MIX))
+        thermo_data=species_data.janaf, elements=AIR_MIX, computation_mode='isentropic', gamma=1.3))
     prob.model.add_subsystem('bld_start', FlowStart(
-        thermo_data=species_data.janaf, elements=AIR_MIX))
+        thermo_data=species_data.janaf, elements=AIR_MIX, computation_mode='isentropic'))
     prob.model.add_subsystem('turbine', IsentropicTurbine(
         map_data=LPT2269, design=True, elements=AIR_MIX,
-        bleed_names=['bld1']))
+        bleed_names=['bld1'], gamma=1.33))
 
     connect_flow(prob.model, 'flow_start.Fl_O', 'turbine.Fl_I')
     connect_flow(prob.model, 'bld_start.Fl_O', 'turbine.bld1', connect_stat=False)
@@ -690,9 +702,44 @@ if __name__ == "__main__":
     # prob.model.flow_start.list_connections()
     prob.run_model()
 
-    print(prob['turbine.Fl_O:tot:T'])
-    print(prob['turbine.Fl_O:tot:P'])
-    print(prob['turbine.Fl_O:stat:W'])
-    print(prob['bld_start.Fl_O:stat:W'])
+    # print(prob['turbine.Fl_O:tot:T'])
+    # print(prob['turbine.Fl_O:tot:P'])
+    # print(prob['turbine.Fl_O:stat:W'])
+    # print(prob['bld_start.Fl_O:stat:W'])
 
-    prob.check_partials(compact_print=True, abs_err_tol=1e-3, rel_err_tol=1e-3)
+    # prob.check_partials(compact_print=True, abs_err_tol=1e-3, rel_err_tol=1e-3)
+    print('turbine.Fl_O:stat:T', prob['turbine.Fl_O:stat:T'], 1887.1214197)
+    print('turbine.Fl_O:stat:P', prob['turbine.Fl_O:stat:P'], 3.3590524)
+    print('turbine.Fl_O:stat:h', prob['turbine.Fl_O:stat:h'], 343.57410273)
+    print('turbine.Fl_O:stat:S', prob['turbine.Fl_O:stat:S'], 2.05752606)
+    print('turbine.Fl_O:stat:gamma', prob['turbine.Fl_O:stat:gamma'], 1.33199169)
+    print('turbine.Fl_O:stat:Cp', prob['turbine.Fl_O:stat:Cp'], 0.27507287)
+    print('turbine.Fl_O:stat:Cv', prob['turbine.Fl_O:stat:Cv'], 0.2065124)
+    print('turbine.Fl_O:stat:rho', prob['turbine.Fl_O:stat:rho'], 0.0048043)
+    print()
+    print('turbine.Fl_O:tot:T', prob['turbine.Fl_O:tot:T'], 1965.15526869)
+    print('turbine.Fl_O:tot:P', prob['turbine.Fl_O:tot:P'], 3.9543)
+    print('turbine.Fl_O:tot:h', prob['turbine.Fl_O:tot:h'], 365.11614029)
+    print('turbine.Fl_O:tot:S', prob['turbine.Fl_O:tot:S'], 2.05752606)
+    print('turbine.Fl_O:tot:gamma', prob['turbine.Fl_O:tot:gamma'], 1.32886488)
+    print('turbine.Fl_O:tot:Cp', prob['turbine.Fl_O:tot:Cp'], 0.27703603)
+    print('turbine.Fl_O:tot:Cv', prob['turbine.Fl_O:tot:Cv'], 0.20847563)
+    print('turbine.Fl_O:tot:rho', prob['turbine.Fl_O:tot:rho'], 0.00543108)
+    print()
+    print('flow_start.Fl_O:stat:T', prob['flow_start.Fl_O:stat:T'], 2545.99910008)
+    print('flow_start.Fl_O:stat:P', prob['flow_start.Fl_O:stat:P'], 13.47086583)
+    print('flow_start.Fl_O:stat:h', prob['flow_start.Fl_O:stat:h'], 529.95922087)
+    print('flow_start.Fl_O:stat:S', prob['flow_start.Fl_O:stat:S'], 2.04690584)
+    print('flow_start.Fl_O:stat:gamma', prob['flow_start.Fl_O:stat:gamma'], 1.30915197)
+    print('flow_start.Fl_O:stat:Cp', prob['flow_start.Fl_O:stat:Cp'], 0.29032776)
+    print('flow_start.Fl_O:stat:Cv', prob['flow_start.Fl_O:stat:Cv'], 0.22176748)
+    print('flow_start.Fl_O:stat:rho', prob['flow_start.Fl_O:stat:rho'], 0.01428075)
+    print()
+    print('flow_start.Fl_O:tot:T', prob['flow_start.Fl_O:tot:T'], 2644.02)
+    print('flow_start.Fl_O:tot:P', prob['flow_start.Fl_O:tot:P'], 15.8172)
+    print('flow_start.Fl_O:tot:h', prob['flow_start.Fl_O:tot:h'], 558.52413227)
+    print('flow_start.Fl_O:tot:S', prob['flow_start.Fl_O:tot:S'], 2.04690584)
+    print('flow_start.Fl_O:tot:gamma', prob['flow_start.Fl_O:tot:gamma'], 1.30614428)
+    print('flow_start.Fl_O:tot:Cp', prob['flow_start.Fl_O:tot:Cp'], 0.29250864)
+    print('flow_start.Fl_O:tot:Cv', prob['flow_start.Fl_O:tot:Cv'], 0.22394776)
+    print('flow_start.Fl_O:tot:rho', prob['flow_start.Fl_O:tot:rho'], 0.01614652)

@@ -217,8 +217,9 @@ if __name__ == "__main__":
     from openmdao.api import Problem, Group, IndepVarComp
 
     from pycycle.cea import species_data
+    from pycycle import constants
 
-    thermo = species_data.Thermo(species_data.co2_co_o2)
+    thermo = species_data.Thermo(species_data.co2_co_o2, constants.CO2_CO_O2_MIX)
 
     p = Problem()
     model = p.model = Group()
@@ -237,21 +238,5 @@ if __name__ == "__main__":
     p.setup()
     p.run_model()
 
-    print("outputs")
-    print('h', p['h'])
-    print('S', p['S'])
-    print('gamma', p['gamma'])
-    print('Cp', p['Cp'])
-    print('Cv', p['Cv'])
-    print('rho', p['rho'])
-    print()
-    print()
-    print('############################################')
-
-    p.model.run_linearize()
-
-    jac = p.model.get_subsystem('calcs').jacobian._subjacs
-    for pair in jac:
-        print(pair)
-        print(jac[pair])
-        print
+    p.model.list_inputs()
+    p.model.list_outputs()

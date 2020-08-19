@@ -404,9 +404,10 @@ if __name__ == "__main__":
 
 
     from pycycle.cea import species_data
+    from pycycle.constants import AIR_MIX
 
     # thermo = species_data.Thermo(species_data.co2_co_o2)
-    thermo = species_data.Thermo(species_data.janaf)
+    thermo = species_data.Thermo(species_data.janaf, AIR_MIX)
 
     prob = om.Problem()
     prob.model = om.Group()
@@ -417,7 +418,7 @@ if __name__ == "__main__":
     des_vars.add_output('P', 1.034210, units='psi')
     des_vars.add_output('h', -24.26682261, units='cal/g')
 
-    chemeq = prob.model.add_subsystem('chemeq', ChemEq(thermo=thermo, mode="h"), promotes=["*"])
+    chemeq = prob.model.add_subsystem('chemeq', ChemEq(thermo=thermo, mode="T"), promotes=["*"])
 
     # prob.model.suppress_solver_output = True
     prob.setup(force_alloc_complex=True)
@@ -437,3 +438,6 @@ if __name__ == "__main__":
 
 
     prob.check_partials(method='cs', compact_print=True)
+
+    prob.model.list_inputs()
+    prob.model.list_outputs()

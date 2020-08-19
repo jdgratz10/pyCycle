@@ -1,13 +1,13 @@
 import numpy as np
 import sys
-from pycycle.constants import R_UNIVERSAL_SI, AIR_MIX, R_UNIVERSAL_ENG
+from pycycle.constants import R_UNIVERSAL_SI, AIR_MIX, R_UNIVERSAL_ENG, AIR_FUEL_MIX
 from pycycle.cea.species_data import Thermo
 from pycycle.cea.thermo_data import janaf
 
 np.set_printoptions(threshold=sys.maxsize)
 
 thermo_data = janaf
-init_reacts = AIR_MIX
+init_reacts = AIR_FUEL_MIX
 
 thermo = Thermo(thermo_data, init_reacts=init_reacts)
 compounds = init_reacts.keys()
@@ -45,7 +45,7 @@ for i, T in enumerate(T_range):
     for j, P in enumerate(P_range):
     	S[i, j] = R_UNIVERSAL_ENG*np.sum(n*(S0_T-np.log(n)+np.log(n_moles)-np.log(P))) #units="cal/(g*degK)"
 
-# f = open( 'AIR_MIX_entropy.py', 'w' )
-# f.write('import numpy as np\n')
-# f.write('S = ' + repr(S))
-# f.close()
+f = open( 'AIR_FUEL_MIX_entropy.py', 'w' )
+f.write('import numpy as np\n')
+f.write('S = ' + repr(S))
+f.close()

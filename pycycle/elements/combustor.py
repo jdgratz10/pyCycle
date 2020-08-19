@@ -313,19 +313,65 @@ class Combustor(om.Group):
 
 if __name__ == "__main__":
 
+    from pycycle.connect_flow import connect_flow
+    from pycycle.elements.flow_start import FlowStart
+    from pycycle.cea import species_data
+    from pycycle.constants import AIR_MIX, AIR_FUEL_MIX
+
     p = om.Problem()
     p.model = om.Group()
-    p.model.add_subsystem('comp', MixFuel(), promotes=['*'])
+    p.model.add_subsystem('flow_start', FlowStart(
+        thermo_data=species_data.janaf, elements=AIR_MIX))
+    p.model.add_subsystem('combustor', Combustor(design=True, thermo_data=species_data.janaf,
+        inflow_elements=AIR_MIX, air_fuel_elements=AIR_FUEL_MIX, fuel_type='JP-7'))
 
-    p.model.add_subsystem('d1', om.IndepVarComp('Fl_I:stat:W', val=1.0, units='lbm/s', desc='weight flow'),
-                          promotes=['*'])
-    p.model.add_subsystem('d2', om.IndepVarComp('Fl_I:FAR', val=0.2, desc='Fuel to air ratio'), promotes=['*'])
-    p.model.add_subsystem('d3', om.IndepVarComp('Fl_I:tot:h', val=1.0, units='Btu/lbm', desc='total enthalpy'),
-                          promotes=['*'])
-    p.model.add_subsystem('d4', om.IndepVarComp('fuel_Tt', val=518.0, units='degR', desc='fuel temperature'),
-                          promotes=['*'])
+    connect_flow(p.model, 'flow_start.Fl_O', 'combustor.Fl_I')
 
-    p.setup(check=False, force_alloc_complex=True)
+    p.model.set_input_defaults('flow_start.P', 198.34034952, units='lbf/inch**2')
+    p.model.set_input_defaults('flow_start.T', 1190.0900001, units='degR')
+    p.model.set_input_defaults('flow_start.W', 100.0, units='lbm/s')
+    p.model.set_input_defaults('combustor.Fl_I:FAR', .017, units=None)
+    p.model.set_input_defaults('combustor.MN', .02, units=None)
+    p.model.set_input_defaults('combustor.dPqP', .03, units=None)
+
+    p.set_solver_print(level=-1)
+
+    p.setup(force_alloc_complex=True)
     p.run_model()
+    # p.check_partials(method='cs', compact_print=True)
 
-    p.check_partials(compact_print=True, method='cs')
+    print(p.get_val('flow_start.Fl_O:tot:T', units='degR') - 1190.0900001)
+    print(p.get_val('flow_start.Fl_O:tot:P', units='bar') - 13.67508573)
+    print(p.get_val('flow_start.Fl_O:tot:h', units='cal/g') - 88.23638223)
+    print(p.get_val('flow_start.Fl_O:tot:S', units='cal/(g*degK)') - 1.65712206)
+    print(p.get_val('flow_start.Fl_O:tot:gamma', units=None) - 1.36872902)
+    print(p.get_val('flow_start.Fl_O:tot:Cp', units='cal/(g*degK)') - 0.25466771)
+    print(p.get_val('flow_start.Fl_O:tot:Cv', units='cal/(g*degK)') - 0.18606141)
+    print(p.get_val('flow_start.Fl_O:tot:rho', units='lbm/inch**3') - 0.00026032)
+    print()
+    print(p.get_val('flow_start.Fl_O:stat:T', units='degR') - 1137.36400187)
+    print(p.get_val('flow_start.Fl_O:stat:P', units='bar') - 11.56433131)
+    print(p.get_val('flow_start.Fl_O:stat:h', units='cal/g') - 80.80131257)
+    print(p.get_val('flow_start.Fl_O:stat:S', units='cal/(g*degK)') - 1.65712206)
+    print(p.get_val('flow_start.Fl_O:stat:gamma', units=None) - 1.37208827)
+    print(p.get_val('flow_start.Fl_O:stat:Cp', units='cal/(g*degK)') - 0.25298835)
+    print(p.get_val('flow_start.Fl_O:stat:Cv', units='cal/(g*degK)') - 0.18438195)
+    print(p.get_val('flow_start.Fl_O:stat:rho', units='lbm/inch**3') - 0.00023034)
+    print()
+    print(p.get_val('combustor.Fl_O:tot:T', units='degR'))
+    print(p.get_val('combustor.Fl_O:tot:P', units='bar'))
+    print(p.get_val('combustor.Fl_O:tot:h', units='cal/g'))
+    print(p.get_val('combustor.Fl_O:tot:S', units='cal/(g*degK)'))
+    print(p.get_val('combustor.Fl_O:tot:gamma', units=None))
+    print(p.get_val('combustor.Fl_O:tot:Cp', units='cal/(g*degK)'))
+    print(p.get_val('combustor.Fl_O:tot:Cv', units='cal/(g*degK)'))
+    print(p.get_val('combustor.Fl_O:tot:rho', units='lbm/inch**3'))
+    print()
+    print(p.get_val('combustor.Fl_O:stat:T', units='degR'))
+    print(p.get_val('combustor.Fl_O:stat:P', units='bar'))
+    print(p.get_val('combustor.Fl_O:stat:h', units='cal/g'))
+    print(p.get_val('combustor.Fl_O:stat:S', units='cal/(g*degK)'))
+    print(p.get_val('combustor.Fl_O:stat:gamma', units=None))
+    print(p.get_val('combustor.Fl_O:stat:Cp', units='cal/(g*degK)'))
+    print(p.get_val('combustor.Fl_O:stat:Cv', units='cal/(g*degK)'))
+    print(p.get_val('combustor.Fl_O:stat:rho', units='lbm/inch**3'))
