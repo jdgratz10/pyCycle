@@ -180,7 +180,6 @@ class IsentropicCombustor(om.Group):
         self.add_subsystem('p_loss', PressureLoss(), promotes_inputs=prom_in)
 
         # Calculate vitiated flow station properties
-        # vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot", gamma=gamma)
         vit_flow = SetTotal(mode='h', fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
         self.add_subsystem('vitiated_flow', vit_flow, promotes_outputs=['Fl_O:*'])
         self.connect("mix_fuel.mass_avg_h", "vitiated_flow.h")
@@ -190,7 +189,6 @@ class IsentropicCombustor(om.Group):
         if statics:
             if design:
                 # Calculate static properties.
-                # out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
                 out_stat = SetStatic(mode="MN", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
                 prom_in = ['MN']
                 prom_out = ['Fl_O:stat:*']
@@ -203,7 +201,6 @@ class IsentropicCombustor(om.Group):
 
             else:
                 # Calculate static properties.
-                # out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma)
                 out_stat = SetStatic(mode="area", fl_name="Fl_O:stat", computation_mode='isentropic', thermo_data=janaf, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
                 prom_in = ['area']
                 prom_out = ['Fl_O:stat:*']

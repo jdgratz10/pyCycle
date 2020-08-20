@@ -189,7 +189,7 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 V = MN*Vsonic
                 P = W*R*T/(area*V)
-                rho = P/(R*T) ##necessary 1e5 for unit conversion
+                rho = P/(R*T) ##no 1e5 necessary because P is in units of Pa
 
                 outputs['MN'] = MN
                 outputs['V'] = V
@@ -202,15 +202,12 @@ class ExplicitIsentropic(ExplicitComponent):
 
                 V = R*T*W/(area*P)
                 MN = V/Vsonic
-                rho = P/(R*T) ##necessary 1e5 for unit conversion
+                rho = P/(R*T) ##no 1e5 necessary because P is in units of Pa
 
                 outputs['rho'] = rho
 
                 outputs['V'] = V
                 outputs['MN'] = MN
-                rho = P/(R*T) ##necessary 1e5 for unit conversion
-
-                outputs['rho'] = rho
 
             
     def compute_partials(self, inputs, J):

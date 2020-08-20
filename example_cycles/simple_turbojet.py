@@ -6,7 +6,7 @@ import pycycle.api as pyc
 
 from pycycle.elements.combustor_isentropic import IsentropicCombustor
 from pycycle.elements.turbine_isentropic import IsentropicTurbine
-from pycycle.isentropic.AIR_FUEL_MIX_entropy_full import AIR_FUEL_MIX_entropy
+from pycycle.isentropic.AIR_FUEL_MIX_entropy import AIR_FUEL_MIX_entropy
 from pycycle.isentropic.entropy_map_data import AIR_MIX_entropy
 
 
@@ -42,7 +42,7 @@ class Turbojet(pyc.Cycle):
                                     thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, gamma=1.32500477, S_data=S_data, Cp=Cp, h_base=h_base, T_base=T_base),
                                     promotes_inputs=['Nmech'])
         self.pyc_add_element('nozz', pyc.Nozzle(nozzType='CD', lossCoef='Cv',
-                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, computation_mode=comp_mode, S_data=S_data, Cp=Cp, h_base=h_base, T_base=T_base))
+                                    thermo_data=thermo_spec, elements=pyc.AIR_FUEL_MIX, computation_mode=comp_mode, S_data=S_data, Cp=Cp, h_base=h_base, T_base=T_base, gamma=1.32295991))
         self.pyc_add_element('shaft', pyc.Shaft(num_ports=2),promotes_inputs=['Nmech'])
         self.pyc_add_element('perf', pyc.Performance(num_nozzles=1, num_burners=1))
 

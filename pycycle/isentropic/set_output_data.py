@@ -42,6 +42,9 @@ class UnitCompBase(ExplicitComponent):
 
     def compute(self, inputs, outputs):
         outputs._data[:] = inputs._data
+        # if 'burner' in self.pathname:
+        #     print(self.pathname)
+        #     print(outputs['Fl_O:tot:T'])
 
 
 class SetOutputData(UnitCompBase):

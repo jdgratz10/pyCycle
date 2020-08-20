@@ -182,25 +182,6 @@ class Bleeds(om.ExplicitComponent):
 
         bleeds = self.options['bleed_names']
 
-        self.main_flow_elements = self.options['main_flow_elements']
-        thermo_data = self.options['thermo_data']
-        self.mixed_elements = self.main_flow_elements.copy()
-        self.mixed_elements.update(self.options['bld_flow_elements'])
-
-        main_flow_thermo = species_data.Thermo(
-            thermo_data, init_reacts=self.mixed_elements)
-        self.main_flow_prods = main_flow_thermo.products
-        self.main_flow_wt_mole = main_flow_thermo.wt_mole
-        self.n_main_flow_prods = len(self.main_flow_prods)
-
-        bld_flow_thermo = species_data.Thermo(
-            thermo_data, init_reacts=self.options['bld_flow_elements'])
-        self.bld_flow_prods = bld_flow_thermo.products
-        self.bld_flow_wt_mole = bld_flow_thermo.wt_mole
-        self.n_bld_flow_prods = len(self.bld_flow_prods)
-
-        self.aij = main_flow_thermo.aij
-
         # primary inputs and outputs
         self.add_input('Pt_in', val=0.0, units='psi',
                        desc='turbine entrance pressure')
@@ -540,7 +521,6 @@ class IsentropicTurbine(om.Group):
 
         # Calculate ideal flow station properties
         self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
-        # self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=elements, gamma=gamma),
                            promotes_inputs=[('S', 'Fl_I:tot:S'), ('b0', 'Fl_I:tot:b0')])
         self.connect("press_drop.Pt_out", "ideal_flow.P")
 
@@ -569,14 +549,12 @@ class IsentropicTurbine(om.Group):
             # Determine bleed inflow properties
             bleed_names2.append(BN + '_inflow')
             self.add_subsystem(BN + '_inflow', SetTotal(thermo_data=thermo_data, mode='h', init_reacts=bleed_elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
-            # self.add_subsystem(BN + '_inflow', SetTotal(thermo_data=thermo_data, mode='h', init_reacts=bleed_elements, gamma=gamma),
                                promotes_inputs=[('h', BN + ':tot:h'),])
             self.connect('blds.' + BN + ':Pt', BN + "_inflow.P")
 
             # Ideally expand bleeds to exit pressure
             bleed_names2.append(BN + '_ideal')
             self.add_subsystem(BN + '_ideal', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=bleed_elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
-            # self.add_subsystem(BN + '_ideal', SetTotal(thermo_data=thermo_data, mode='S', init_reacts=bleed_elements, gamma=gamma),
                                promotes_inputs=[('b0', BN + ":tot:b0")])
             self.connect(BN + "_inflow.flow:S", BN + "_ideal.S")
             self.connect("press_drop.Pt_out", BN + "_ideal.P")
@@ -593,7 +571,6 @@ class IsentropicTurbine(om.Group):
 
         # Calculate real flow station properties before bleed air is added
         real_flow_b4bld = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O_b4bld:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
-        # real_flow_b4bld = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O_b4bld:tot", gamma=gamma)
         self.add_subsystem('real_flow_b4bld', real_flow_b4bld,
                            promotes_inputs=[('b0', 'Fl_I:tot:b0')])
         self.connect('ht_out_b4bld', 'real_flow_b4bld.h')
@@ -607,7 +584,6 @@ class IsentropicTurbine(om.Group):
 
         # Calculate real flow station properties
         real_flow = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
-        # real_flow = SetTotal(thermo_data=thermo_data, mode='h', init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma)
         self.add_subsystem('real_flow', real_flow,
                            promotes_outputs=['Fl_O:tot:*'])
         self.connect("pwr_turb.ht_out", "real_flow.h")
@@ -621,7 +597,6 @@ class IsentropicTurbine(om.Group):
             if designFlag:
                 #   SetStaticMN
                 out_stat = SetStatic(mode='MN', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
-                # out_stat = SetStatic(mode='MN', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=['MN'],
                                    promotes_outputs=['Fl_O:stat:*'])
@@ -632,7 +607,6 @@ class IsentropicTurbine(om.Group):
             else:
                 #   SetStaticArea
                 out_stat = SetStatic(mode='area', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
-                # out_stat = SetStatic(mode='area', thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode='isentropic', gamma=gamma)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=['area'],
                                    promotes_outputs=['Fl_O:stat:*'])
