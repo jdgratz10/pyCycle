@@ -171,13 +171,9 @@ class Inlet(om.Group):
                                promotes=['*'])
 
         if comp_mode == 'CEA':
-            if design:
-                self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
-
-            else:
-                self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
+            self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
+            self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
+                
 
 
 if __name__ == "__main__":

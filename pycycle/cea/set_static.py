@@ -24,6 +24,7 @@ class SetStatic(om.Group):
         self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
         self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
         self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('MW', default=28.2, desc='molecular weight of gas in units of g/mol')
 
     def setup(self):
 
@@ -56,6 +57,7 @@ class SetStatic(om.Group):
                                S_data=self.options['S_data'],
                                h_base=self.options['h_base'],
                                T_base=self.options['T_base'],
+                               MW=self.options['MW'],
                                Cp=self.options['Cp'])
 
         # have to promote things differently depending on which mode we are

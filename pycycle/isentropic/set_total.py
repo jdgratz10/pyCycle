@@ -2,7 +2,8 @@ import openmdao.api as om
 
 # from pycycle.cea.species_data import Thermo
 from pycycle.isentropic.explicit_isentropic import ExplicitIsentropic
-from pycycle.isentropic.properties import PropertyMap, AIR_MIX_entropy
+from pycycle.isentropic.properties import PropertyMap
+from pycycle.isentropic.AIR_MIX_entropy_full import AIR_MIX_entropy
 from pycycle.isentropic.pressure_solve import PressureSolve
 from pycycle.isentropic.thermo_lookup import TempFromSP, TempFromGamma, TempFromEnthalpy, EnthalpyFromTemp
 from pycycle.isentropic.T_MN_resid import TmnResid
@@ -27,7 +28,6 @@ class SetTotal(om.Group):
 
     def setup(self):
 
-        # thermo_data = self.options['thermo_data']
         for_statics = self.options['for_statics']
         fl_name = self.options['fl_name']
         S_data = self.options['S_data']

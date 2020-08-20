@@ -312,7 +312,6 @@ class Nozzle(om.Group):
         self.options.declare('elements', default=AIR_FUEL_MIX,
                               desc='set of elements present in the flow')
         self.options.declare('internal_solver', default=False)
-        self.options.declare('map_extrap', default=False, desc='Switch to allow extrapoloation off map')
         self.options.declare('computation_mode', default='CEA', values=('CEA', 'isentropic'), 
                               desc='mode of computation')
         self.options.declare('gamma', default=1.4, 
@@ -321,6 +320,7 @@ class Nozzle(om.Group):
         self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
         self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
         self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('air_fuel_MW', default=28.22177517, desc='molecular weight of inflow mixed with fuel, units are g/mol')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
@@ -333,6 +333,7 @@ class Nozzle(om.Group):
         h_base = self.options['h_base']
         T_base = self.options['T_base']
         Cp = self.options['Cp']
+        air_fuel_MW = self.options['air_fuel_MW']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -378,7 +379,7 @@ class Nozzle(om.Group):
         elif comp_mode == 'isentropic':
             throat_total = SetTotal(thermo_data=thermo_data, mode="h", init_reacts=elements,
                                 # fl_name="Fl_O:tot", gamma=gamma)
-                                fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp)
+                                fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_fuel_MW)
 
         prom_in = [('h', 'Fl_I:tot:h'),
                    ('b0', 'Fl_I:tot:b0')]
@@ -390,8 +391,7 @@ class Nozzle(om.Group):
         prom_in = [('ht', 'Fl_I:tot:h'),
                    ('W', 'Fl_I:stat:W'),
                    ('b0', 'Fl_I:tot:b0')]
-        self.add_subsystem('staticMN', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
-        # self.add_subsystem('staticMN', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma),
+        self.add_subsystem('staticMN', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_fuel_MW),
                            promotes_inputs=prom_in)
         self.connect('throat_total.S', 'staticMN.S')
         self.connect('mach_choked.MN', 'staticMN.MN')
@@ -406,8 +406,7 @@ class Nozzle(om.Group):
                    ('W', 'Fl_I:stat:W'),
                    ('Ps', 'Ps_calc'),
                    ('b0', 'Fl_I:tot:b0')]
-        self.add_subsystem('staticPs', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
-        # self.add_subsystem('staticPs', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma),
+        self.add_subsystem('staticPs', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_fuel_MW),
                            promotes_inputs=prom_in)
         self.connect('throat_total.S', 'staticPs.S')
         # self.connect('press_calcs.Ps_calc', 'staticPs.Ps')
@@ -419,8 +418,7 @@ class Nozzle(om.Group):
                    ('W', 'Fl_I:stat:W'),
                    ('Ps', 'Ps_calc'),
                    ('b0', 'Fl_I:tot:b0')]
-        self.add_subsystem('ideal_flow', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp),
-        # self.add_subsystem('ideal_flow', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma),
+        self.add_subsystem('ideal_flow', SetStatic(mode="Ps", thermo_data=thermo_data, init_reacts=elements, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_fuel_MW),
                            promotes_inputs=prom_in)
         # self.connect('press_calcs.Ps_calc', 'ideal_flow.Ps')
         # self.connect('Fl_I.flow:flow_products','ideal_flow.init_prod_amounts')

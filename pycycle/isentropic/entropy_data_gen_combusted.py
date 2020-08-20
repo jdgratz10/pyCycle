@@ -60,12 +60,12 @@ if __name__ == "__main__":
     from pycycle import constants
 
     thermo_data = species_data.janaf
-    init_reacts = constants.AIR_FUEL_MIX
+    init_reacts = constants.AIR_MIX
 
     thermo = Thermo(thermo_data, init_reacts)
 
-    T_range = np.linspace(50,2000,3902) #units are Kelvin
-    P_range = np.linspace(.5, 21, 83) #units are bar
+    T_range = np.linspace(100,2000, 1000) #units are Kelvin
+    P_range = np.linspace(.5, 21, 15) #units are bar
 
     S = np.empty((len(T_range),len(P_range)))
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         print(i, j)
 
 
-    f = open( 'AIR_FUEL_MIX_entropy_full.py', 'w' )
+    f = open( 'AIR_MIX_entropy_full.py', 'w' )
     f.write('import numpy as np\n')
     f.write('S = ' + repr(S))
     f.close()

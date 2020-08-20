@@ -567,13 +567,8 @@ class Compressor(om.Group):
                             'FAR_passthru'] + bleed_names + ['out_stat'])
 
             if comp_mode == 'CEA':
-                if design:
-                    self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                    self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
-
-                else:
-                    self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
-                    self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
+                self.connect('Fl_O:tot:P', 'out_stat.guess:Pt')
+                self.connect('Fl_O:tot:gamma', 'out_stat.guess:gamt')
 
         else:
             self.add_subsystem('W_passthru', PassThrough('W_out',
