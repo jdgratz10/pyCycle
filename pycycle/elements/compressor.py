@@ -11,6 +11,7 @@ from pycycle.passthrough import PassThrough
 from pycycle.constants import AIR_MIX, BTU_s2HP, HP_per_RPM_to_FT_LBF, T_STDeng, P_STDeng
 from pycycle.elements.compressor_map import CompressorMap
 from pycycle.maps.ncp01 import NCP01
+from pycycle.isentropic.AIR_MIX_entropy_full import AIR_MIX_entropy
 
 
 class CorrectedInputsCalc(om.ExplicitComponent):
@@ -404,6 +405,11 @@ class Compressor(om.Group):
                               desc='mode of computation')
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('air_MW', default=28.2, desc='molecular weight of inflow mixed with fuel, units are g/mol')
 
         self.default_des_od_conns = [
             # (design src, off-design target)
@@ -436,6 +442,12 @@ class Compressor(om.Group):
         elements = self.options['elements']
         statics = self.options['statics']
         comp_mode = self.options['computation_mode']
+        gamma = self.options['gamma']
+        S_data = self.options['S_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+        Cp = self.options['Cp']
+        air_MW = self.options['air_MW']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -472,11 +484,20 @@ class Compressor(om.Group):
                            'PR', ('Pt_in', 'Fl_I:tot:P')])
 
         # Calculate ideal flow station properties
-        self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data,
-                                                  mode='S',
-                                                  init_reacts=elements),
-                           promotes_inputs=[('S', 'Fl_I:tot:S'),
-                                            ('b0', 'Fl_I:tot:b0')])
+        if comp_mode == 'CEA':
+            self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data,
+                                                      mode='S',
+                                                      init_reacts=elements),
+                               promotes_inputs=[('S', 'Fl_I:tot:S'),
+                                                ('b0', 'Fl_I:tot:b0')])
+
+        elif comp_mode == 'isentropic':
+            self.add_subsystem('ideal_flow', SetTotal(thermo_data=thermo_data,
+                                                      mode='S',
+                                                      init_reacts=elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW),
+                               promotes_inputs=[('S', 'Fl_I:tot:S'),
+                                                ('b0', 'Fl_I:tot:b0')])
+
         self.connect("press_rise.Pt_out", "ideal_flow.P")
 
         # Calculate enthalpy rise across compressor
@@ -485,8 +506,13 @@ class Compressor(om.Group):
         self.connect("ideal_flow.h", "enth_rise.ideal_ht")
 
         # Calculate real flow station properties
-        real_flow = SetTotal(thermo_data=thermo_data, mode='h',
-                             init_reacts=elements, fl_name="Fl_O:tot")
+        if comp_mode == 'CEA':
+            real_flow = SetTotal(thermo_data=thermo_data, mode='h',
+                                 init_reacts=elements, fl_name="Fl_O:tot")
+
+        elif comp_mode == 'isentropic':
+            real_flow = SetTotal(thermo_data=thermo_data, mode='h',
+                                 init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
         self.add_subsystem('real_flow', real_flow,
                            promotes_inputs=[
                                ('b0', 'Fl_I:tot:b0')],
@@ -522,8 +548,14 @@ class Compressor(om.Group):
         for BN in bleeds:
 
             bleed_names.append(BN + '_flow')
-            bleed_flow = SetTotal(thermo_data=thermo_data, mode='h',
-                                  init_reacts=elements, fl_name=BN + ":tot")
+            if comp_mode == 'CEA':
+                bleed_flow = SetTotal(thermo_data=thermo_data, mode='h',
+                                      init_reacts=elements, fl_name=BN + ":tot")
+
+            elif comp_mode == 'isentropic':
+                bleed_flow = SetTotal(thermo_data=thermo_data, mode='h',
+                                      init_reacts=elements, fl_name=BN + ":tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
+
             self.add_subsystem(BN + '_flow', bleed_flow,
                                promotes_inputs=[
                                    ('b0', 'Fl_I:tot:b0')],
@@ -539,7 +571,7 @@ class Compressor(om.Group):
                 #   Calculate static properties
                 out_stat = SetStatic(
                     mode='MN', thermo_data=thermo_data, init_reacts=elements,
-                    fl_name="Fl_O:stat", computation_mode=comp_mode)
+                    fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=[
                                        'MN', ('b0', 'Fl_I:tot:b0')],
@@ -551,7 +583,7 @@ class Compressor(om.Group):
             else:  # Calculate static properties
                 out_stat = SetStatic(
                     mode='area', thermo_data=thermo_data, init_reacts=elements,
-                    fl_name="Fl_O:stat", computation_mode=comp_mode)
+                    fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
                 self.add_subsystem('out_stat', out_stat,
                                    promotes_inputs=[
                                        'area', ('b0', 'Fl_I:tot:b0')],

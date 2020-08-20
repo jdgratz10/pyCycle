@@ -4,6 +4,7 @@ from pycycle.cea import species_data
 from pycycle.cea.set_static import SetStatic
 from pycycle.constants import AIR_MIX, WET_AIR_MIX
 import numpy as np
+from pycycle.isentropic.AIR_MIX_entropy_full import AIR_MIX_entropy
 
 class SetWAR(ExplicitComponent):
 
@@ -122,6 +123,11 @@ class FlowStart(Group):
 
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('air_MW', default=28.2, desc='molecular weight of inflow mixed with fuel, units are g/mol')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
@@ -129,6 +135,11 @@ class FlowStart(Group):
         use_WAR = self.options['use_WAR']
         comp_mode = self.options['computation_mode']
         gamma = self.options['gamma']
+        S_data = self.options['S_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+        Cp = self.options['Cp']
+        air_MW = self.options['air_MW']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -163,7 +174,7 @@ class FlowStart(Group):
         elif comp_mode == 'isentropic':
             set_TP = SetTotal(mode="T", fl_name="Fl_O:tot",
                             thermo_data=thermo_data,
-                            init_reacts=elements, gamma=gamma)
+                            init_reacts=elements, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
 
         params = ('T','P', 'b0')
 
@@ -173,7 +184,7 @@ class FlowStart(Group):
 
         # if self.options['statics']:
         set_stat_MN = SetStatic(mode="MN", thermo_data=thermo_data,
-                                init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma)
+                                init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
         set_stat_MN.set_input_defaults('W', val=1.0, units='kg/s')
 
         self.add_subsystem('exit_static', set_stat_MN, promotes_inputs=('MN', 'W', 'b0'),

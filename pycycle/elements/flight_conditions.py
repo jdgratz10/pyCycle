@@ -4,6 +4,7 @@ from pycycle.cea import species_data
 from pycycle.constants import AIR_MIX
 from pycycle.elements.ambient import Ambient
 from pycycle.elements.flow_start import FlowStart
+from pycycle.isentropic.AIR_MIX_entropy_full import AIR_MIX_entropy
 
 
 class FlightConditions(om.Group):
@@ -20,6 +21,11 @@ class FlightConditions(om.Group):
                               desc='mode of computation')
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('air_MW', default=28.2, desc='molecular weight of inflow mixed with fuel, units are g/mol')
 
     def setup(self):
         thermo_data = self.options['thermo_data']
@@ -27,6 +33,11 @@ class FlightConditions(om.Group):
         use_WAR = self.options['use_WAR']
         comp_mode = self.options['computation_mode']
         gamma = self.options['gamma']
+        S_data = self.options['S_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+        Cp = self.options['Cp']
+        air_MW = self.options['air_MW']
 
         self.add_subsystem('ambient', Ambient(), promotes=('alt', 'dTs'))  # inputs
 
@@ -35,7 +46,7 @@ class FlightConditions(om.Group):
             proms = ['Fl_O:*', 'MN', 'W', 'WAR']
         else:
             proms = ['Fl_O:*', 'MN', 'W']
-        conv.add_subsystem('fs', FlowStart(thermo_data=thermo_data, elements=elements, use_WAR=use_WAR, computation_mode=comp_mode, gamma=gamma), promotes=proms)
+        conv.add_subsystem('fs', FlowStart(thermo_data=thermo_data, elements=elements, use_WAR=use_WAR, computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, air_MW=air_MW), promotes=proms)
         balance = conv.add_subsystem('balance', om.BalanceComp())
         balance.add_balance('Tt', val=500.0, lower=1e-4, units='degR', desc='Total temperature', eq_units='degR')
         balance.add_balance('Pt', val=14.696, lower=1e-4, units='psi', desc='Total pressure', eq_units='psi')

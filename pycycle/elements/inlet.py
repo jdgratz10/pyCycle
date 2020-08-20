@@ -7,6 +7,7 @@ from pycycle.cea.set_static import SetStatic
 from pycycle.constants import AIR_FUEL_MIX, AIR_MIX, g_c
 from pycycle.flow_in import FlowIn
 from pycycle.passthrough import PassThrough
+from pycycle.isentropic.AIR_MIX_entropy_full import AIR_MIX_entropy
 
 #from pycycle.elements.test.util import regression_generator
 
@@ -88,6 +89,11 @@ class Inlet(om.Group):
                               desc='mode of computation')
         self.options.declare('gamma', default=1.4, 
                               desc='ratio of specific heats, only used in isentropic mode')
+        self.options.declare('S_data', default=AIR_MIX_entropy, desc='entropy property data')
+        self.options.declare('h_base', default=0, desc='enthalpy at base temperature (units are cal/g)')
+        self.options.declare('T_base', default=302.4629819, desc='base temperature (units are degK)')
+        self.options.declare('Cp', default=0.24015494, desc='constant specific heat that is assumed (units are cal/(g*degK)')
+        self.options.declare('air_MW', default=28.2, desc='molecular weight of inflow mixed with fuel, units are g/mol')
 
         self.default_des_od_conns = [
             # (design src, off-design target)
@@ -102,6 +108,11 @@ class Inlet(om.Group):
         design = self.options['design']
         comp_mode = self.options['computation_mode']
         gamma = self.options['gamma']
+        S_data = self.options['S_data']
+        h_base = self.options['h_base']
+        T_base = self.options['T_base']
+        Cp = self.options['Cp']
+        air_MW = self.options['air_MW']
 
         if comp_mode == 'CEA':
             from pycycle.cea.set_total import SetTotal
@@ -133,7 +144,7 @@ class Inlet(om.Group):
             real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot")
 
         elif comp_mode == 'isentropic':
-            real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma)
+            real_flow = SetTotal(thermo_data=thermo_data, mode="T", init_reacts=elements, fl_name="Fl_O:tot", gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
 
         self.add_subsystem('real_flow', real_flow,
                            promotes_inputs=[('T', 'Fl_I:tot:T'), ('b0', 'Fl_I:tot:b0')],
@@ -145,7 +156,7 @@ class Inlet(om.Group):
         if statics:
             if design:
                 #   Calculate static properties
-                self.add_subsystem('out_stat', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma),
+                self.add_subsystem('out_stat', SetStatic(mode="MN", thermo_data=thermo_data, init_reacts=elements, fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW),
                                    promotes_inputs=[('b0', 'Fl_I:tot:b0'), ('W', 'Fl_I:stat:W'), 'MN'],
                                    promotes_outputs=['Fl_O:stat:*'])
 
@@ -155,7 +166,7 @@ class Inlet(om.Group):
             else:
                 # Calculate static properties
                 out_stat = SetStatic(mode="area", thermo_data=thermo_data, init_reacts=elements,
-                                         fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma)
+                                         fl_name="Fl_O:stat", computation_mode=comp_mode, gamma=gamma, S_data=S_data, h_base=h_base, T_base=T_base, Cp=Cp, MW=air_MW)
                 prom_in = [('b0', 'Fl_I:tot:b0'),
                            ('W', 'Fl_I:stat:W'),
                            'area']
