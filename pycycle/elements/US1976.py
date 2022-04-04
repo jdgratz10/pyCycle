@@ -103,3 +103,17 @@ class USatm1976Comp(ExplicitComponent):
         partials['Ps', 'alt'] = P_interp_deriv(inputs['alt']).reshape(1,)[0]
         partials['rhos', 'alt'] = rho_interp_deriv(inputs['alt']).reshape(1,)[0]
         partials['drhos_dalt', 'alt'] = drho_dh_interp_deriv(inputs['alt']).reshape(1,)[0]
+
+
+
+
+if __name__ == "__main__":
+    import openmdao.api as om
+    prob = om.Problem()
+    prob.model = USatm1976Comp()
+    prob.setup()
+    prob.set_val('alt', val=10000, units='ft')
+
+    prob.run_model()
+    print(prob.get_val('Ts', units='degR'))
+    print(prob.get_val('Ps', units='psi'))

@@ -103,7 +103,7 @@ class TurbineMap(om.Group):
     def initialize(self):
         self.options.declare('map_data', default=LPT2269)
         self.options.declare('design', default=True)
-        self.options.declare('interp_method', default='slinear')
+        self.options.declare('interp_method', default='3D-slinear')
         self.options.declare('extrap', default=False)
 
     def setup(self):
