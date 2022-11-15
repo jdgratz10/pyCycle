@@ -23,6 +23,21 @@ class Propulsor(pyc.Cycle):
 
         self.add_subsystem('inlet', pyc.Inlet())
         self.add_subsystem('fan', pyc.Compressor(map_data=pyc.FanMap, map_extrap=True))
+
+        self.add_subsystem('fan_dia', om.ExecComp('FanDia = 2.0*(area/(pi*(1.0-hub_tip**2.0)))**0.5',
+                            area={'value':7000.0, 'units':'inch**2'},
+                            hub_tip={'value':0.35, 'units':None},
+                            FanDia={'value':100.0, 'units':'inch'}))
+        self.connect('inlet.Fl_O:stat:area', 'fan_dia.area')
+
+
+        self.add_subsystem('tip_speed', om.ExecComp('TipSpeed = pi*FanDia*fan_rpm/60',  # rev/sec
+                            fan_rpm={'value': 1000, 'units': 'rpm'},
+                            TipSpeed={'value': 12992*0.85, 'units': 'inch/s'}))         #12992 in/sec == 330 m/s == speed of sound at SLS
+        # self.connect('tip_speed.fan_rpm', 'fan.Nmech')                                # Constrain at design case
+        
+
+
         self.add_subsystem('nozz', pyc.Nozzle())
         
         self.add_subsystem('perf', pyc.Performance(num_nozzles=1, num_burners=0))
@@ -153,8 +168,9 @@ if __name__ == "__main__":
     prob.set_val('design.fc.MN', 0.8)
     prob.set_val('design.inlet.MN', 0.6)
     prob.set_val('design.fan.PR', 1.2)
-    prob.set_val('pwr_target', -3486.657, units='hp')
+    prob.set_val('pwr_target', -2100.041, units='hp')
     prob.set_val('design.fan.eff', 0.96)
+
 
     # Set initial guesses for balances
     prob['design.balance.W'] = 200.
