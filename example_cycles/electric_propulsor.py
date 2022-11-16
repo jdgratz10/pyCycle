@@ -25,16 +25,20 @@ class Propulsor(pyc.Cycle):
         self.add_subsystem('fan', pyc.Compressor(map_data=pyc.FanMap, map_extrap=True))
 
         self.add_subsystem('fan_dia', om.ExecComp('FanDia = 2.0*(area/(pi*(1.0-hub_tip**2.0)))**0.5',
-                            area={'value':7000.0, 'units':'inch**2'},
-                            hub_tip={'value':0.35, 'units':None},
-                            FanDia={'value':100.0, 'units':'inch'}))
+                            area={'val':7000.0, 'units':'inch**2'},
+                            hub_tip={'val':0.35, 'units':None},
+                            FanDia={'val':100.0, 'units':'inch'}))
         self.connect('inlet.Fl_O:stat:area', 'fan_dia.area')
 
 
         self.add_subsystem('tip_speed', om.ExecComp('TipSpeed = pi*FanDia*fan_rpm/60',  # rev/sec
-                            fan_rpm={'value': 1000, 'units': 'rpm'},
-                            TipSpeed={'value': 12992*0.85, 'units': 'inch/s'}))         #12992 in/sec == 330 m/s == speed of sound at SLS
-        # self.connect('tip_speed.fan_rpm', 'fan.Nmech')                                # Constrain at design case
+                            fan_rpm={'val': 1000, 'units': 'rpm'},
+                            TipSpeed={'val': 12992*0.85, 'units': 'inch/s'}))         # 12992 in/sec == 330 m/s == speed of sound at SLS
+                                                                                        # Constrain at design case
+        
+        self.add_subsystem('shaft', pyc.Shaft())
+
+        self.connect('fan.Nmech', 'tip_speed.fan_rpm')
         
 
 
@@ -45,8 +49,8 @@ class Propulsor(pyc.Cycle):
 
         balance = om.BalanceComp()
         if design:
-            self.add_subsystem('shaft', om.IndepVarComp('Nmech', 1., units='rpm'))
-            self.connect('shaft.Nmech', 'fan.Nmech')
+            # self.add_subsystem('shaft', om.IndepVarComp('Nmech', 1., units='rpm'))
+            # self.connect('shaft.Nmech', 'fan.Nmech')
 
             balance.add_balance('W', units='lbm/s', eq_units='hp', val=50., lower=1., upper=500.)
             self.add_subsystem('balance', balance,
