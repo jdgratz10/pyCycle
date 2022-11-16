@@ -2,12 +2,20 @@ import openmdao.api as om
 
 import pycycle.api as pyc
 
+import numpy as np
+
 
 class Propulsor(pyc.Cycle):
+
+    def initialize(self):
+        self.options.declare('power_type', default='max', values=['max', 'part'], desc='determines what type of power is targeted, ignored in design mode.')
+
+        super().initialize()
 
     def setup(self):
 
         design = self.options['design']
+        power_type = self.options['power_type']
 
         USE_TABULAR = True
         if USE_TABULAR: 
@@ -18,61 +26,90 @@ class Propulsor(pyc.Cycle):
             self.options['thermo_data'] = pyc.species_data.janaf
             FUEL_TYPE = 'JP-7'
 
+        HP_to_FT_LBF_per_SEC = 550
+        convert = 2. * np.pi / 60. / HP_to_FT_LBF_per_SEC
+
 
         self.add_subsystem('fc', pyc.FlightConditions())
 
         self.add_subsystem('inlet', pyc.Inlet())
-        self.add_subsystem('fan', pyc.Compressor(map_data=pyc.FanMap, map_extrap=True))
+        self.add_subsystem('fan', pyc.Compressor(map_data=pyc.FanMap, map_extrap=True),
+                            promotes_inputs=['Nmech'])
 
         self.add_subsystem('fan_dia', om.ExecComp('FanDia = 2.0*(area/(pi*(1.0-hub_tip**2.0)))**0.5',
                             area={'val':7000.0, 'units':'inch**2'},
-                            hub_tip={'val':0.35, 'units':None},
+                            hub_tip={'val':0.25, 'units':None},
                             FanDia={'val':100.0, 'units':'inch'}))
         self.connect('inlet.Fl_O:stat:area', 'fan_dia.area')
 
 
         self.add_subsystem('tip_speed', om.ExecComp('TipSpeed = pi*FanDia*fan_rpm/60',  # rev/sec
                             fan_rpm={'val': 1000, 'units': 'rpm'},
-                            TipSpeed={'val': 12992*0.85, 'units': 'inch/s'}))         # 12992 in/sec == 330 m/s == speed of sound at SLS
-                                                                                        # Constrain at design case
-        
-        self.add_subsystem('shaft', pyc.Shaft())
-
-        self.connect('fan.Nmech', 'tip_speed.fan_rpm')
-        
-
+                            TipSpeed={'val': 12992*0.85, 'units': 'inch/s'}),
+                            promotes_inputs=[('fan_rpm', 'Nmech')])         # 12992 in/sec == 330 m/s == speed of sound at SLS
+        self.connect('fan_dia.FanDia', 'tip_speed.FanDia')                    # Constrain at design case
 
         self.add_subsystem('nozz', pyc.Nozzle())
         
+        self.add_subsystem('shaft', pyc.Shaft(num_ports=2), promotes_inputs=['Nmech'], promotes_outputs=[('trq_net', 'shaft_net_trq')]) 
+        
         self.add_subsystem('perf', pyc.Performance(num_nozzles=1, num_burners=0))
+
+        self.add_subsystem('motor_calc_pwr', om.ExecComp('motor_pwr_out=motor_pwr_in*motor_eff',
+                           motor_pwr_out={'val':1000, 'units':'hp'},
+                           motor_pwr_in={'val':1000, 'units':'hp'},
+                           motor_eff={'val':1, 'units':None}),  # for now this is just 1, eventually it will come from the motor model
+                           promotes_inputs=['motor_pwr_in', 'motor_eff'],
+                           promotes_outputs=['motor_pwr_out'])
+
+        self.add_subsystem('motor_calc_trq', om.ExecComp('motor_trq_out=motor_pwr_out/(Nmech*conversion)',
+                           motor_trq_out={'val':1000, 'units':'ft*lbf'},
+                           motor_pwr_out={'val':1000, 'units':'hp'},
+                           Nmech={'val':200, 'units':'rpm'},
+                           conversion={'val':convert, 'units':None}),
+                           promotes_inputs=['motor_pwr_out', 'Nmech'],
+                           promotes_outputs=['motor_trq_out'])
+
+        self.connect('fan.trq', 'shaft.trq_0')
+        self.connect('motor_trq_out', 'shaft.trq_1')
 
 
         balance = om.BalanceComp()
-        if design:
-            # self.add_subsystem('shaft', om.IndepVarComp('Nmech', 1., units='rpm'))
-            # self.connect('shaft.Nmech', 'fan.Nmech')
+        # vary input power to motor until the shaft balance is resolved
+        balance.add_balance('motor_input_pwr', units='hp', eq_units='ft*lbf', rhs_val=0,)
 
+        if design:
+            # vary mass flow until the target power is reached
             balance.add_balance('W', units='lbm/s', eq_units='hp', val=50., lower=1., upper=500.)
             self.add_subsystem('balance', balance,
                                promotes_inputs=[('rhs:W', 'pwr_target')])
             self.connect('fan.power', 'balance.lhs:W')
 
+        elif power_type == 'max':
+            # vary mass flow till the nozzle area matches the design values
+            balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
+            self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
 
+            balance.add_balance('Nmech', val=1., units=None, lower=0.1, upper=10_000, rhs_val=1.15)
+            self.connect('balance.Nmech', 'Nmech')
+            self.connect('fan.map.NcMap', 'balance.lhs:Nmech')
+
+            self.add_subsystem('balance', balance)
 
         else:
             # vary mass flow till the nozzle area matches the design values
             balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
             self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
 
-            balance.add_balance('Nmech', val=1., units='rpm', lower=0.1, upper=2.0, eq_units='hp')
-            self.connect('balance.Nmech', 'fan.Nmech')
+            balance.add_balance('Nmech', val=1., units='rpm', lower=0.1, upper=10_000, eq_units='hp')
+            self.connect('balance.Nmech', 'Nmech')
             self.connect('fan.power', 'balance.lhs:Nmech')
 
-            # self.add_subsystem('shaft', om.IndepVarComp('Nmech', 1., units='rpm'))
-            # self.connect('shaft.Nmech', 'fan.Nmech')
+            self.add_subsystem('balance', balance)
 
-            self.add_subsystem('balance', balance,
-                               promotes_inputs=[('rhs:Nmech', 'pwr_target')])
+
+
+        self.promotes('balance', inputs=[('lhs:motor_input_pwr', 'shaft_net_trq')], outputs=[('motor_input_pwr', 'motor_pwr_in')])
 
         self.pyc_connect_flow('fc.Fl_O', 'inlet.Fl_I')
         self.pyc_connect_flow('inlet.Fl_O', 'fan.Fl_I')
@@ -132,20 +169,29 @@ class MPpropulsor(pyc.MPCycle):
     def setup(self):
 
         design = self.pyc_add_pnt('design', Propulsor(design=True, thermo_method='CEA'))
-        self.pyc_add_cycle_param('pwr_target', 100.)
+        self.set_input_defaults('design.Nmech', 1000, units='rpm')
+        self.set_input_defaults('design.fc.MN', .8)
+        self.set_input_defaults('design.fc.alt', 10000, units='ft')
 
-        # define the off-design conditions we want to run
-        self.od_pts = ['off_design']
-        self.od_MNs = [0.8,]
-        self.od_alts = [10000,]
-        self.od_Rlines = [2.2,]
+        self.pyc_add_pnt('off_design_max_pwr', Propulsor(design=False, thermo_method='CEA', power_type='max'))
+        self.set_input_defaults('off_design_max_pwr.fc.MN', .8)
+        self.set_input_defaults('off_design_max_pwr.fc.alt', 10000, units='ft')
 
-        for i, pt in enumerate(self.od_pts):
-            self.pyc_add_pnt(pt, Propulsor(design=False, thermo_method='CEA'))
+        self.add_subsystem('calc_part_pwr', om.ExecComp('part_pwr=max_pwr*throttle_percentage',
+                           part_pwr={'val':1000, 'units':'hp'},
+                           max_pwr={'val':1000, 'units':'hp'},
+                           throttle_percentage={'val':1, 'units':None}),
+                           promotes_inputs=['throttle_percentage'],
+                           promotes_outputs=['part_pwr'])
 
-            self.set_input_defaults(pt+'.fc.MN', val=self.od_MNs[i])
-            self.set_input_defaults(pt+'.fc.alt', val=self.od_alts, units='m') 
-            self.set_input_defaults(pt+'.fan.map.RlineMap', val=self.od_Rlines[i])        
+        self.pyc_add_pnt('off_design_part_pwr', Propulsor(design=False, thermo_method='CEA', power_type='part'))
+        self.set_input_defaults('off_design_part_pwr.fc.MN', .8)
+        self.set_input_defaults('off_design_part_pwr.fc.alt', 10000, units='ft')
+
+        self.connect('part_pwr', 'off_design_part_pwr.balance.rhs:Nmech')
+        self.connect('off_design_max_pwr.fan.power', 'calc_part_pwr.max_pwr')
+
+    
 
         self.pyc_use_default_des_od_conns()
 
@@ -172,19 +218,19 @@ if __name__ == "__main__":
     prob.set_val('design.fc.MN', 0.8)
     prob.set_val('design.inlet.MN', 0.6)
     prob.set_val('design.fan.PR', 1.2)
-    prob.set_val('pwr_target', -2100.041, units='hp')
+    prob.set_val('design.pwr_target', -2100.041, units='hp')
     prob.set_val('design.fan.eff', 0.96)
 
 
     # Set initial guesses for balances
     prob['design.balance.W'] = 200.
     
-    for i, pt in enumerate(mp_propulsor.od_pts):
+    for i, pt in enumerate(['off_design_max_pwr', 'off_design_part_pwr']):
     
         # initial guesses
-        prob['off_design.fan.PR'] = 1.2
-        prob['off_design.balance.W'] = 406.790
-        prob['off_design.balance.Nmech'] = 1. # normalized value
+        prob[pt+'.fan.PR'] = 1.2
+        prob[pt+'.balance.W'] = 200
+        prob[pt+'.balance.Nmech'] = 1000.
 
     st = time.time()
 
@@ -193,14 +239,17 @@ if __name__ == "__main__":
     prob.model.design.nonlinear_solver.options['atol'] = 1e-6
     prob.model.design.nonlinear_solver.options['rtol'] = 1e-6
 
-    prob.model.off_design.nonlinear_solver.options['atol'] = 1e-6
-    prob.model.off_design.nonlinear_solver.options['rtol'] = 1e-6
+    prob.model.off_design_max_pwr.nonlinear_solver.options['atol'] = 1e-6
+    prob.model.off_design_max_pwr.nonlinear_solver.options['rtol'] = 1e-6
+    prob.model.off_design_part_pwr.nonlinear_solver.options['atol'] = 1e-6
+    prob.model.off_design_part_pwr.nonlinear_solver.options['rtol'] = 1e-6
 
 
     prob.run_model()
     run_time = time.time() - st
 
-    for pt in ['design']+mp_propulsor.od_pts:
+    # for pt in ['design']+mp_propulsor.od_pts:
+    for pt in ['design', 'off_design_max_pwr', 'off_design_part_pwr']:
         print('\n', '#'*10, pt, '#'*10)
         viewer(prob, pt)
 
