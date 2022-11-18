@@ -97,14 +97,15 @@ class Propulsor(pyc.Cycle):
 
         elif power_type == 'max':
             # vary mass flow till the nozzle area matches the design values
-            balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
-            self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
+            # balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
+            # self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
 
-            balance.add_balance('Nmech', val=1., units=None, lower=0.1, upper=10_000, rhs_val=.99)
-            self.connect('balance.Nmech', 'Nmech')
-            self.connect('fan.map.NcMap', 'balance.lhs:Nmech')
+            # balance.add_balance('Nmech', val=1., units=None, lower=0.1, upper=10_000, rhs_val=.99)
+            # self.connect('balance.Nmech', 'Nmech')
+            # self.connect('fan.map.NcMap', 'balance.lhs:Nmech')
 
             self.add_subsystem('balance', balance)
+            self.set_input_defaults('Nmech', 800, units='rpm')
 
         else:
             # vary mass flow till the nozzle area matches the design values
@@ -132,13 +133,16 @@ class Propulsor(pyc.Cycle):
         self.connect('inlet.F_ram', 'perf.ram_drag')
         self.connect('nozz.Fg', 'perf.Fg_0')
 
-        self.connect('balance.W', 'fc.W')
+        if design:
+            self.connect('balance.W', 'fc.W')
 
         newton = self.nonlinear_solver = om.NewtonSolver()
         newton.options['atol'] = 1e-12
         newton.options['rtol'] = 1e-12
         newton.options['iprint'] = 2
         newton.options['maxiter'] = 10
+        if not design:
+            newton.options['maxiter'] = 10
         newton.options['solve_subsystems'] = True
         newton.options['max_sub_solves'] = 10
         newton.options['reraise_child_analysiserror'] = False
@@ -241,7 +245,7 @@ class MPpropulsor(pyc.MPCycle):
 
         self.pyc_use_default_des_od_conns()
 
-        self.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
+        # self.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
         super().setup()
         
@@ -276,8 +280,10 @@ if __name__ == "__main__":
     
         # initial guesses
         prob[pt+'.fan.PR'] = 1.3
-        prob[pt+'.balance.W'] = 200
-        prob[pt+'.balance.Nmech'] = 1000.
+        # prob[pt+'.balance.W'] = 62.44
+        # prob[pt+'.balance.Nmech'] = 852.3
+        prob[pt+'.fc.W'] = 62.44
+        prob.set_val(pt+'.Nmech', 852.3, units='rad/s')
 
     st = time.time()
 
@@ -307,3 +313,7 @@ if __name__ == "__main__":
 
     print("Run time", run_time)
     prob.model.list_outputs(implicit=True, prom_name=True, explicit=False, includes='*OD*', residuals=True, print_max=True, print_min=True)
+    print(prob.get_val('design.fan.Nc', units=None))
+    print(prob.get_val('OD_max_pwr.fan.Nc', units=None))
+    print(prob.get_val('design.Nmech', units='rpm'))
+    print(prob.get_val('OD_max_pwr.Nmech', units='rpm'))
