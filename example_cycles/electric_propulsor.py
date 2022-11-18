@@ -318,12 +318,12 @@ if __name__ == "__main__":
     # alts = [10000, 90000, 80000]
     # percentages = [1, .9, .8, .7, .6]
 
-    MNs = [.8,]
-    alts = [10000,]
-    percentages = [.9, .8, .7, .6, .5, .4, .3, .2, .1, 0]
+    MNs = [.8, .7, .6, .5]
+    alts = [10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000, 0.0]
+    percentages = [.9, .8, .7, .6, .5, .4, .3, .2, .1]
 
-    for MN in MNs:
-        for alt in alts:
+    for alt in alts:
+        for MN in MNs:
             prob.set_val('OD_MN', MN)
             prob.set_val('OD_alt', alt, units='ft')
             for i, percentage in enumerate(percentages):
@@ -336,4 +336,15 @@ if __name__ == "__main__":
                 if i == 0:
                     viewer(prob, 'OD_max_pwr')
                 viewer(prob, 'OD_prt_pwr')
+
+            #run back up in percentage
+            for percentage in [.4, .6, .8]:
+                prob.set_val('throttle_percentage', percentage, units=None)
+                prob.run_model()
+
+        # run back up in mach
+        for MN in [.6, .7, .8]:
+            prob.set_val('OD_MN', MN)
+            prob.run_model()
+
 
