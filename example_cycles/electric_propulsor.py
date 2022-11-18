@@ -280,10 +280,8 @@ if __name__ == "__main__":
     
         # initial guesses
         prob[pt+'.fan.PR'] = 1.3
-        # prob[pt+'.balance.W'] = 62.44
-        # prob[pt+'.balance.Nmech'] = 852.3
-        prob[pt+'.fc.W'] = 62.44
-        prob.set_val(pt+'.Nmech', 852.3, units='rad/s')
+        prob[pt+'.balance.W'] = 62.44
+        prob.set_val(pt+'.balance.Nmech', 852.3, units='rad/s')
 
     st = time.time()
 
