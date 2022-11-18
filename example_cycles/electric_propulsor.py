@@ -222,29 +222,26 @@ class MPpropulsor(pyc.MPCycle):
         self.set_input_defaults('design.fc.MN', .8)
         self.set_input_defaults('design.fc.alt', 10000, units='ft')
 
-        self.pyc_add_pnt('OD_max_pwr', Propulsor(design=False, thermo_method='CEA', power_type='max'))
-        self.set_input_defaults('OD_max_pwr.fc.MN', .8)
-        self.set_input_defaults('OD_max_pwr.fc.alt', 10000, units='ft')
+        self.pyc_add_pnt('OD_max_pwr', Propulsor(design=False, thermo_method='CEA', power_type='max'), promotes_inputs=[('fc.MN', 'OD_MN'), ('fc.alt', 'OD_alt')])
 
-        # self.add_subsystem('calc_part_pwr', om.ExecComp('part_pwr=max_pwr*throttle_percentage',
-        #                    part_pwr={'val':1000, 'units':'hp'},
-        #                    max_pwr={'val':1000, 'units':'hp'},
-        #                    throttle_percentage={'val':1, 'units':None}),
-        #                    promotes_inputs=['throttle_percentage'],
-        #                    promotes_outputs=['part_pwr'])
+        self.add_subsystem('calc_part_pwr', om.ExecComp('part_pwr=max_pwr*throttle_percentage',
+                           part_pwr={'val':1000, 'units':'hp'},
+                           max_pwr={'val':1000, 'units':'hp'},
+                           throttle_percentage={'val':1, 'units':None}),
+                           promotes_inputs=['throttle_percentage'],
+                           promotes_outputs=['part_pwr'])
 
-        # self.pyc_add_pnt('OD_prt_pwr', Propulsor(design=False, thermo_method='CEA', power_type='part'))
-        # self.set_input_defaults('OD_prt_pwr.fc.MN', .8)
-        # self.set_input_defaults('OD_prt_pwr.fc.alt', 10000, units='ft')
+        self.pyc_add_pnt('OD_prt_pwr', Propulsor(design=False, thermo_method='CEA', power_type='part'), promotes_inputs=[('fc.MN', 'OD_MN'), ('fc.alt', 'OD_alt')])
 
-        # self.connect('part_pwr', 'OD_prt_pwr.balance.rhs:Nmech')
-        # self.connect('OD_max_pwr.fan.power', 'calc_part_pwr.max_pwr')
+        self.connect('part_pwr', 'OD_prt_pwr.balance.rhs:Nmech')
+        self.connect('OD_max_pwr.fan.power', 'calc_part_pwr.max_pwr')
 
     
 
         self.pyc_use_default_des_od_conns()
 
         self.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
+
 
         super().setup()
         
@@ -274,15 +271,11 @@ if __name__ == "__main__":
     # Set initial guesses for balances
     prob['design.balance.W'] = 200.
     
-    # for i, pt in enumerate(['OD_max_pwr', 'OD_prt_pwr']):
-    for i, pt in enumerate(['OD_max_pwr',]):
+    for i, pt in enumerate(['OD_max_pwr', 'OD_prt_pwr']):
     
         # initial guesses
         prob[pt+'.fan.PR'] = 1.3
         prob.set_val(pt+'.balance.W', 62.44, units='kg/s')
-        # prob[pt+'.balance.Nmech'] = 852.3
-        # prob.set_val(pt+'.fc.W', 62.43899, units='kg/s')
-        # prob.set_val(pt+'.fc.W', 62., units='kg/s')
         prob.set_val(pt+'.balance.Nmech', 852.3, units='rad/s')
 
     st = time.time()
@@ -294,18 +287,49 @@ if __name__ == "__main__":
 
     prob.model.OD_max_pwr.nonlinear_solver.options['atol'] = 1e-6
     prob.model.OD_max_pwr.nonlinear_solver.options['rtol'] = 1e-6
-    # prob.model.OD_prt_pwr.nonlinear_solver.options['atol'] = 1e-6
-    # prob.model.OD_prt_pwr.nonlinear_solver.options['rtol'] = 1e-6
+    prob.model.OD_prt_pwr.nonlinear_solver.options['atol'] = 1e-6
+    prob.model.OD_prt_pwr.nonlinear_solver.options['rtol'] = 1e-6
 
+
+    print()
+    print()
+    print('#####################################################################')
+    print('###################### RUNNING AT DESIGN POINT ######################')
+    print('#####################################################################')
+    print()
+
+    prob.set_val('OD_MN', .8)
+    prob.set_val('OD_alt', 10000, units='ft')
+    prob.set_val('throttle_percentage', 1)
 
     prob.run_model()
-    run_time = time.time() - st
 
-    # for pt in ['design', 'OD_max_pwr', 'OD_prt_pwr']:
-    for pt in ['design', 'OD_max_pwr',]:
-        # print('\n\n\n'+'#'*100,)
-        # print(pt)
-        # print('#'*100+'\n')
+    for pt in ['design', 'OD_max_pwr', 'OD_prt_pwr']:
+        viewer(prob, pt)
+
+    print()
+    print()
+    print('#####################################################################')
+    print('##################### RUNNING OFF-DESIGN POINTS #####################')
+    print('#####################################################################')
+    print()
+
+    exit()
+
+    for MN in MNs:
+        for alt in alts:
+            for i, percentage in enumerate(percentages):
+                prob.set_val('OD_MN', MN)
+                prob.set_val('OD_alt', alt, units='ft')
+                prob.set_val('throttle_percentage', percentage, units=None)
+                prob.run_model()
+
+                if i == 0:
+                    viewer(prob, 'OD_max_pwr')
+                viewer(prob, 'OD_prt_pwr')
+
+
+    for pt in ['design', 'OD_max_pwr', 'OD_prt_pwr']:
         viewer(prob, pt)
 
     map_plots(prob,'design')
