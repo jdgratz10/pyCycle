@@ -97,8 +97,8 @@ class Propulsor(pyc.Cycle):
 
         elif power_type == 'max':
             # vary mass flow till the nozzle area matches the design values
-            # balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
-            # self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
+            balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
+            self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
 
             balance.add_balance('Nmech', val=1000., units='rpm', lower=0.1, upper=10_000, rhs_val=.99)
             self.connect('balance.Nmech', 'Nmech')
@@ -133,8 +133,7 @@ class Propulsor(pyc.Cycle):
         self.connect('inlet.F_ram', 'perf.ram_drag')
         self.connect('nozz.Fg', 'perf.Fg_0')
 
-        if design:
-            self.connect('balance.W', 'fc.W')
+        self.connect('balance.W', 'fc.W')
 
         newton = self.nonlinear_solver = om.NewtonSolver()
         newton.options['atol'] = 1e-12
@@ -245,7 +244,7 @@ class MPpropulsor(pyc.MPCycle):
 
         self.pyc_use_default_des_od_conns()
 
-        # self.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
+        self.pyc_connect_des_od('nozz.Throat:stat:area', 'balance.rhs:W')
 
         super().setup()
         
@@ -280,9 +279,10 @@ if __name__ == "__main__":
     
         # initial guesses
         prob[pt+'.fan.PR'] = 1.3
-        # prob[pt+'.balance.W'] = 62.44
+        prob.set_val(pt+'.balance.W', 62.44, units='kg/s')
         # prob[pt+'.balance.Nmech'] = 852.3
-        prob[pt+'.fc.W'] = 62.44
+        # prob.set_val(pt+'.fc.W', 62.43899, units='kg/s')
+        # prob.set_val(pt+'.fc.W', 62., units='kg/s')
         prob.set_val(pt+'.balance.Nmech', 852.3, units='rad/s')
 
     st = time.time()
@@ -323,3 +323,4 @@ if __name__ == "__main__":
     # print(prob.get_val('design.design_Nmech.speed_of_sound', units='ft/s'))
     # print(prob.get_val('design.design_Nmech.fan_diam', units='ft'))
     # print(prob.get_val('design.inlet.Fl_O:stat:area', units='ft**2'))
+    # print(prob['OD_max_pwr.nozz.Throat:stat:area'])
