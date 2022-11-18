@@ -314,13 +314,22 @@ if __name__ == "__main__":
     print('#####################################################################')
     print()
 
-    exit()
+    # MNs = [.8, .7, .6, .5]
+    # alts = [10000, 90000, 80000]
+    # percentages = [1, .9, .8, .7, .6]
+
+    MNs = [.8,]
+    alts = [10000,]
+    percentages = [.9, .8, .7, .6, .5, .4, .3, .2, .1, 0]
 
     for MN in MNs:
         for alt in alts:
+            prob.set_val('OD_MN', MN)
+            prob.set_val('OD_alt', alt, units='ft')
             for i, percentage in enumerate(percentages):
-                prob.set_val('OD_MN', MN)
-                prob.set_val('OD_alt', alt, units='ft')
+                print('##########################################')
+                print('MN =', MN, '  alt =', alt, '  throttle =', percentage*100, '%')
+                print('##########################################')
                 prob.set_val('throttle_percentage', percentage, units=None)
                 prob.run_model()
 
@@ -328,23 +337,3 @@ if __name__ == "__main__":
                     viewer(prob, 'OD_max_pwr')
                 viewer(prob, 'OD_prt_pwr')
 
-
-    for pt in ['design', 'OD_max_pwr', 'OD_prt_pwr']:
-        viewer(prob, pt)
-
-    map_plots(prob,'design')
-
-
-    print("Run time", run_time)
-    # prob.model.list_outputs(implicit=True, prom_name=True, explicit=False, includes='*OD*', residuals=True, print_max=True, print_min=True)
-    # print(prob.get_val('design.fan.Nc', units=None))
-    # print(prob.get_val('OD_max_pwr.fan.Nc', units=None))
-    # print(prob.get_val('design.Nmech', units='rpm'))
-    # print(prob.get_val('OD_max_pwr.Nmech', units='rpm'))
-    # 'design_Nmech', om.ExecComp('design_fan_Nmech=max_MN*speed_of_sound/(fan_diam/2)'
-    # print(prob.get_val('design.design_Nmech.design_fan_Nmech', units='rad/s'))
-    # print(prob.get_val('design.design_Nmech.max_MN', units=None))
-    # print(prob.get_val('design.design_Nmech.speed_of_sound', units='ft/s'))
-    # print(prob.get_val('design.design_Nmech.fan_diam', units='ft'))
-    # print(prob.get_val('design.inlet.Fl_O:stat:area', units='ft**2'))
-    # print(prob['OD_max_pwr.nozz.Throat:stat:area'])
