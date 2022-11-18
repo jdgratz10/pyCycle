@@ -46,7 +46,7 @@ class Propulsor(pyc.Cycle):
             self.add_subsystem('design_Nmech', om.ExecComp('design_fan_Nmech=max_MN*speed_of_sound/(fan_diam/2)',
                                design_fan_Nmech={'val':1000, 'units':'rad/s'},
                                max_MN={'val':.8, 'units':None},
-                               speed_of_sound={'val':1116.45, 'units':'ft/s'},  # at sea level static
+                               speed_of_sound={'val':1077.39, 'units':'ft/s'},  # 1116.45 at sea level static (1077.39 at 10 kft)
                                fan_diam={'val':5, 'units':'ft'}),
                                promotes_outputs=[('design_fan_Nmech', 'Nmech')])
             self.connect('fan_dia.FanDia', 'design_Nmech.fan_diam')
@@ -100,9 +100,9 @@ class Propulsor(pyc.Cycle):
             # balance.add_balance('W', units='lbm/s', eq_units='inch**2', val=50, lower=1., upper=500.)
             # self.connect('nozz.Throat:stat:area', 'balance.lhs:W')
 
-            # balance.add_balance('Nmech', val=1., units=None, lower=0.1, upper=10_000, rhs_val=.99)
-            # self.connect('balance.Nmech', 'Nmech')
-            # self.connect('fan.map.NcMap', 'balance.lhs:Nmech')
+            balance.add_balance('Nmech', val=1000., units='rpm', lower=0.1, upper=10_000, rhs_val=.99)
+            self.connect('balance.Nmech', 'Nmech')
+            self.connect('fan.map.NcMap', 'balance.lhs:Nmech')
 
             self.add_subsystem('balance', balance)
             self.set_input_defaults('Nmech', 800, units='rpm')
@@ -165,15 +165,15 @@ def viewer(prob, pt):
 
     summary_data = (
         prob[pt + ".fc.Fl_O:stat:MN"],
-        prob[pt + ".fc.alt"],
-        prob[pt + ".fc.dTs"],
-        prob[pt + ".fc.W"],
-        prob[pt + ".perf.Fn"],
-        prob[pt + ".Nmech"],
+        prob.get_val(pt + ".fc.alt", units='ft'),
+        prob.get_val(pt + ".fc.dTs", units='degR'),
+        prob.get_val(pt + ".fc.W", units='lbm/s'),
+        prob.get_val(pt + ".perf.Fn", units='lbf'),
+        prob.get_val(pt + ".Nmech", units='rpm'),
         prob[pt + ".motor_eff"],
-        prob[pt + ".motor_pwr_in"],
-        prob[pt + ".motor_pwr_out"],
-        prob[pt + ".fan.power"]
+        prob.get_val(pt + ".motor_pwr_in", units='hp'),
+        prob.get_val(pt + ".motor_pwr_out", units='hp'),
+        prob.get_val(pt + ".fan.power", units='hp')
     )
 
     print(flush=True)
@@ -280,7 +280,9 @@ if __name__ == "__main__":
     
         # initial guesses
         prob[pt+'.fan.PR'] = 1.3
-        prob[pt+'.balance.W'] = 62.44
+        # prob[pt+'.balance.W'] = 62.44
+        # prob[pt+'.balance.Nmech'] = 852.3
+        prob[pt+'.fc.W'] = 62.44
         prob.set_val(pt+'.balance.Nmech', 852.3, units='rad/s')
 
     st = time.time()
@@ -310,8 +312,14 @@ if __name__ == "__main__":
 
 
     print("Run time", run_time)
-    prob.model.list_outputs(implicit=True, prom_name=True, explicit=False, includes='*OD*', residuals=True, print_max=True, print_min=True)
-    print(prob.get_val('design.fan.Nc', units=None))
-    print(prob.get_val('OD_max_pwr.fan.Nc', units=None))
-    print(prob.get_val('design.Nmech', units='rpm'))
-    print(prob.get_val('OD_max_pwr.Nmech', units='rpm'))
+    # prob.model.list_outputs(implicit=True, prom_name=True, explicit=False, includes='*OD*', residuals=True, print_max=True, print_min=True)
+    # print(prob.get_val('design.fan.Nc', units=None))
+    # print(prob.get_val('OD_max_pwr.fan.Nc', units=None))
+    # print(prob.get_val('design.Nmech', units='rpm'))
+    # print(prob.get_val('OD_max_pwr.Nmech', units='rpm'))
+    # 'design_Nmech', om.ExecComp('design_fan_Nmech=max_MN*speed_of_sound/(fan_diam/2)'
+    # print(prob.get_val('design.design_Nmech.design_fan_Nmech', units='rad/s'))
+    # print(prob.get_val('design.design_Nmech.max_MN', units=None))
+    # print(prob.get_val('design.design_Nmech.speed_of_sound', units='ft/s'))
+    # print(prob.get_val('design.design_Nmech.fan_diam', units='ft'))
+    # print(prob.get_val('design.inlet.Fl_O:stat:area', units='ft**2'))
