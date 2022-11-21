@@ -3,6 +3,7 @@ import openmdao.api as om
 import pycycle.api as pyc
 
 import numpy as np
+import sys
 
 
 class Propulsor(pyc.Cycle):
@@ -157,7 +158,7 @@ class Propulsor(pyc.Cycle):
         # base_class setup should be called as the last thing in your setup
         super().setup()
 
-def viewer(prob, pt):
+def viewer(prob, pt, file=sys.stdout):
     """
     print a report of all the relevant cycle properties
     """
@@ -175,36 +176,36 @@ def viewer(prob, pt):
         prob.get_val(pt + ".fan.power", units='hp')
     )
 
-    print(flush=True)
-    print(flush=True)
-    print(flush=True)
+    print(flush=True, file=file)
+    print(flush=True, file=file)
+    print(flush=True, file=file)
     print(
         "----------------------------------------------------------------------------",
-        flush=True,
+        flush=True, file=file
     )
-    print("                              POINT:", pt, flush=True)
+    print("                              POINT:", pt, flush=True, file=file)
     print(
         "----------------------------------------------------------------------------",
-        flush=True,
+        flush=True, file=file
     )
-    print("                       PERFORMANCE CHARACTERISTICS", flush=True)
+    print("                       PERFORMANCE CHARACTERISTICS", flush=True, file=file)
     print(
         "     Mach         Alt              dTamb       W             Fn            fan_Nmech      motor_eff    motor_pwr_in  motor_pwr_out fan_pwr",
-        flush=True,
+        flush=True, file=file
     )
     print(
         " %9.3f  %13.1f %13.2f %13.2f %13.1f %13.1f %13.3f %13.1f %13.1f  %13.1f"
         % summary_data,
-        flush=True,
+        flush=True, file=file
     )
 
     fs_names = ['fc.Fl_O', 'inlet.Fl_O', 'fan.Fl_O', 'nozz.Fl_O']
     fs_full_names = [f'{pt}.{fs}' for fs in fs_names]
-    pyc.print_flow_station(prob, fs_full_names)
+    pyc.print_flow_station(prob, fs_full_names, file=file)
 
-    pyc.print_compressor(prob, [f'{pt}.fan'])
+    pyc.print_compressor(prob, [f'{pt}.fan'], file=file)
 
-    pyc.print_nozzle(prob, [f'{pt}.nozz'])
+    pyc.print_nozzle(prob, [f'{pt}.nozz'], file=file)
 
 def map_plots(prob, pt):
     comp_names = ['fan']
@@ -281,7 +282,7 @@ if __name__ == "__main__":
     st = time.time()
 
     prob.set_solver_print(level=-1)
-    prob.set_solver_print(level=2, depth=2)
+    prob.set_solver_print(level=0, depth=2)
     prob.model.design.nonlinear_solver.options['atol'] = 1e-6
     prob.model.design.nonlinear_solver.options['rtol'] = 1e-6
 
@@ -304,8 +305,10 @@ if __name__ == "__main__":
 
     prob.run_model()
 
+    view_file = open('envelope_out.txt', 'w')
+
     for pt in ['design', 'OD_max_pwr', 'OD_prt_pwr']:
-        viewer(prob, pt)
+        viewer(prob, pt, file=view_file)
 
     print()
     print()
@@ -318,11 +321,16 @@ if __name__ == "__main__":
     # alts = [10000, 90000, 80000]
     # percentages = [1, .9, .8, .7, .6]
 
-    MNs = [.8, .7, .6, .5]
-    alts = [10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000, 0.0]
-    percentages = [.9, .8, .7, .6, .5, .4, .3, .2, .1]
+    MNs_high = [.8, .7, .6, .5, .4]
+    MNs_low = [.8, .7, .6, .5, .4, .3, .2, .1, 0.001]
+    alts = [10000, 7000, 4000, 2000, 0.0, 1000, 3000, 6000, 9000, 11000, 13000, 15000, 17000, 19000, 20000, 25000, 27000, 29000, 30000, 35000, 37000, 39000, 40000, 43000]
+    percentages = [.9, .8, .7, .6, .5, .4, .3, .2]
 
     for alt in alts:
+        if alt <= 5000:
+            MNs = MNs_low
+        else:
+            MNs = MNs_high
         for MN in MNs:
             prob.set_val('OD_MN', MN)
             prob.set_val('OD_alt', alt, units='ft')
@@ -334,8 +342,8 @@ if __name__ == "__main__":
                 prob.run_model()
 
                 if i == 0:
-                    viewer(prob, 'OD_max_pwr')
-                viewer(prob, 'OD_prt_pwr')
+                    viewer(prob, 'OD_max_pwr', file=view_file)
+                viewer(prob, 'OD_prt_pwr', file=view_file)
 
             #run back up in percentage
             for percentage in [.4, .6, .8]:
