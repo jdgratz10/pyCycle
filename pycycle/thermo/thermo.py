@@ -179,6 +179,7 @@ class Thermo(om.Group):
         ln_bt.options['maxiter'] = 2
         # ln_bt.options['rho'] = 0.5
         ln_bt.options['iprint'] = 2
+        ln_bt.options['iprint'] = -1
 
     def configure(self): 
         composition = self.base_thermo.composition

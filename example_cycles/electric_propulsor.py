@@ -140,8 +140,8 @@ class Propulsor(pyc.Cycle):
         newton = self.nonlinear_solver = om.NewtonSolver()
         newton.options['atol'] = 1e-12
         newton.options['rtol'] = 1e-12
-        newton.options['iprint'] = -1
-        newton.options['maxiter'] = 10
+        newton.options['iprint'] = 0
+        newton.options['maxiter'] = 20
         newton.options['solve_subsystems'] = True
         newton.options['max_sub_solves'] = 10
         newton.options['reraise_child_analysiserror'] = False
@@ -151,7 +151,7 @@ class Propulsor(pyc.Cycle):
         # newton.linesearch.options['maxiter'] = 3
         newton.linesearch = om.BoundsEnforceLS()
         # newton.linesearch.options['print_bound_enforce'] = True
-        # newton.linesearch.options['iprint'] = -1
+        newton.linesearch.options['iprint'] = -1
         #
         self.linear_solver = om.DirectSolver()
 
@@ -304,8 +304,8 @@ if __name__ == "__main__":
 
     st = time.time()
 
-    prob.set_solver_print(level=-1)
-    prob.set_solver_print(level=0, depth=2)
+    # prob.set_solver_print(level=-1)
+    # prob.set_solver_print(level=0, depth=2)
     prob.model.design.nonlinear_solver.options['atol'] = 1e-6
     prob.model.design.nonlinear_solver.options['rtol'] = 1e-6
 
@@ -370,12 +370,31 @@ if __name__ == "__main__":
     MNs_low = [.8, .7, .6, .5, .4, .3, .2, .1, 0.001]
     alts = [10000, 7000, 4000, 2000, 0.0, 1000, 3000, 6000, 9000, 11000, 13000, 15000, 17000, 19000, 20000, 25000, 27000, 29000, 30000, 35000, 37000, 39000, 40000, 43000]
     percentages = [.9, .8, .7, .6, .5, .4, .3]
+    # MNs_high = [.8,]
+    # MNs_low = [.8,]
+    # alts = [10000, 13000, 15000, 17000, 19000, 20000, 25000, 27000, 29000, 30000, 35000, 37000, 39000, 40000, 43000]
+    # percentages = [.9, .8, .7, .6, .5, .4, .3]
+
+    prob.model.set_solver_print(level=-1, depth=100, type_='LN')
+    # prob.model.set_solver_print(level=-1, depth=100, type_='NL')
+
+    # up through this point converges: MN = 0.8   alt = 29000   throttle = 30.0 %
 
     for alt in alts:
         if alt <= 5000:
             MNs = MNs_low
         else:
             MNs = MNs_high
+
+        # if alt != 20000:
+        #     percentages = [.9,]
+        #     # prob.set_solver_print(level=-1)
+        #     # prob.set_solver_print(level=2, depth=4)
+        # else:
+        #     percentages = [.9, .8, .7, .6, .5, .4, .3]
+        #     # prob.set_solver_print(level=-1)
+        #     # prob.set_solver_print(level=0, depth=2)
+
         for MN in MNs:
             prob.set_val('OD_MN', MN)
             prob.set_val('OD_alt', alt, units='ft')
