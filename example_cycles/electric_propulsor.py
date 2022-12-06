@@ -372,97 +372,14 @@ if __name__ == "__main__":
     MNs_low = [.8, .7, .6, .5, .4, .3, .2, .1, 0.001]
     alts = [10000, 7000, 4000, 2000, 0.0, 1000, 3000, 6000, 9000, 11000, 13000, 15000, 17000, 19000, 20000, 25000, 27000, 29000, 30000, 35000, 37000, 39000, 40000, 43000]
     percentages = [.9, .8, .7, .6, .5, .4, .35, .3]
-    MNs_high = [.8,]
-    # MNs_low = [.8,]
-    # alts = [10000, 11000, 13000, 15000, 17000, 19000, 20000, 25000, 27000, 29000, 30000, 35000, 37000, 39000, 40000, 43000]
-    # percentages = [.9, .8, .7, .6, .5, .4, .3]
 
     prob.model.set_solver_print(level=-1, depth=100, type_='all')
-    # prob.model.set_solver_print(level=-1, depth=100, type_='NL')
-
-    # up through this point converges: MN = 0.8   alt = 29000   throttle = 30.0 %
-    # prob.set_val('OD_prt_pwr.balance.W', units='kg/s', val=331)
-    # prob.set_val('OD_prt_pwr.balance.Nmech', units='rpm', val=1437)
-    # prob.set_val('OD_prt_pwr.balance.motor_input_power', units='hp', val=7348)
-
-    # prob["OD_max_pwr.fc.fs.exit_static.T"] = [230.695]
-    # prob["OD_max_pwr.fc.fs.exit_static.Ps"] = [0.31484978]
-    # prob["OD_max_pwr.fc.fs.exit_static.V"] = [243.67546509]
-    # prob["OD_max_pwr.fc.fs.exit_static.Vsonic"] = [304.59433137]
-    # prob["OD_max_pwr.fc.fs.exit_static.area"] = [2.02534418]
-    # prob["OD_max_pwr.fc.balance.Tt"] = [468.52762264]
-    # prob["OD_max_pwr.fc.balance.Pt"] = [6.96342545]
-    # prob["OD_max_pwr.inlet.out_stat.T"] = [258.23749486]
-    # prob["OD_max_pwr.inlet.out_stat.Ps"] = [0.467299]
-    # prob["OD_max_pwr.inlet.out_stat.V"] = [64.22178096]
-    # prob["OD_max_pwr.inlet.out_stat.Vsonic"] = [322.2274448]
-    # prob["OD_max_pwr.inlet.out_stat.MN"] = [0.19930575]
-    # prob["OD_max_pwr.fan.map.NcMap"] = [0.99]
-    # prob["OD_max_pwr.fan.map.RlineMap"] = [3.04515302]
-    # prob["OD_max_pwr.fan.map.SMW_bal.NcMap"] = [1.20241356]
-    # prob["OD_max_pwr.fan.ideal_flow.T"] = [271.10312429]
-    # prob["OD_max_pwr.fan.real_flow.T"] = [275.457539]
-    # prob["OD_max_pwr.fan.out_stat.T"] = [257.71796234]
-    # prob["OD_max_pwr.fan.out_stat.Ps"] = [0.43967625]
-    # prob["OD_max_pwr.fan.out_stat.V"] = [188.68311271]
-    # prob["OD_max_pwr.fan.out_stat.Vsonic"] = [321.90394349]
-    # prob["OD_max_pwr.fan.out_stat.MN"] = [0.58614725]
-    # prob["OD_max_pwr.nozz.PR"] = [1.7691926]
-    # prob["OD_max_pwr.nozz.throat_total.T"] = [275.457539]
-    # prob["OD_max_pwr.nozz.staticMN.T"] = [229.46292773]
-    # prob["OD_max_pwr.nozz.staticMN.Ps"] = [0.29323878]
-    # prob["OD_max_pwr.nozz.staticMN.V"] = [303.7807308]
-    # prob["OD_max_pwr.nozz.staticMN.Vsonic"] = [303.7807308]
-    # prob["OD_max_pwr.nozz.staticMN.area"] = [1.73415667]
-    # prob["OD_max_pwr.nozz.staticPs.T"] = [234.07980995]
-    # prob["OD_max_pwr.nozz.ideal_flow.T"] = [234.07980995]
-    # prob["OD_max_pwr.motor_power_in"] = [5022.2676922]
-    # prob["OD_max_pwr.balance.W"] = [519.2949711]
-    # prob["OD_max_pwr.balance.Nmech"] = [1439.45461426]
-    # prob["OD_prt_pwr.fc.fs.exit_static.T"] = [230.695]
-    # prob["OD_prt_pwr.fc.fs.exit_static.Ps"] = [0.31484978]
-    # prob["OD_prt_pwr.fc.fs.exit_static.V"] = [243.67546509]
-    # prob["OD_prt_pwr.fc.fs.exit_static.Vsonic"] = [304.59433137]
-    # prob["OD_prt_pwr.fc.fs.exit_static.area"] = [1.75345426]
-    # prob["OD_prt_pwr.fc.balance.Tt"] = [468.52762264]
-    # prob["OD_prt_pwr.fc.balance.Pt"] = [6.96342545]
-    # prob["OD_prt_pwr.inlet.out_stat.T"] = [258.76747466]
-    # prob["OD_prt_pwr.inlet.out_stat.Ps"] = [0.47060225]
-    # prob["OD_prt_pwr.inlet.out_stat.V"] = [55.32702444]
-    # prob["OD_prt_pwr.inlet.out_stat.Vsonic"] = [322.5571138]
-    # prob["OD_prt_pwr.inlet.out_stat.MN"] = [0.17152629]
-    # prob["OD_prt_pwr.fan.map.NcMap"] = [0.7891327]
-    # prob["OD_prt_pwr.fan.map.RlineMap"] = [2.94652953]
-    # prob["OD_prt_pwr.fan.map.SMW_bal.NcMap"] = [1.06461126]
-    # prob["OD_prt_pwr.fan.ideal_flow.T"] = [261.43520583]
-    # prob["OD_prt_pwr.fan.real_flow.T"] = [267.30138579]
-    # prob["OD_prt_pwr.fan.out_stat.T"] = [251.44006754]
-    # prob["OD_prt_pwr.fan.out_stat.Ps"] = [0.39279774]
-    # prob["OD_prt_pwr.fan.out_stat.V"] = [178.39374994]
-    # prob["OD_prt_pwr.fan.out_stat.Vsonic"] = [317.9685645]
-    # prob["OD_prt_pwr.fan.out_stat.MN"] = [0.5610421]
-    # prob["OD_prt_pwr.nozz.PR"] = [1.54749871]
-    # prob["OD_prt_pwr.nozz.throat_total.T"] = [267.30138579]
-    # prob["OD_prt_pwr.nozz.staticMN.T"] = [222.66046873]
-    # prob["OD_prt_pwr.nozz.staticMN.Ps"] = [0.25616442]
-    # prob["OD_prt_pwr.nozz.staticMN.V"] = [299.24873033]
-    # prob["OD_prt_pwr.nozz.staticMN.Vsonic"] = [299.24873033]
-    # prob["OD_prt_pwr.nozz.staticMN.area"] = [1.69016977]
-    # prob["OD_prt_pwr.nozz.staticPs.T"] = [235.77022826]
-    # prob["OD_prt_pwr.nozz.ideal_flow.T"] = [235.77022826]
-    # prob["OD_prt_pwr.motor_power_in"] = [2166.36263687]
-    # prob["OD_prt_pwr.balance.W"] = [449.58283718]
-    # # prob["OD_prt_pwr.Nmech"] = [1147.394653]
-    # prob["OD_prt_pwr.balance.Nmech"] = [1125.1795819813]
 
     for alt in alts:
         if alt <= 5000:
             MNs = MNs_low
         else:
             MNs = MNs_high
-
-        # percentages = [.9, .8, .7, .6, .5, .4, .3]
-        # percentages = [.39, .3]
 
         for MN in MNs:
             prob.set_val('OD_MN', MN)
@@ -472,24 +389,8 @@ if __name__ == "__main__":
                 print('MN =', MN, '  alt =', alt, '  throttle =', percentage*100, '%')
                 print('##########################################')
                 prob.set_val('throttle_percentage', percentage, units=None)
-                # if percentage == .3 and alt == 29000:
-                    # prob.model.OD_prt_pwr.nonlinear_solver.options['maxiter'] = 6
-                prob.run_model()
-                # if percentage == .4:
-                #     prob.model.list_outputs(explicit=False, implicit=True, residuals=True, prom_name=True)
-                #     exit()
 
-                # print(prob['OD_prt_pwr.motor_efficiency'])
-                # print(prob.get_val('OD_prt_pwr.balance.W', units='kg/s'))
-                # print(prob.get_val('OD_prt_pwr.balance.Nmech', units='rpm'))
-                # print(prob.get_val('OD_prt_pwr.balance.motor_input_power', units='hp'))
-                # if percentage == .3 and alt == 29000:
-                #     # prob.model.list_outputs(explicit=False, implicit=True, residuals=True, prom_name=True)
-                #     print('OD_prt_pwr.fan.power', prob.get_val('OD_prt_pwr.fan.power', units='hp'))
-                #     print('part_pwr', prob.get_val('part_pwr', units='hp'))
-                #     print('OD_prt_pwr.fan.map.NcMap', prob.get_val('OD_prt_pwr.fan.map.NcMap', units=None))
-                #     print('OD_prt_pwr.balance.Nmech', prob.get_val('OD_prt_pwr.balance.Nmech', units='rpm'))
-                #     exit()
+                prob.run_model()
 
                 if i == 0:
                     viewer(prob, 'OD_max_pwr', file=view_file)
